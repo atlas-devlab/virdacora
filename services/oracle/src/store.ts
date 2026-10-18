@@ -5,6 +5,7 @@ import type {
 } from "@terravoce/protocol";
 
 import { DomainError } from "./errors.js";
+import { compareTimestampKeys, timestampMilliseconds } from "./timestamp-order.js";
 
 export interface StoredSensor extends SensorRegistration {
   active: boolean;
@@ -40,6 +41,11 @@ interface IndexedObservation {
   observedAt: number;
 }
 
+interface IndexedAssessment {
+  assessment: Assessment;
+  generatedAt: number;
+}
+
 const seriesKey = (regionId: string, metric: string): string => JSON.stringify([regionId, metric]);
 
 const copyObservation = (entry: StoredObservation): StoredObservation => ({
@@ -47,12 +53,9 @@ const copyObservation = (entry: StoredObservation): StoredObservation => ({
   observation: { ...entry.observation }
 });
 
-// Preserve the existing Date.parse millisecond/ID ordering; do not reinterpret signed timestamps.
-const compareObservations = (left: IndexedObservation, right: IndexedObservation): number => {
-  const time = left.observedAt - right.observedAt;
-  if (time !== 0) return time;
-  return left.entry.observationId.localeCompare(right.entry.observationId);
-};
+const compareObservations = (left: IndexedObservation, right: IndexedObservation): number =>
+  compareTimestampKeys(left.observedAt, left.entry.observationId,
+    right.observedAt, right.entry.observationId);
 
 export class MemoryObservationStore implements ObservationStore {
   private readonly sensors = new Map<string, StoredSensor>();
@@ -60,7 +63,7 @@ export class MemoryObservationStore implements ObservationStore {
   private readonly sequenceKeys = new Set<string>();
   private readonly observationSeries = new Map<string, IndexedObservation[]>();
   private readonly assessmentIds = new Set<string>();
-  private readonly assessments = new Map<string, Assessment>();
+  private readonly assessments = new Map<string, IndexedAssessment>();
 
   public async registerSensor(sensor: SensorRegistration): Promise<StoredSensor> {
     if (this.sensors.has(sensor.sensorId)) {
@@ -77,13 +80,14 @@ export class MemoryObservationStore implements ObservationStore {
   }
 
   public async addObservation(entry: StoredObservation): Promise<void> {
+    const observedAt = timestampMilliseconds(entry.observation.observedAt);
     const sequenceKey = JSON.stringify([entry.observation.sensorId, entry.observation.sequence]);
     if (this.observationIds.has(entry.observationId) || this.sequenceKeys.has(sequenceKey)) {
       throw new DomainError("observation replay detected", 409, "OBSERVATION_REPLAY");
     }
 
     const snapshot = copyObservation(entry);
-    const indexed = { entry: snapshot, observedAt: Date.parse(snapshot.observation.observedAt) };
+    const indexed = { entry: snapshot, observedAt };
     const key = seriesKey(snapshot.observation.regionId, snapshot.observation.metric);
     const series = this.observationSeries.get(key) ?? [];
     const latest = series[series.length - 1];
@@ -119,17 +123,13 @@ export class MemoryObservationStore implements ObservationStore {
   }
 
   public async saveAssessment(assessment: Assessment): Promise<void> {
+    const generatedAt = timestampMilliseconds(assessment.generatedAt);
     if (this.assessmentIds.has(assessment.assessmentId)) return;
     const key = seriesKey(assessment.regionId, assessment.metric);
     const latest = this.assessments.get(key);
-    const time = latest === undefined
-      ? 1
-      : Date.parse(assessment.generatedAt) - Date.parse(latest.generatedAt);
-    if (
-      latest === undefined || time > 0 ||
-      (time === 0 && assessment.assessmentId.localeCompare(latest.assessmentId) > 0)
-    ) {
-      this.assessments.set(key, { ...assessment });
+    if (latest === undefined || compareTimestampKeys(generatedAt, assessment.assessmentId,
+      latest.generatedAt, latest.assessment.assessmentId) > 0) {
+      this.assessments.set(key, { assessment: { ...assessment }, generatedAt });
     }
     this.assessmentIds.add(assessment.assessmentId);
   }
@@ -139,7 +139,7 @@ export class MemoryObservationStore implements ObservationStore {
     metric: string
   ): Promise<Assessment | undefined> {
     const assessment = this.assessments.get(seriesKey(regionId, metric));
-    return assessment === undefined ? undefined : { ...assessment };
+    return assessment === undefined ? undefined : { ...assessment.assessment };
   }
 
   public async close(): Promise<void> {}

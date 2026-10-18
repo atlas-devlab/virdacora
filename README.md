@@ -34,6 +34,10 @@ tests storage constraints, concurrent writers and signed API requests against
 an isolated PostgreSQL 18 server. Run `pnpm test:postgres` with the explicit
 dedicated local test URL; the ordinary unit suite does not imply database validation.
 
+The [shared timestamp ordering rule (IT/EN)](docs/TIMESTAMP_ORDER_IT_EN.md)
+aligns memory, PostgreSQL and analysis using separate millisecond ordering keys.
+Existing PostgreSQL volumes require migration 002 before running the new writer.
+
 ## Research branches and original mission
 
 The mission is to combine verifiable environmental analysis, distributed

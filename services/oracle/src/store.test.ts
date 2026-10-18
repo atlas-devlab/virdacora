@@ -29,7 +29,9 @@ const reference = (entries: StoredObservation[], regionId: string, metric: strin
   entries.filter(({ observation }) => observation.regionId === regionId && observation.metric === metric)
     .sort((left, right) => {
       const time = Date.parse(left.observation.observedAt) - Date.parse(right.observation.observedAt);
-      return time === 0 ? left.observationId.localeCompare(right.observationId) : time;
+      return time === 0
+        ? left.observationId < right.observationId ? -1 : left.observationId > right.observationId ? 1 : 0
+        : time;
     }).slice(-limit);
 
 afterEach(() => vi.restoreAllMocks());
@@ -96,6 +98,36 @@ describe("memory observation storage", () => {
       entry(2, { observedAt: "2026-10-01T00:00:00.1231Z" })];
     for (const row of [...rows].reverse()) await store.addObservation(row);
     expect(await store.listObservations("region-01", "water.oxygen.mg_l", 2)).toEqual(reference(rows, "region-01", "water.oxygen.mg_l", 2));
+  });
+
+  it("orders submillisecond and offset ties by ASCII ID and takes the greatest bounded tail", async () => {
+    const store = new MemoryObservationStore();
+    const earlier = entry(1, { observedAt: "1969-12-31T23:59:59.1229Z" });
+    const digit = entry(9, { observedAt: "1969-12-31T23:59:59.1239Z" });
+    const letter = entry(10, { observedAt: "1970-01-01T00:59:59.1231+01:00" });
+    for (const row of [letter, earlier, digit]) await store.addObservation(row);
+    expect(await store.listObservations("region-01", "water.oxygen.mg_l", 3))
+      .toEqual([earlier, digit, letter]);
+    expect(await store.listObservations("region-01", "water.oxygen.mg_l", 1)).toEqual([letter]);
+    await store.saveAssessment(assessment(10, { generatedAt: letter.observation.observedAt }));
+    await store.saveAssessment(assessment(9, { generatedAt: digit.observation.observedAt }));
+    expect(await store.latestAssessment("region-01", "water.oxygen.mg_l"))
+      .toEqual(assessment(10, { generatedAt: letter.observation.observedAt }));
+  });
+
+  it("rejects invalid times without consuming an observation ID, sequence or assessment ID", async () => {
+    const store = new MemoryObservationStore();
+    await expect(store.addObservation(entry(1, { observedAt: "invalid" })))
+      .rejects.toMatchObject({ statusCode: 422, code: "INVALID_TIME" });
+    expect(await store.listObservations("region-01", "water.oxygen.mg_l", 10)).toEqual([]);
+    const valid = entry(1);
+    await store.addObservation(valid);
+    expect(await store.listObservations("region-01", "water.oxygen.mg_l", 10)).toEqual([valid]);
+    await expect(store.saveAssessment(assessment(1, { generatedAt: "invalid" })))
+      .rejects.toMatchObject({ statusCode: 422, code: "INVALID_TIME" });
+    expect(await store.latestAssessment("region-01", "water.oxygen.mg_l")).toBeUndefined();
+    await store.saveAssessment(assessment(1));
+    expect(await store.latestAssessment("region-01", "water.oxygen.mg_l")).toEqual(assessment(1));
   });
 
   it("keeps region/metric keys distinct even when a colon concatenation would collide", async () => {
@@ -213,7 +245,7 @@ describe("PostgreSQL query contracts without a database", () => {
       originalObservation.observationId, originalObservation.observation.sensorId,
       originalObservation.observation.regionId, originalObservation.observation.metric,
       originalObservation.observation.observedAt, originalObservation.observation.sequence,
-      originalObservation.observation
+      originalObservation.observation, Date.parse(originalObservation.observation.observedAt)
     ]);
     const assessmentInput = assessment(1);
     const originalAssessment = { ...assessmentInput };
@@ -223,7 +255,7 @@ describe("PostgreSQL query contracts without a database", () => {
     await assessmentWrite;
     expect(query.mock.calls[1]![1]).toEqual([
       originalAssessment.assessmentId, originalAssessment.regionId, originalAssessment.metric,
-      originalAssessment.generatedAt, originalAssessment
+      originalAssessment.generatedAt, originalAssessment, Date.parse(originalAssessment.generatedAt)
     ]);
     await store.close();
   });
@@ -233,8 +265,39 @@ describe("PostgreSQL query contracts without a database", () => {
     const query = vi.spyOn(Pool.prototype, "query").mockResolvedValue({ rows } as never);
     const store = new PostgresObservationStore("postgres://unused.invalid/test");
     expect(await store.listObservations("region-01", "water.oxygen.mg_l", 512)).toEqual([entry(1), entry(2)]);
-    expect(query.mock.calls[0]![0]).toContain("ORDER BY observed_at DESC, observation_id DESC");
+    expect(query.mock.calls[0]![0]).toContain('ORDER BY observed_at_ms DESC, observation_id COLLATE "C" DESC');
     expect(query.mock.calls[0]![1]).toEqual(["region-01", "water.oxygen.mg_l", 512]);
+    await store.close();
+  });
+
+  it("rejects invalid observation and assessment times before any database query", async () => {
+    const query = vi.spyOn(Pool.prototype, "query").mockResolvedValue({ rows: [] } as never);
+    const store = new PostgresObservationStore("postgres://unused.invalid/test");
+    await expect(store.addObservation(entry(1, { observedAt: "invalid" })))
+      .rejects.toMatchObject({ statusCode: 422, code: "INVALID_TIME" });
+    await expect(store.saveAssessment(assessment(1, { generatedAt: "invalid" })))
+      .rejects.toMatchObject({ statusCode: 422, code: "INVALID_TIME" });
+    expect(query).not.toHaveBeenCalled();
+    await store.addObservation(entry(1));
+    await store.saveAssessment(assessment(1));
+    expect(query).toHaveBeenCalledTimes(2);
+    await store.close();
+  });
+
+  it("writes epoch-millisecond keys separately while preserving signed fractional timestamps", async () => {
+    const query = vi.spyOn(Pool.prototype, "query").mockResolvedValue({ rows: [] } as never);
+    const store = new PostgresObservationStore("postgres://unused.invalid/test");
+    const original = entry(9, { observedAt: "1969-12-31T23:59:59.1239Z" });
+    const result = assessment(10, { generatedAt: "1970-01-01T00:59:59.1231+01:00" });
+    await store.addObservation(original);
+    await store.saveAssessment(result);
+    expect(query.mock.calls[0]![1]).toEqual([original.observationId, "sensor-01", "region-01",
+      "water.oxygen.mg_l", original.observation.observedAt, 9, original.observation, -877]);
+    expect(query.mock.calls[1]![1]).toEqual([result.assessmentId, "region-01", "water.oxygen.mg_l",
+      result.generatedAt, result, -877]);
+    await store.latestAssessment("region-01", "water.oxygen.mg_l");
+    expect(query.mock.calls[2]![0])
+      .toContain('ORDER BY generated_at_ms DESC, assessment_id COLLATE "C" DESC');
     await store.close();
   });
 });

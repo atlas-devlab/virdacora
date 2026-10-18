@@ -6,6 +6,7 @@ import {
 } from "@terravoce/protocol";
 
 import type { StoredObservation } from "./store.js";
+import { compareTimestampKeys, timestampMilliseconds } from "./timestamp-order.js";
 
 export interface MetricProfile {
   direction: "above" | "below";
@@ -61,11 +62,11 @@ export const analyzeObservations = (
     throw new Error("forecast horizon must be a positive integer");
   }
 
-  const sorted = [...entries].sort((left, right) => {
-    const time = Date.parse(left.observation.observedAt) - Date.parse(right.observation.observedAt);
-    if (time !== 0) return time;
-    return left.observationId.localeCompare(right.observationId);
-  });
+  const indexed = entries.map(entry => ({ entry,
+    milliseconds: timestampMilliseconds(entry.observation.observedAt) }));
+  indexed.sort((left, right) => compareTimestampKeys(left.milliseconds, left.entry.observationId,
+    right.milliseconds, right.entry.observationId));
+  const sorted = indexed.map(({ entry }) => entry);
   const first = sorted[0];
   const latest = sorted[sorted.length - 1];
   if (first === undefined || latest === undefined) throw new Error("observation series is empty");
@@ -80,10 +81,8 @@ export const analyzeObservations = (
     throw new Error("all observations must share region and metric");
   }
 
-  const origin = Date.parse(first.observation.observedAt);
-  const hours = sorted.map(
-    ({ observation }) => (Date.parse(observation.observedAt) - origin) / 3_600_000
-  );
+  const origin = indexed[0]!.milliseconds;
+  const hours = indexed.map(({ milliseconds }) => (milliseconds - origin) / 3_600_000);
   const values = sorted.map(({ observation }) => observation.value);
   const regression = linearRegression(hours, values);
   const latestHour = hours[hours.length - 1] ?? 0;
