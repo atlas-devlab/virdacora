@@ -1,0 +1,99 @@
+{
+  "version": "real-postgres-local-results-v1",
+  "runner": {
+    "node": "24.18.0",
+    "os": "Windows",
+    "architecture": "x64"
+  },
+  "server": {
+    "version": "18.6",
+    "versionNumber": 180006,
+    "os": "Linux",
+    "architecture": "x64",
+    "image": "postgres:18-alpine@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873"
+  },
+  "source": "Sanitized extraction of Vitest JSON: absolute paths and environment omitted",
+  "startedAtUTC": "2026-10-18T12:47:04.330000+00:00",
+  "total": 15,
+  "passed": 15,
+  "failed": 0,
+  "pending": 0,
+  "success": true,
+  "cases": [
+    {
+      "name": "real PostgreSQL observation storage applies the actual migration twice in a private schema with no public fallback",
+      "status": "passed",
+      "durationMs": 76.00310000000002
+    },
+    {
+      "name": "real PostgreSQL observation storage roundtrips sensor Unicode and keeps input and read snapshots isolated",
+      "status": "passed",
+      "durationMs": 64.08870000000002
+    },
+    {
+      "name": "real PostgreSQL observation storage lets exactly one of sixteen concurrent sensor registrations succeed across two pools",
+      "status": "passed",
+      "durationMs": 93.53010000000006
+    },
+    {
+      "name": "real PostgreSQL observation storage roundtrips exact signed timestamp text and safe integer sequence with isolated snapshots",
+      "status": "passed",
+      "durationMs": 60.0705999999999
+    },
+    {
+      "name": "real PostgreSQL observation storage enforces the real sensor foreign key without converting it to a replay error",
+      "status": "passed",
+      "durationMs": 67.37819999999999
+    },
+    {
+      "name": "real PostgreSQL observation storage accepts one of sixteen concurrent writes: identical observation",
+      "status": "passed",
+      "durationMs": 93.55829999999992
+    },
+    {
+      "name": "real PostgreSQL observation storage accepts one of sixteen concurrent writes: different IDs with the same sensor sequence",
+      "status": "passed",
+      "durationMs": 94.81410000000005
+    },
+    {
+      "name": "real PostgreSQL observation storage rolls back rejected primary-key and sequence collisions without reserving the other key",
+      "status": "passed",
+      "durationMs": 80.61549999999988
+    },
+    {
+      "name": "real PostgreSQL observation storage allows equal sequences from different registered sensors",
+      "status": "passed",
+      "durationMs": 65.48080000000004
+    },
+    {
+      "name": "real PostgreSQL observation storage matches bounded chronological tails for shuffled rows, metric/region partitions and offset ties",
+      "status": "passed",
+      "durationMs": 239.52970000000005
+    },
+    {
+      "name": "real PostgreSQL observation storage keeps the latest assessment despite completion order, ties and duplicate-ID conflicts",
+      "status": "passed",
+      "durationMs": 73.03369999999995
+    },
+    {
+      "name": "real PostgreSQL observation storage isolates assessment inputs and returned JSONB snapshots",
+      "status": "passed",
+      "durationMs": 54.289600000000064
+    },
+    {
+      "name": "real PostgreSQL observation storage persists sensor, observation and assessment across closing and reopening independent clients",
+      "status": "passed",
+      "durationMs": 69.7052000000001
+    },
+    {
+      "name": "real PostgreSQL observation storage documents the known PostgreSQL microsecond versus memory millisecond ordering difference",
+      "status": "passed",
+      "durationMs": 62.86910000000012
+    },
+    {
+      "name": "real PostgreSQL observation storage uses actual Ed25519 API verification with PostgreSQL and preserves rejected sequence availability",
+      "status": "passed",
+      "durationMs": 233.67080000000033
+    }
+  ]
+}

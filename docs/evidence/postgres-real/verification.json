@@ -1,0 +1,113 @@
+{
+  "version": "real-postgres-verification-v1",
+  "recordedAtUTC": "2026-10-18T12:48:24.625094+00:00",
+  "baseMainMerge": "337c7b2ed4f86c83ea2401a465f3f5b74f2a4d61",
+  "mergedPRs": [
+    {
+      "number": 22,
+      "target": "main",
+      "merge": "337c7b2ed4f86c83ea2401a465f3f5b74f2a4d61",
+      "postMergeCIRun": 39128299745,
+      "postMergeCI": "success"
+    },
+    {
+      "number": 23,
+      "target": "feat/owasco-local-median-implementation",
+      "merge": "5d74baa290c8d5f388aac7aec8ebbc1cf5780be9",
+      "postMergeCIRun": 39128306447,
+      "postMergeCI": "success",
+      "inMain": false
+    }
+  ],
+  "codeFiles": [
+    {
+      "file": "services/oracle/src/postgres.integration.test.ts",
+      "rawSha256": "9b91eafd08eee165bcffcb8d06dd1609435211c7114d55d3cf2443ef92d2c0c8"
+    },
+    {
+      "file": "services/oracle/test/postgres-fixture.ts",
+      "rawSha256": "e896c93eb6902b55ce6393ac9398c5f62673fae592d9731bf4a6c2a29f9b21a4"
+    },
+    {
+      "file": "services/oracle/src/postgres-config.test.ts",
+      "rawSha256": "8fb68e4bdb01a0e1b23218c9c31928764263c1673a64e931aca4b2b038c72b32"
+    },
+    {
+      "file": "scripts/run-postgres-tests.ts",
+      "rawSha256": "bee0701e9619e9cb64cfc0b008e34d50c9111fd403ec925d566b1ee8f52aa360"
+    },
+    {
+      "file": ".github/workflows/ci.yml",
+      "rawSha256": "7803f5127416a5c5bf21cfdae164cec02d2ca34b22d6f82364b4f2b60679cee6"
+    }
+  ],
+  "localResultsRawSha256": "ea6b5cefe4ae578dacc8836113bb53b6036b041283f3127fbfe2ef3af5e99955",
+  "productionFilesUnchangedFromMergedMain": [
+    {
+      "file": "services/oracle/src/postgres-store.ts",
+      "rawSha256": "ff14ed6d0ef2449c03c0e5adbd07853d20887875cda97af5c769dc51e2b01830"
+    },
+    {
+      "file": "services/oracle/src/store.ts",
+      "rawSha256": "c46e65edcf24d214cd0ea2db6a3c2227779065dcc0d72f33adb5e7f6ed9c02d7"
+    },
+    {
+      "file": "services/oracle/src/app.ts",
+      "rawSha256": "b7ad165e10138035687bf1c96facea76ea53b587d48b04341e28c9e49a8ccea2"
+    },
+    {
+      "file": "services/oracle/src/analysis.ts",
+      "rawSha256": "41f5cad037f771194a2e42db78e65004f91549b67a6e202b7fc1ba03e88af58b"
+    },
+    {
+      "file": "services/oracle/db/001_init.sql",
+      "rawSha256": "e684a632ddb9b7a68fb6db68f6925753e4d8ab4c5946e3c25d5e0d2306c35c0b"
+    },
+    {
+      "file": "pnpm-lock.yaml",
+      "rawSha256": "db6a7b596a0915007b08ce21582d54a29c73002246c00e1d5897faefbd62bca7"
+    }
+  ],
+  "localChecks": {
+    "realDatabaseTestsPassed": 15,
+    "realDatabaseTestsFailed": 0,
+    "realDatabaseTestsSkipped": 0,
+    "configurationGuardTestsPassed": 37,
+    "ordinaryWorkspaceTestsPassed": 84,
+    "ordinarySuiteDatabaseTestsVisiblySkipped": 15,
+    "build": "PASS",
+    "workspaceTypecheck": "PASS",
+    "explicitFixtureRunnerTestTypecheck": "PASS",
+    "missingDedicatedConfigurationReturnsNonzero": "PASS"
+  },
+  "cleanup": {
+    "serverVersion": "18.6",
+    "serverVersionNum": "180006",
+    "database": "virdacora_test",
+    "remainingTestSchemas": 0,
+    "publicTableCount": 0,
+    "containerRemoved": true,
+    "temporaryCredentialFilesRemoved": [
+      "container.env",
+      "test.env"
+    ],
+    "existingContainersOrVolumesModified": false,
+    "dataMounts": [],
+    "completedAtUTC": "2026-10-18T12:47:23.352593+00:00",
+    "tmpfsConfiguredByLaunchCommand": {
+      "/var/lib/postgresql": "rw,size=268435456"
+    },
+    "inspectionReportedNoVolumeMounts": true
+  },
+  "researchMergedInputsAndLADArtifactsUnchanged": true,
+  "independentFieldValidation": false,
+  "syntheticInputsOnly": true,
+  "newEnvironmentalAcquisitionOrTraining": false,
+  "governanceOrFundsChanged": false,
+  "knownLimits": [
+    "PostgreSQL microseconds versus existing memory-store milliseconds can produce different ordering; characterized without changing signed timestamps",
+    "Persistence test closes/reopens clients, not server restart or crash recovery",
+    "Functional checks, not production performance or durability benchmark",
+    "Same Codex-family review, not independent environmental or security audit"
+  ]
+}
