@@ -1,0 +1,105 @@
+{
+  "version": "postgres-recovery-verification-v1",
+  "recordedAtUTC": "2026-10-18T13:16:37.1960381+00:00",
+  "baseMain": "8e7f02e48f6317be9592ef0e8b723714a33fa2ae",
+  "pr25": {
+    "postMergeCI": "success",
+    "merged": true,
+    "postMergeCIRun": 39129955093
+  },
+  "baseline": {
+    "status": "expected failure on old production code",
+    "workerExitCode": 1,
+    "workerUnhandledError": true,
+    "originalFixtureCount": 7,
+    "casesCompleted": 0,
+    "laterCasesNotExecuted": true
+  },
+  "after": {
+    "status": "pass",
+    "cases": [
+      "clean-stop",
+      "sigkill",
+      "blocked-write"
+    ],
+    "signaturesIdsAndAssessmentHashesVerified": true,
+    "sameWorkerAppAndPoolVerified": true,
+    "originalAcknowledgedDataPreserved": true,
+    "casesPassed": 3,
+    "postRecoveryStatusCodes": [
+      202,
+      409,
+      401
+    ],
+    "newWrites": 3,
+    "finalAcknowledgedObservations": 10,
+    "serverStatementTimeoutObserved": true
+  },
+  "checks": {
+    "baselineFocusedPassed": 4,
+    "baselineFocusedExpectedFailures": 4,
+    "composeConfiguration": "PASS",
+    "explicitScriptAndTestTypecheck": "PASS",
+    "localRecovery": "PASS",
+    "build": "PASS",
+    "focusedNewTestsPassed": 8,
+    "ordinaryTestsPassed": 112,
+    "ordinaryDatabaseCasesVisiblySkipped": 29,
+    "workspaceCheck": "PASS"
+  },
+  "cleanup": {
+    "workerExited": true,
+    "containerRemoved": true,
+    "volumeRemoved": true,
+    "credentialFileRemoved": true
+  },
+  "codeFiles": [
+    {
+      "file": "services/oracle/src/postgres-store.ts",
+      "rawSha256": "87e5a130d7dac6445c0f977c129a113e0bd6c4f78b14023142a2b580cbcd3a6d"
+    },
+    {
+      "file": "services/oracle/src/postgres-resilience.test.ts",
+      "rawSha256": "86cd219898167f8ae625490b796170ea27ab315b5f5fb6752b37130dff6bf473"
+    },
+    {
+      "file": "scripts/run-postgres-recovery.ts",
+      "rawSha256": "b45c7774b1fa595cf93a7442d9845ba41b1345c1fcaa7affc5c4076dc210dd23"
+    },
+    {
+      "file": "scripts/postgres-recovery-worker.ts",
+      "rawSha256": "78e4ee7f382b42f13a352c15d107f3224d201b49f105b853dfa83abecb00f499"
+    },
+    {
+      "file": ".github/workflows/ci.yml",
+      "rawSha256": "866711537b4d4a017acb1b046f2359fcdc8acf3611db9c5135de525c5d7875c1"
+    },
+    {
+      "file": "package.json",
+      "rawSha256": "533be20f1bc214ebde9cd710a474ca4d6cc82249b254f9435fd8ce16fbdef93d"
+    }
+  ],
+  "evidenceFiles": [
+    {
+      "file": "docs/evidence/postgres-recovery/baseline-results.json",
+      "rawSha256": "6de7d348e46646cf8d4e38d0b2c83013a67a4693c1e7ddda6de6bad18b69b005"
+    },
+    {
+      "file": "docs/evidence/postgres-recovery/local-results.json",
+      "rawSha256": "439c16fa021c2a11efe2338ef35a407ded9c2ee3724545293fb4a2d834525a99"
+    }
+  ],
+  "productionProtocolSchemasCryptoAnalysisSQLContractsPoliciesUnchanged": true,
+  "newDependenciesOrLockfileChanges": false,
+  "newEnvironmentalDataOrFit": false,
+  "independentExternalValidation": false,
+  "harnessPortProblem": "A dynamic Docker port could change on restart; fixed explicit loopback binding and repeated baseline before accepting recovery",
+  "limits": [
+    "Synthetic API/store recovery test; no environmental field validation or forecast-skill claim.",
+    "SIGKILL interrupts the PostgreSQL container process, not the host, Docker VM, disk or electrical power.",
+    "Acknowledged records are checked; interrupted requests with unknown commit outcomes are not tested.",
+    "No automatic write retries, exactly-once guarantee, replication, failover or availability SLA.",
+    "Durations are diagnostics, not performance benchmarks or service objectives."
+  ],
+  "evidenceEncoding": "UTF-8 without BOM, LF"
+}

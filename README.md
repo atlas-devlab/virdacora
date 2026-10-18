@@ -38,6 +38,11 @@ The [shared timestamp ordering rule (IT/EN)](docs/TIMESTAMP_ORDER_IT_EN.md)
 aligns memory, PostgreSQL and analysis using separate millisecond ordering keys.
 Existing PostgreSQL volumes require migration 002 before running the new writer.
 
+The [PostgreSQL recovery checks (IT/EN)](docs/POSTGRES_RECOVERY_IT_EN.md)
+cover clean shutdown, SIGKILL and a blocked write using a fresh Docker volume.
+Run `pnpm test:postgres:recovery` with Docker available. The runner never uses
+a production database URL; `/healthz` remains liveness rather than DB readiness.
+
 ## Research branches and original mission
 
 The mission is to combine verifiable environmental analysis, distributed

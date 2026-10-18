@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "status": "pass",
+  "completedAt": "2026-10-18T13:13:10.139Z",
+  "durationMsDiagnosticOnly": 21915,
+  "controls": {
+    "image": "postgres:18-alpine@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873",
+    "owner": "4d07e179-5789-4795-8798-1643f83879f7",
+    "syntheticDataOnly": true,
+    "writesRetriedAutomatically": false,
+    "sameOracleProcessAndStoreIntendedAcrossBothInterruptions": true,
+    "productionDatabaseUrlRead": false,
+    "explicitLoopbackPortStableAcrossRestarts": true,
+    "stopSignal": "SIGINT",
+    "volumeMount": {
+      "type": "volume",
+      "destination": "/var/lib/postgresql",
+      "freshOwnerVerified": true
+    },
+    "containerMemoryLimitBytes": 536870912,
+    "databaseSettings": {
+      "version": "18.6",
+      "fsync": "on",
+      "synchronous_commit": "on",
+      "full_page_writes": "on"
+    },
+    "workerProcessId": 8592,
+    "seed": {
+      "processId": 8592,
+      "observations": 7,
+      "evidenceHash": "0xe8b246e0cd51f28f1480fe3736728374a517381f7f0c6688e1944142e2a6287a",
+      "signedSnapshotsVerified": true
+    },
+    "workerProducedStderr": true,
+    "workerUnhandledErrorObserved": false,
+    "workerExitCode": 0,
+    "sameOracleProcessAndStoreAcrossBothInterruptionsVerified": true,
+    "sameOracleProcessAndStoreAcrossAllThreeScenariosVerified": true
+  },
+  "cases": [
+    {
+      "name": "clean-stop",
+      "status": "pass",
+      "signal": "SIGINT",
+      "observedStoppedExitCode": 0,
+      "down": {
+        "processId": 8592,
+        "unavailableResponse": {
+          "statusCode": 500,
+          "body": {
+            "error": "INTERNAL_ERROR"
+          }
+        },
+        "durationMsDiagnosticOnly": 2,
+        "livenessIsNotDatabaseReadiness": true,
+        "pendingSequence": 8
+      },
+      "recovered": {
+        "processId": 8592,
+        "observations": 8,
+        "evidenceHash": "0x46a154b64ed61585111109a72c92e8556801a095553896f404ad980b360f7429",
+        "priorAcknowledgedRecordsUnchanged": true,
+        "signedSnapshotsVerified": true,
+        "newWriteStatus": 202,
+        "replayStatus": 409,
+        "tamperStatus": 401
+      },
+      "recoveryMarkers": {
+        "cleanShutdown": true,
+        "interrupted": false,
+        "automaticRecovery": false,
+        "redoStarted": false,
+        "ready": true
+      },
+      "durationMsDiagnosticOnly": 2208
+    },
+    {
+      "name": "sigkill",
+      "status": "pass",
+      "signal": "SIGKILL",
+      "observedStoppedExitCode": 137,
+      "down": {
+        "processId": 8592,
+        "unavailableResponse": {
+          "statusCode": 500,
+          "body": {
+            "error": "INTERNAL_ERROR"
+          }
+        },
+        "durationMsDiagnosticOnly": 1,
+        "livenessIsNotDatabaseReadiness": true,
+        "pendingSequence": 9
+      },
+      "recovered": {
+        "processId": 8592,
+        "observations": 9,
+        "evidenceHash": "0x887d4f34fe08ab2efc4ca8f4c210470893a26c3b8895d0f3aac20d262e65599d",
+        "priorAcknowledgedRecordsUnchanged": true,
+        "signedSnapshotsVerified": true,
+        "newWriteStatus": 202,
+        "replayStatus": 409,
+        "tamperStatus": 401
+      },
+      "recoveryMarkers": {
+        "cleanShutdown": false,
+        "interrupted": true,
+        "automaticRecovery": true,
+        "redoStarted": true,
+        "ready": true
+      },
+      "durationMsDiagnosticOnly": 2321
+    },
+    {
+      "name": "blocked-write",
+      "status": "pass",
+      "fault": "test-only exclusive observations table lock",
+      "down": {
+        "processId": 8592,
+        "unavailableResponse": {
+          "statusCode": 500,
+          "body": {
+            "error": "INTERNAL_ERROR"
+          }
+        },
+        "durationMsDiagnosticOnly": 10012,
+        "livenessIsNotDatabaseReadiness": true,
+        "pendingSequence": 10
+      },
+      "recovered": {
+        "processId": 8592,
+        "observations": 10,
+        "evidenceHash": "0xc3863e4a066ae6ddfdeeceafcc7afaf743db6fae57775aea87b67ede738d86ed",
+        "priorAcknowledgedRecordsUnchanged": true,
+        "signedSnapshotsVerified": true,
+        "newWriteStatus": 202,
+        "replayStatus": 409,
+        "tamperStatus": 401
+      },
+      "statementTimeoutObserved": true,
+      "blockerTransactionRolledBack": true,
+      "blockerPoolClosed": true,
+      "durationMsDiagnosticOnly": 10265
+    }
+  ],
+  "cleanup": {
+    "workerExited": true,
+    "containerRemoved": true,
+    "volumeRemoved": true,
+    "credentialFileRemoved": true
+  },
+  "failures": [],
+  "limitations": [
+    "Synthetic API/store recovery test; no environmental field validation or forecast-skill claim.",
+    "SIGKILL interrupts the PostgreSQL container process, not the host, Docker VM, disk or electrical power.",
+    "Acknowledged records are checked; interrupted requests with unknown commit outcomes are not tested.",
+    "No automatic write retries, exactly-once guarantee, replication, failover or availability SLA.",
+    "Durations are diagnostics, not performance benchmarks or service objectives."
+  ]
+}
