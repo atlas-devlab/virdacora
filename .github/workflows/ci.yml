@@ -165,3 +165,49 @@ jobs:
           else
             echo "Recovery receipt was not created; the job did not validate recovery."
           fi
+
+  oracle-shutdown:
+    name: Real Oracle signal drain with PostgreSQL
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Set up pnpm 11.7.0
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: '11.7.0'
+          run_install: false
+          cache: false
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Oracle dependencies
+        run: |
+          pnpm --filter @terravoce/protocol build
+          pnpm --filter @terravoce/terralex build
+
+      - name: Require actual SIGTERM and SIGINT drain on the Linux Oracle image
+        run: pnpm test:oracle:shutdown
+
+      - name: Print the sanitized shutdown receipt
+        if: always()
+        run: |
+          if test -f outputs/oracle-shutdown/results.json; then
+            cat outputs/oracle-shutdown/results.json
+          else
+            echo "Shutdown receipt was not created; the job did not validate signal drain."
+          fi

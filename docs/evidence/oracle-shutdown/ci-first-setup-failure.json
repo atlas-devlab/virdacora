@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "status": "fail",
+  "startedAt": "2026-10-18T13:58:51.700Z",
+  "completedAt": "2026-10-18T13:59:19.980Z",
+  "controls": {
+    "owner": "7d8213ec-d35d-4b48-bfed-b3552c7a766d",
+    "syntheticDataOnly": true,
+    "postgresImage": "postgres:18-alpine@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873",
+    "noAutomaticWriteRetries": true,
+    "productionDatabaseUrlRead": false,
+    "actualLinuxContainerSignals": true,
+    "compiledServerEntrypointIntended": true,
+    "shutdownMarker": "VIRDACORA_ORACLE_SHUTDOWN_STARTED",
+    "hungCloseDeadlineNotTestedHere": true,
+    "oracleImage": "virdacora-oracle-shutdown:7d8213ec-d35d-4b48-bfed-b3552c7a766d",
+    "oracleImageId": "sha256:76194ee2389cf5e75a91f57867220f34f69f0aad912d6f8cf61dbbbde53f30c1",
+    "imageBuiltByRunner": true
+  },
+  "cases": [],
+  "cleanup": {
+    "inspectorPoolClosed": true,
+    "postgresContainerRemoved": true,
+    "networkRemoved": true,
+    "credentialFilesRemoved": true,
+    "runnerBuiltImageRemoved": true
+  },
+  "failures": [
+    "SHUTDOWN_SETUP_OR_ASSERTION_FAILED"
+  ],
+  "limitations": [
+    "Synthetic signed requests against the compiled Oracle server running as PID 1 in Linux containers.",
+    "Positive drain cases only; a never-settling close deadline is tested separately with a unit fake clock.",
+    "Transport errors are distinguished from real HTTP responses; no synthetic HTTP status zero.",
+    "No host power loss, environmental field validation, write retry, exactly-once guarantee or availability SLA.",
+    "Durations are diagnostics for this test execution, not production performance benchmarks."
+  ]
+}

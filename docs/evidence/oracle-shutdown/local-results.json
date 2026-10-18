@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "status": "pass",
+  "startedAt": "2026-10-18T14:01:09.474Z",
+  "completedAt": "2026-10-18T14:01:47.450Z",
+  "controls": {
+    "owner": "213b3a1c-d568-4080-82f9-2b35bf8eaafa",
+    "syntheticDataOnly": true,
+    "postgresImage": "postgres:18-alpine@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873",
+    "noAutomaticWriteRetries": true,
+    "productionDatabaseUrlRead": false,
+    "actualLinuxContainerSignals": true,
+    "compiledServerEntrypointIntended": true,
+    "shutdownMarker": "VIRDACORA_ORACLE_SHUTDOWN_STARTED",
+    "hungCloseDeadlineNotTestedHere": true,
+    "oracleImage": "virdacora-oracle-shutdown:213b3a1c-d568-4080-82f9-2b35bf8eaafa",
+    "oracleImageId": "sha256:e001dbaeb5edfdb421520be2ea169a0a65092e214aebaa59cea758b5f7e2e89a",
+    "imageBuiltByRunner": true,
+    "postgresTcpReadinessRequired": true,
+    "postgresVersion": "18.6"
+  },
+  "cases": [
+    {
+      "signal": "SIGTERM",
+      "status": "pass",
+      "syntheticDataOnly": true,
+      "hostProcessIdBefore": 8779,
+      "pidOneEntrypointVerified": true,
+      "postgresInsertProcessId": 98,
+      "blockedInsertObservedBeforeSignal": true,
+      "shutdownStartedMarkerObserved": true,
+      "pendingRequestSurvivedSignal": true,
+      "sameProcessAliveDuringDrain": true,
+      "lateRequest": {
+        "kind": "transport-error",
+        "code": "ECONNRESET"
+      },
+      "drainedRequestStatus": 202,
+      "acknowledgedObservationIdMatches": true,
+      "exitCodeAfterAcknowledgement": 0,
+      "signalToCleanExitMsDiagnosticOnly": 1576,
+      "exactlyOneSignedRecordVerified": true,
+      "hostProcessIdAfterRestart": 8909,
+      "distinctLateObservationAbsentAfterExitAndRestart": true,
+      "lateRequestNotAccepted": true,
+      "readyAfterRestart": 200,
+      "replayStatusAfterRestart": 409,
+      "tamperStatusAfterRestart": 401,
+      "signedRecordUnchangedAfterRestart": true,
+      "finalRequestOutcome": {
+        "kind": "http",
+        "statusCode": 202
+      }
+    },
+    {
+      "signal": "SIGINT",
+      "status": "pass",
+      "syntheticDataOnly": true,
+      "hostProcessIdBefore": 8909,
+      "pidOneEntrypointVerified": true,
+      "postgresInsertProcessId": 101,
+      "blockedInsertObservedBeforeSignal": true,
+      "shutdownStartedMarkerObserved": true,
+      "pendingRequestSurvivedSignal": true,
+      "sameProcessAliveDuringDrain": true,
+      "lateRequest": {
+        "kind": "transport-error",
+        "code": "ECONNRESET"
+      },
+      "drainedRequestStatus": 202,
+      "acknowledgedObservationIdMatches": true,
+      "exitCodeAfterAcknowledgement": 0,
+      "signalToCleanExitMsDiagnosticOnly": 1515,
+      "exactlyOneSignedRecordVerified": true,
+      "hostProcessIdAfterRestart": 9065,
+      "distinctLateObservationAbsentAfterExitAndRestart": true,
+      "lateRequestNotAccepted": true,
+      "readyAfterRestart": 200,
+      "replayStatusAfterRestart": 409,
+      "tamperStatusAfterRestart": 401,
+      "signedRecordUnchangedAfterRestart": true,
+      "finalRequestOutcome": {
+        "kind": "http",
+        "statusCode": 202
+      }
+    }
+  ],
+  "cleanup": {
+    "inspectorPoolClosed": true,
+    "oracleContainerRemoved": true,
+    "postgresContainerRemoved": true,
+    "networkRemoved": true,
+    "credentialFilesRemoved": true,
+    "runnerBuiltImageRemoved": true
+  },
+  "setupStage": "RUN_SIGNAL_CASES",
+  "failures": [],
+  "limitations": [
+    "Synthetic signed requests against the compiled Oracle server running as PID 1 in Linux containers.",
+    "Positive drain cases only; a never-settling close deadline is tested separately with a unit fake clock.",
+    "Transport errors are distinguished from real HTTP responses; no synthetic HTTP status zero.",
+    "No host power loss, environmental field validation, write retry, exactly-once guarantee or availability SLA.",
+    "Durations are diagnostics for this test execution, not production performance benchmarks."
+  ]
+}

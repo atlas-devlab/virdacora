@@ -1,0 +1,130 @@
+{
+  "version": "oracle-shutdown-verification-v1",
+  "recordedAtUTC": "2026-10-18T14:02:00.320Z",
+  "baseMain": "d2a6f2bf4c8c81641d78d74c0ce815da472f46b4",
+  "pr27": {
+    "merged": true,
+    "postMergeCI": "success",
+    "postMergeCIRun": 39133170216
+  },
+  "checks": {
+    "build": "PASS",
+    "workspaceCheck": "PASS",
+    "explicitScriptAndTestTypecheck": "PASS",
+    "composeConfiguration": "PASS",
+    "ordinaryTestsPassed": 141,
+    "databaseCasesVisiblySkippedInOrdinarySuite": 32,
+    "newShutdownTests": 12,
+    "realLinuxSignalCasesPassed": 2,
+    "lateObservationAbsenceCheckedAfterCleanExitAndRestart": true,
+    "defaultRunnerBuiltOwnImageAndPassed": true,
+    "defaultRunnerImageCleaned": true,
+    "postgresTcpReadinessRequired": true
+  },
+  "baseline": {
+    "status": "expected failure",
+    "signalCasesFailed": 2,
+    "oldLinuxPID1StillServingAndRunningAfter202": true,
+    "immediateExitOrDataLossDemonstrated": false
+  },
+  "intermediateFailures": {
+    "entrypointPreflight": "test error, before signals; not application failure",
+    "handlerOnly": "real active HTTP ECONNRESET; fixed by explicit forceCloseConnections:false",
+    "lateConnectionAssumption": "Docker proxy reset rather than refusal; now distinct late signed sequence and DB absence checks plus transport distinction",
+    "firstCISetup": "No cases executed; exact cause not uniquely proved. RequireTCP rather than initdb Unixsocket, add safe setupStage/errorCode diagnostics."
+  },
+  "realHttpRegression": {
+    "before": "FAIL ECONNRESET",
+    "after": "PASS 200, active request before store.close and app.close completion"
+  },
+  "applicationDeadlineMs": 20000,
+  "composeStopGraceSeconds": 25,
+  "hungCloseDeadlineTest": "unit fake clock only, not real Linux20s measurement",
+  "noAutomaticWriteRetries": true,
+  "codeFiles": [
+    {
+      "file": ".github/workflows/ci.yml",
+      "rawSha256": "6555beb709d13ea6cbf9ffed94235bd494d413bd1f22c860358991747b6ed7d4"
+    },
+    {
+      "file": "compose.yaml",
+      "rawSha256": "4033e4a343b24a56c5fb9871c10503e5da0035d23afa71826c0a502b63c16fa4"
+    },
+    {
+      "file": "package.json",
+      "rawSha256": "0cbdf120b602c9255a9dd920f5427602bee99a07ec8daab34e3bcc9d658a9a68"
+    },
+    {
+      "file": "README.md",
+      "rawSha256": "e40056573dc8db689b4fefa58f04427395aafe460b39734d8737bc380fd9c608"
+    },
+    {
+      "file": "docs/deployment.md",
+      "rawSha256": "24ac9429dc222070eab45a6f2caf36f60d51ce353585984a439d5eb0420de395"
+    },
+    {
+      "file": "docs/ORACLE_SHUTDOWN_IT_EN.md",
+      "rawSha256": "34e49d70f0b8aebd286ec8ac05e8e07b0c1096626beb7007350d6a34b74a72b6"
+    },
+    {
+      "file": "services/oracle/src/server.ts",
+      "rawSha256": "5a3844ffbc0131dea125906ddc6639c5958ad888169bb30552ff54ecf7522a21"
+    },
+    {
+      "file": "services/oracle/src/shutdown.ts",
+      "rawSha256": "c9e6b53e55e10a300fe6b8cacd9879b254478c4ed76735b1e6c0df46516e3da5"
+    },
+    {
+      "file": "services/oracle/src/shutdown.test.ts",
+      "rawSha256": "2804f79fb238c9532c94a4dc7327c254f90fbbd9a747287f2d4f9e728dc1312e"
+    },
+    {
+      "file": "services/oracle/src/shutdown-http.test.ts",
+      "rawSha256": "2cead0812371114a85839e46e337a5d17150f2d534a012593ab45030f3b46de2"
+    },
+    {
+      "file": "services/oracle/src/app.ts",
+      "rawSha256": "62ff3d72a67bc366852b957d33d04a419d8117f0aa2b25676c61e95c6f518578"
+    },
+    {
+      "file": "scripts/run-oracle-shutdown.ts",
+      "rawSha256": "eb720de9c72e049f32a823122506c4c3f7162c7afbf7357a3ff2e501aa82ab46"
+    }
+  ],
+  "evidenceFiles": [
+    {
+      "file": "docs/evidence/oracle-shutdown/baseline-results.json",
+      "rawSha256": "d585d1478405a39e4b258111aa74f7498c554223a5e8f6c18930827888f682db"
+    },
+    {
+      "file": "docs/evidence/oracle-shutdown/harness-entrypoint-failure.json",
+      "rawSha256": "d833e8c424e38dff0780650c3456cde82153f071656725402f1496cc6f60f67e"
+    },
+    {
+      "file": "docs/evidence/oracle-shutdown/handler-only-failure.json",
+      "rawSha256": "4ad750a1337744a47ea98f4ae2c00122cf0960a7051a7e896fa78ab3e9851607"
+    },
+    {
+      "file": "docs/evidence/oracle-shutdown/late-connection-assumption-failure.json",
+      "rawSha256": "fb0fcede8ded5944c9886b0aae07adbdd9d7a4174542ebd2021937d6c6ba2114"
+    },
+    {
+      "file": "docs/evidence/oracle-shutdown/local-results.json",
+      "rawSha256": "23e3c02687dcc0ef468e9d7319200128e26f786456428224453429c89af046b5"
+    },
+    {
+      "file": "docs/evidence/oracle-shutdown/ci-first-setup-failure.json",
+      "rawSha256": "e0aa4507d14924ac5b61ea655699f1eb60e6247b3d4929eb23fd1c52d84f69ba"
+    }
+  ],
+  "lockfileAndDependenciesUnchanged": true,
+  "environmentalDataModelsCryptoOrderingContractsPoliciesFundsUnchanged": true,
+  "independentExternalValidation": false,
+  "limits": [
+    "Synthetic signed requests against the compiled Oracle server running as PID 1 in Linux containers.",
+    "Positive drain cases only; a never-settling close deadline is tested separately with a unit fake clock.",
+    "Transport errors are distinguished from real HTTP responses; no synthetic HTTP status zero.",
+    "No host power loss, environmental field validation, write retry, exactly-once guarantee or availability SLA.",
+    "Durations are diagnostics for this test execution, not production performance benchmarks."
+  ]
+}
