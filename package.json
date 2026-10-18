@@ -15,7 +15,8 @@
     "contracts:test": "pnpm --filter @terravoce/contracts test",
     "oracle:dev": "pnpm --filter @terravoce/oracle dev",
     "demo": "pnpm --filter @terravoce/oracle demo",
-    "e2e": "pnpm build && pnpm --filter @terravoce/contracts e2e"
+    "e2e": "pnpm build && pnpm --filter @terravoce/contracts e2e",
+    "benchmark:oracle": "tsx scripts/benchmark-oracle-store.ts"
   },
   "devDependencies": {
     "@types/node": "24.13.3",

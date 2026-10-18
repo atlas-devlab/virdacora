@@ -25,6 +25,10 @@ refers here to the experimental policy language in this repository.
 > Per una spiegazione completa in italiano, leggi la
 > [guida operativa](GUIDA_OPERATIVA.md).
 
+Oracle storage, request-boundary fixes and the reproducible synthetic performance
+comparison are explained in [Italian and English](docs/ORACLE_RESILIENCE_IT_EN.md).
+Run `pnpm benchmark:oracle` for the local indexed-store comparison.
+
 ## Research branches and original mission
 
 The mission is to combine verifiable environmental analysis, distributed

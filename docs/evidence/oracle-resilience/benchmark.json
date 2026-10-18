@@ -1,0 +1,111 @@
+{
+  "schemaVersion": "oracle-memory-store-synthetic-benchmark-v1",
+  "completedAtUTC": "2026-10-18T12:24:16.332Z",
+  "runtime": {
+    "node": "v24.18.0",
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "syntheticOnly": true,
+  "config": {
+    "rows": 100000,
+    "regions": 100,
+    "read-samples": 100,
+    "write-samples": 5,
+    "seed": 4125131,
+    "queryLimit": 512
+  },
+  "methodology": {
+    "fixture": "Identical deterministic synthetic payloads, including timestamp ties, for both implementations.",
+    "baseline": "Previous insertion/full-scan/filter/sort/tail implementation retained inline; no snapshot copies.",
+    "timing": "performance.now; alternating implementation order; read samples are one query each; write samples are one complete corpus insertion each.",
+    "p95": "Nearest-rank p95. Five default write samples make that p95 the largest sample, not a stable service tail estimate.",
+    "garbageCollection": "Not forced; timings may include allocation and garbage-collection noise.",
+    "scope": "Local memory-store operations only; excludes HTTP, signature verification, PostgreSQL, blockchain and forecasting.",
+    "tradeoff": "Snapshot copies and an additional per-series timestamp index add allocations. Appends are fast; binary search for late arrivals still needs O(series length) array shifting. All observations remain retained, without a memory cap."
+  },
+  "scenarios": [
+    {
+      "arrivalOrder": "chronological",
+      "queryPayloadsEqualForAllRegions": true,
+      "rowsReturnedAcrossBothImplementations": 102400,
+      "reads": {
+        "previous": {
+          "samples": 100,
+          "medianMs": 4.201250000000073,
+          "p95Ms": 5.191499999999905,
+          "minimumMs": 3.1630999999997584,
+          "maximumMs": 10.692900000000009
+        },
+        "indexed": {
+          "samples": 100,
+          "medianMs": 0.05989999999997053,
+          "p95Ms": 0.08000000000038199,
+          "minimumMs": 0.04370000000017171,
+          "maximumMs": 0.13149999999995998
+        },
+        "medianSpeedupPreviousOverIndexed": 70.13772954928447,
+        "p95SpeedupPreviousOverIndexed": 64.89374999968896
+      },
+      "wholeCorpusWrites": {
+        "previous": {
+          "samples": 5,
+          "medianMs": 125.80359999999996,
+          "p95Ms": 164.00580000000008,
+          "minimumMs": 112.81240000000003,
+          "maximumMs": 164.00580000000008
+        },
+        "indexed": {
+          "samples": 5,
+          "medianMs": 234.74749999999995,
+          "p95Ms": 330.4668999999999,
+          "minimumMs": 201.09210000000007,
+          "maximumMs": 330.4668999999999
+        },
+        "medianTimeRatioIndexedOverPrevious": 1.8659839623031458,
+        "p95TimeRatioIndexedOverPrevious": 2.014970812007866
+      }
+    },
+    {
+      "arrivalOrder": "shuffled",
+      "queryPayloadsEqualForAllRegions": true,
+      "rowsReturnedAcrossBothImplementations": 102400,
+      "reads": {
+        "previous": {
+          "samples": 100,
+          "medianMs": 24.332750000000487,
+          "p95Ms": 29.67369999999937,
+          "minimumMs": 15.928799999999683,
+          "maximumMs": 35.90649999999914
+        },
+        "indexed": {
+          "samples": 100,
+          "medianMs": 0.07225000000016735,
+          "p95Ms": 0.12850000000071304,
+          "minimumMs": 0.057499999998981366,
+          "maximumMs": 0.19110000000000582
+        },
+        "medianSpeedupPreviousOverIndexed": 336.7854671272544,
+        "p95SpeedupPreviousOverIndexed": 230.92373540727402
+      },
+      "wholeCorpusWrites": {
+        "previous": {
+          "samples": 5,
+          "medianMs": 201.65290000000005,
+          "p95Ms": 208.8076000000001,
+          "minimumMs": 136.91890000000058,
+          "maximumMs": 208.8076000000001
+        },
+        "indexed": {
+          "samples": 5,
+          "medianMs": 380.2411000000002,
+          "p95Ms": 548.8908000000001,
+          "minimumMs": 361.4479000000001,
+          "maximumMs": 548.8908000000001
+        },
+        "medianTimeRatioIndexedOverPrevious": 1.8856217788090333,
+        "p95TimeRatioIndexedOverPrevious": 2.6286916759734793
+      }
+    }
+  ]
+}

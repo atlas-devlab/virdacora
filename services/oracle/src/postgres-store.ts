@@ -6,10 +6,11 @@ import type {
 import { Pool } from "pg";
 
 import { DomainError } from "./errors.js";
-import type {
-  ObservationStore,
-  StoredObservation,
-  StoredSensor
+import {
+  validateObservationLimit,
+  type ObservationStore,
+  type StoredObservation,
+  type StoredSensor
 } from "./store.js";
 
 const isUniqueViolation = (error: unknown): boolean =>
@@ -53,19 +54,20 @@ export class PostgresObservationStore implements ObservationStore {
   }
 
   public async addObservation(entry: StoredObservation): Promise<void> {
+    const snapshot = { observationId: entry.observationId, observation: { ...entry.observation } };
     try {
       await this.pool.query(
         `INSERT INTO observations
            (observation_id, sensor_id, region_id, metric, observed_at, sequence, body)
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [
-          entry.observationId,
-          entry.observation.sensorId,
-          entry.observation.regionId,
-          entry.observation.metric,
-          entry.observation.observedAt,
-          entry.observation.sequence,
-          entry.observation
+          snapshot.observationId,
+          snapshot.observation.sensorId,
+          snapshot.observation.regionId,
+          snapshot.observation.metric,
+          snapshot.observation.observedAt,
+          snapshot.observation.sequence,
+          snapshot.observation
         ]
       );
     } catch (error) {
@@ -81,6 +83,7 @@ export class PostgresObservationStore implements ObservationStore {
     metric: string,
     limit: number
   ): Promise<StoredObservation[]> {
+    validateObservationLimit(limit);
     const result = await this.pool.query<{
       observationId: `0x${string}`;
       observation: SignedObservation;
@@ -96,17 +99,18 @@ export class PostgresObservationStore implements ObservationStore {
   }
 
   public async saveAssessment(assessment: Assessment): Promise<void> {
+    const snapshot = { ...assessment };
     await this.pool.query(
       `INSERT INTO assessments
          (assessment_id, region_id, metric, generated_at, body)
        VALUES ($1, $2, $3, $4, $5)
        ON CONFLICT (assessment_id) DO NOTHING`,
       [
-        assessment.assessmentId,
-        assessment.regionId,
-        assessment.metric,
-        assessment.generatedAt,
-        assessment
+        snapshot.assessmentId,
+        snapshot.regionId,
+        snapshot.metric,
+        snapshot.generatedAt,
+        snapshot
       ]
     );
   }
