@@ -307,3 +307,13 @@ dati USGS reali è disponibile nel modulo environmental-case e mostra che la
 regressione attuale non supera la baseline su quella finestra. Il collegamento
 dell'advisory al consenso resta da implementare, come descritto nel
 [progetto tecnico](docs/AI_DESIGN.md).
+
+## Prossimo esperimento Owasco: protocollo, senza addestramento
+
+Il [protocollo IT/EN della regressione locale LAD](docs/OWASCO_LOCAL_MEDIAN_PROTOCOL_IT_EN.md)
+fissa luglio 2020 per l'addestramento e agosto per un solo controllo di sviluppo
+dell'ossigeno a un'ora, con MAE contro l'ultima misura come criterio principale.
+Questa modifica verifica soltanto integrità e separazione degli archivi: nessun
+nuovo fit o punteggio, settembre chiuso. Agosto è già stato studiato e non è
+una validazione cieca. English explanation and reproducible metadata-only
+checks are included in the linked protocol.

@@ -1,0 +1,378 @@
+{
+  "version": "owasco-local-median-protocol-v1",
+  "status": "PROTOCOL_ONLY_NO_ENVIRONMENTAL_FIT",
+  "preparedAtUTC": "2026-10-18T00:17:53.550593+00:00",
+  "baseCommit": "13ed7c2cbb154a1c1cf803431da6f699a1e18603",
+  "scope": "Plan one July-trained local LAD model and one August development screen; this change executes only hash/timestamp/identifier preflight and synthetic tests.",
+  "authorization": "User requested the one-hour Owasco oxygen protocol: July training, August development, MAE primary. Environmental fitting/scoring is a later task, not performed by this change.",
+  "stationId": "USGS-425327076313601",
+  "horizonSeconds": 3600,
+  "features": [
+    "oxygenNow",
+    "oxygenDelta30m",
+    "oxygenDelta2h",
+    "oxygenDelta5h30m",
+    "clockSinUTC",
+    "clockCosUTC",
+    "temperatureNow",
+    "temperatureDelta2h"
+  ],
+  "cohorts": [
+    {
+      "id": "july-2020",
+      "role": "training",
+      "file": "docs/evidence/owasco-lake-transfer/evaluation.json",
+      "rawSha256": "7bd27ec609a7c4f471385498b61fff7b9d74546de13711559e84fcb16536ff85",
+      "pairs": 1275,
+      "window": {
+        "start": "2020-07-01T00:00:00Z",
+        "end": "2020-07-29T00:00:00Z"
+      }
+    },
+    {
+      "id": "august-2020",
+      "role": "development",
+      "file": "docs/evidence/owasco-temporal-validation/evaluation.json",
+      "rawSha256": "65e1b3793c78982e1496eaf9b3e56e8157d684b6df84343ed5f5b5e0abe98853",
+      "pairs": 1306,
+      "window": {
+        "start": "2020-08-01T00:00:00Z",
+        "end": "2020-08-29T00:00:00Z"
+      }
+    }
+  ],
+  "candidate": {
+    "id": "owasco-july-local-linear-lad-v1",
+    "target": "delta = saved actual O(t+1h) minus saved persistence P=O(t), binary64 subtraction",
+    "prediction": "L=P+deltaHat; deltaHat=math.fsum([intercept]+[coefficient[j]*z[j] in frozen feature order]); no final rounding",
+    "kind": "Linear conditional-median (quantile 0.5 / least absolute deviations), free intercept, eight features, uniform row weights",
+    "objective": "min (1/N)*sum(abs(delta[i]-(intercept+sum(z[i,j]*coefficient[j])))) on July only",
+    "regularization": "None: no L1/L2 coefficient penalty. Not median(absolute errors).",
+    "preprocessing": {
+      "source": "All and only the 1275 bound July rows, archived chronological order",
+      "mean": "math.fsum(x_j)/N",
+      "populationVariance": "math.fsum((x_j-mean_j)*(x_j-mean_j))/N",
+      "scale": "math.sqrt(populationVariance)",
+      "transform": "(x_j-mean_j)/scale_j in binary64; never center or scale on August",
+      "zeroVariance": "If variance equals exactly 0: save scale=1 and constant mask=true; transformed column=0 for both months and coefficient bound=(0,0). No near-zero cutoff.",
+      "invalid": "Nonfinite features/target/scaler or inconsistent source lineage stops entire run; no dropped rows, imputation, interpolation or changed eligibility."
+    },
+    "optimizer": {
+      "implementation": "scipy.optimize.linprog",
+      "method": "highs-ds",
+      "environment": {
+        "python": "3.13.5",
+        "numpy": "2.3.5",
+        "scipy": "1.17.1",
+        "platform": "Windows AMD64"
+      },
+      "environmentPolicy": "Before the later fit, record interpreter, OS, architecture, installed distribution/wheel/source hashes and bundled HiGHS version. Mismatch requires a protocol amendment before any environmental fit, never a solver swap after scoring.",
+      "variables": "theta=(intercept,beta[0..7]) then u[0..N-1]; rows July chronological, columns frozen feature order",
+      "lp": "A=[ones,Z]; A_ub=[[A,-I],[-A,-I]]; b_ub=[delta,-delta]; c=[0]*9+[1/N]*N; no equalities",
+      "bounds": "All 9 theta variables (None,None), except beta of exactly constant features (0,0); all N u variables (0,None). Explicit bounds: linprog default nonnegative coefficients are forbidden.",
+      "options": {
+        "presolve": true,
+        "primal_feasibility_tolerance": 1e-09,
+        "dual_feasibility_tolerance": 1e-09,
+        "simplex_dual_edge_weight_strategy": "steepest-devex",
+        "maxiter": 100000,
+        "disp": false
+      },
+      "attempts": 1,
+      "failure": "Any warning about unused options, unsuccessful status, numerical failure or acceptance-check failure stops. No alternate solver, retry-to-pick-weights, penalty or hyperparameter scan.",
+      "multipleOptima": "Plain LAD need not have unique coefficients. Fixed procedure/environment yields one solution; frozen scaler/weights bytes are canonical. No promise of cross-platform bit-identical refitting, minimum-norm selection or unique physical explanation.",
+      "acceptance": {
+        "require": "success is True, status==0; all coefficients/slacks finite; recompute residuals and constraint violations from July only",
+        "maxConstraintViolationMgL": 1e-07,
+        "objectiveRecompositionToleranceMgL": 1e-09,
+        "trainingSanity": "Training MAE(L)<=training MAE(P)+1e-7 mg/L because zero delta is feasible; this is an optimizer check, not validation",
+        "meaning": "Numerical tolerances only; no ecological or sensor-accuracy interpretation"
+      }
+    },
+    "forbiddenPostprocessing": [
+      "direction gate",
+      "small-correction threshold",
+      "attenuation",
+      "clipping",
+      "rounding to source precision",
+      "silent fallback to P",
+      "selection using future actual"
+    ],
+    "comparisonMeaning": "New local training and new loss are changed together. A result cannot isolate which change caused any gain."
+  },
+  "developmentDecision": {
+    "metric": "MAE = math.fsum(abs(prediction-actual) for all 1306 August rows)/1306",
+    "baseline": "Exact saved persistence P=O(t); same rows and archived targets",
+    "gain": "MAE(P)-MAE(L); positive helps",
+    "pass": "All 1306 predictions finite and nonnegative AND gain>1e-9 mg/L",
+    "numericalToleranceMgL": 1e-09,
+    "invalid": "Any negative/nonfinite L prevents success. Keep full denominator and record invalid row IDs; uncomputable primary score=null, never average only valid rows or replace by P.",
+    "ifFailOrTie": "STOP this candidate and discuss the next design. No retry, threshold, alternative month, parameter search, September or promotion.",
+    "ifPass": "Development gain only. Discuss a separately preregistered unopened verification before any environmental/operational claim.",
+    "julyRole": "Training only; no July out-of-sample success gate. Previous two-month rule belongs to the prior frozen candidates and remains unchanged in their evidence.",
+    "noMinimumPercentageClaim": "No adopted 10% success threshold. The numerical gate is not statistical significance or practical utility."
+  },
+  "plannedReporting": {
+    "rowEvidence": "For every fixed row: origin,target,source index, actual,P,L,deltaHat,errors,gain and validity; bind scaler/weight/source/protocol hashes.",
+    "primary": "One full-cohort August MAE vs P, N=1306, invalid count and gain",
+    "secondary": [
+      "Training MAE explicitly labelled in-sample",
+      "August max absolute error and signed mean error",
+      "Every UTC day MAE and gain, no chosen favorable days",
+      "August counts and summed gains for helps/ties/harms vs P using fixed 1e-9 mg/L tie tolerance",
+      "Changed-prediction count using exact L!=P, distinct from helps/harms",
+      "Descriptive saved old-R comparison only, not an alternative primary baseline"
+    ],
+    "examples": "First chronological helps and harms cases, selected only after routing for explanation; no new trigger or tuning from examples",
+    "recomposition": "Every partition count/error/gain sum must reconstruct the complete monthly cohort within fixed 1e-9 mg/L mean-error tolerance",
+    "uncertainty": "No new p-value/bootstrap to rescue this development screen. Correlated overlapping origins are not independent events; future unopened verification requires an uncertainty plan fixed before acquisition."
+  },
+  "preflight": {
+    "historyPoints": 12,
+    "historyStepSeconds": 1800,
+    "originGridSeconds": 1800,
+    "requiredGapSeconds": 259200,
+    "expectedLastTrainingTarget": "2020-07-29T00:00:00Z",
+    "expectedFirstDevelopmentHistory": "2020-08-01T00:00:00Z",
+    "allowedFields": "Top-level station/window/horizon, row origin/target, oxygenHistory.timeUTC and evidence observation UUIDs. Do not access actual, features, history values or predictions.",
+    "scopeLimit": "Checks archive separation/integrity, not future training-code behavior, physical accuracy, temperature chronology independently or as-of-origin availability."
+  },
+  "stages": [
+    "NOW: write/review protocol; hash-bound metadata-only preflight and synthetic tests. No fit, preprocessing statistics or new environmental predictions/scores.",
+    "LATER, after a new instruction to execute: implement July-only fit and separate prediction/score paths; pass synthetic, leakage and optimizer tests; commit/push implementation and exact recipe BEFORE environmental fit.",
+    "Run one July-only fit, archive complete scaler/weights, mask, diagnostics, environment, source/protocol/code hashes, times and stdout. Freeze/push immutable model artifact BEFORE any August candidate prediction.",
+    "Run one August development score with frozen artifact; retain output, invalid records, all rows and success/failure. Subsequent verify is read-only replay, never refit.",
+    "Discuss result with user; no automatic new candidate, unopened data, merge or operational promotion."
+  ],
+  "limitations": [
+    "Both July and August archives were already opened during earlier experiments; August is development, not blind/independent validation.",
+    "Finalized USGS 2020 records from one near-surface site do not establish real-time availability, whole-lake forecasts or ecological causes.",
+    "Published decimal resolution is not sensor accuracy; repeated values do not prove physical stability.",
+    "No September access or new observations. No changes to existing frozen Willamette ridge, historical reports, Oracle, blockchain, consensus, governance, community rights or funds."
+  ],
+  "preservedFiles": [
+    {
+      "file": "docs/OWASCO_DIRECTION_DIAGNOSTIC.md",
+      "rawSha256": "9946e948741c1b8a881ee6b0b63fe9ea15e64321024e6354b1b16a1a1423f656"
+    },
+    {
+      "file": "docs/datasets/owasco-attenuation-diagnostic/protocol.json",
+      "rawSha256": "b952df8d503c986e3b84567a5c81dfcf5eb21ca27cefe81f3aa1e6f5d5acb2c1"
+    },
+    {
+      "file": "docs/datasets/owasco-direction-diagnostic/protocol.json",
+      "rawSha256": "438b66c99e1ed602ea572d15442e309c82be5972307619e1e63d37702c69d2bd"
+    },
+    {
+      "file": "docs/datasets/owasco-lake-transfer/capture-attempt.json",
+      "rawSha256": "00ac6308022961a452edb12fb86719f2b6fe2b4dde4ac5c896ceb3f9ef9594ff"
+    },
+    {
+      "file": "docs/datasets/owasco-lake-transfer/continuous-queryables.json.gz",
+      "rawSha256": "9e0b99dea92e13b5d2ef912378d3ae4bd8e5ff7e949760324ec4fa36304c996d"
+    },
+    {
+      "file": "docs/datasets/owasco-lake-transfer/manifest.json",
+      "rawSha256": "fcb8e68dc5462a97c0cfde1b2829cc8581bfdf522c43af2256b72c186521a1ff"
+    },
+    {
+      "file": "docs/datasets/owasco-lake-transfer/oxygen.json.gz",
+      "rawSha256": "b3df382a73d751502b24f307be9228aeff791ce232810b2a4b8933969af1d632"
+    },
+    {
+      "file": "docs/datasets/owasco-lake-transfer/protocol.json",
+      "rawSha256": "a97f7eae9c9ad4c0f7e2e46848e2cc5df15c1cf8b5b50473c2a0a7f3e866c02b"
+    },
+    {
+      "file": "docs/datasets/owasco-lake-transfer/temperature.json.gz",
+      "rawSha256": "b4563d140428dddde3d5f606b73a3e8bdbdadef8deb71846b851f0d396c698f1"
+    },
+    {
+      "file": "docs/datasets/owasco-lake-transfer/time-series-metadata.json.gz",
+      "rawSha256": "2f1f154b74b5ab40ba23ec021b1d98fda0b25ab95306f5497cb57a6290f15a12"
+    },
+    {
+      "file": "docs/datasets/owasco-temporal-validation/capture-attempt.json",
+      "rawSha256": "ff453ab266b1ac1877f631747fb7b14e52ef6c00da081745e4cc241b9945813a"
+    },
+    {
+      "file": "docs/datasets/owasco-temporal-validation/manifest.json",
+      "rawSha256": "24cb71d195ef72df9cae86b47d55919e1162a59ebfcd122c68fba173106a839b"
+    },
+    {
+      "file": "docs/datasets/owasco-temporal-validation/oxygen.json.gz",
+      "rawSha256": "078809deb00f1e7fde543ce90527c07355aa4cf4a235aefb19ecbfa063ea5563"
+    },
+    {
+      "file": "docs/datasets/owasco-temporal-validation/protocol.json",
+      "rawSha256": "b9746290e6ffd702440c257b62a72cd49d0161ffbf73fe887a668f508397439d"
+    },
+    {
+      "file": "docs/datasets/owasco-temporal-validation/temperature.json.gz",
+      "rawSha256": "e5296ef54afc42daea5510cfc73013163bb38ceb367823741a35db6da4669086"
+    },
+    {
+      "file": "docs/datasets/willamette-threshold-development/protocol.json",
+      "rawSha256": "d68381c42e992e4328b6bb454642a51878bedcf4b1d1748aafdc7576bb335d9e"
+    },
+    {
+      "file": "docs/evidence/owasco-attenuation-diagnostic/diagnostic.json",
+      "rawSha256": "0a5dad4d240073028fc05d5671a86a36fe567e0b79a0a888e70f34c7d270974c"
+    },
+    {
+      "file": "docs/evidence/owasco-attenuation-diagnostic/explanation-review.json",
+      "rawSha256": "240fe8d29669ddf1b1f261332fba91be820b84c0f8d53addef9ebe115d8f6ca9"
+    },
+    {
+      "file": "docs/evidence/owasco-attenuation-diagnostic/freeze-before-score.json",
+      "rawSha256": "c31c7a81f77ea42b52805ed7b23d623193109401a6a2a3767fbfae0e028ed39d"
+    },
+    {
+      "file": "docs/evidence/owasco-attenuation-diagnostic/independent-arithmetic-review.json",
+      "rawSha256": "3dd97cfda1895d8412e40a104f80ef846d505af1acb83e6f0e8a23eee361dcee"
+    },
+    {
+      "file": "docs/evidence/owasco-attenuation-diagnostic/post-score-verification.json",
+      "rawSha256": "b2d9b5b2d53b67e956b6a3272769f26e2a55bb2d51c84106f8a67f848cc70bb5"
+    },
+    {
+      "file": "docs/evidence/owasco-attenuation-diagnostic/pre-score-static-review.json",
+      "rawSha256": "6207f703e25ef98d8610db807fc4fb4fa34c110e77904b6cc96e7fb558afc103"
+    },
+    {
+      "file": "docs/evidence/owasco-attenuation-diagnostic/pre-score-tests-and-preservation.json",
+      "rawSha256": "5f05e919d8e86171e529aa3f6f73c89ae41b1bb8c763e4d5e631bb4e563eca70"
+    },
+    {
+      "file": "docs/evidence/owasco-direction-diagnostic/arithmetic-portable-review.json",
+      "rawSha256": "a38f389adffd0003f09e088b4ec1fec0eed64e0f7b92eb9b0f5896e92ba8b685"
+    },
+    {
+      "file": "docs/evidence/owasco-direction-diagnostic/arithmetic-review.json",
+      "rawSha256": "b5a02975f8e8eaf8f517771e7ea052182c424687fd91093b35058c59569963f4"
+    },
+    {
+      "file": "docs/evidence/owasco-direction-diagnostic/diagnostic.json",
+      "rawSha256": "4820b19a9df12356721d5466bacc9c985ce54db162a9d73b68ee0459d9c0b93e"
+    },
+    {
+      "file": "docs/evidence/owasco-direction-diagnostic/expost-error-mechanism.json",
+      "rawSha256": "6d661329c4833e3be4d520c4abac6aa6b081734f37020ed7adf69e153f46ab77"
+    },
+    {
+      "file": "docs/evidence/owasco-direction-diagnostic/freeze-before-score.json",
+      "rawSha256": "093ca3edc0720a21c51e2c4db594088cf7042eb4bdab59e5d52901f1cfcb0e61"
+    },
+    {
+      "file": "docs/evidence/owasco-direction-diagnostic/gemini-contribution.json",
+      "rawSha256": "e4fe7b61a3429f7200386b72ea03ed79189347f384c613e489a88fc5242b6c1a"
+    },
+    {
+      "file": "docs/evidence/owasco-direction-diagnostic/theoretical-loss-example.json",
+      "rawSha256": "842b4c962c0d567a5dbf1bf62b811fd587d247db3fc9b048707a647dea1a8f1c"
+    },
+    {
+      "file": "docs/evidence/owasco-lake-transfer/evaluation.json",
+      "rawSha256": "7bd27ec609a7c4f471385498b61fff7b9d74546de13711559e84fcb16536ff85"
+    },
+    {
+      "file": "docs/evidence/owasco-temporal-validation/evaluation.json",
+      "rawSha256": "65e1b3793c78982e1496eaf9b3e56e8157d684b6df84343ed5f5b5e0abe98853"
+    },
+    {
+      "file": "docs/evidence/owasco-temporal-validation/freeze-before-capture.json",
+      "rawSha256": "262d11750aea056db0b9d923cf9f77b116a0aa44f7550e72db26aa44cf23f4e4"
+    },
+    {
+      "file": "docs/evidence/owasco-temporal-validation/mae.png",
+      "rawSha256": "aec3efb171816cf460d4de5251d2023cc29dc82ec53175f15443c22cc395c864"
+    },
+    {
+      "file": "docs/evidence/owasco-temporal-validation/temporal-independent-code-review.json",
+      "rawSha256": "49a276acb9d84e31eedbd8f7e5496aa0460abf4a06ca752ba47c4f2088e82faf"
+    },
+    {
+      "file": "docs/evidence/willamette-multiseason/frozen-model.json",
+      "rawSha256": "72d7d14221c7b14c173dba59d69d2a1d36cbb27ee146378b9e046eea998762c9"
+    },
+    {
+      "file": "docs/evidence/willamette-threshold-development/evaluation.json",
+      "rawSha256": "d8b4d73751f457df5a34b82d2c2202c14585d02e17ae3e206f182ab8c185c5f2"
+    },
+    {
+      "file": "scripts/audit_owasco_attenuation.py",
+      "rawSha256": "bb50612858e5201ae7c72050df761905dfe39d39e9891dd62fba3abe2b5b728e"
+    },
+    {
+      "file": "scripts/audit_owasco_direction.py",
+      "rawSha256": "8bb26f8d77f7860a474226eb057154b48cdc1f0462e710643dc5f0ad532a39bd"
+    },
+    {
+      "file": "scripts/audit_stability_compare.py",
+      "rawSha256": "b08e369bfb7e75ecd931457387e0f2e8f41696b256e68c0cf191cdac3aa9d64a"
+    },
+    {
+      "file": "scripts/audit_willamette.py",
+      "rawSha256": "9a8de29078d7e4c75260b7f9fea1b7220193f64a97b0b00384ca680ea00f8d12"
+    },
+    {
+      "file": "scripts/evaluate_threshold_development.py",
+      "rawSha256": "e0065e82d5eb7e2acbe3680c903a2c37370188b8133d2020877a0907764c73f7"
+    },
+    {
+      "file": "scripts/experiment_multiseason.py",
+      "rawSha256": "00999b36a5c5fcb5c6a51ca9d00ee076f6bd9b1c2fb47245a402ccf9c5d4dfea"
+    },
+    {
+      "file": "scripts/lake_transfer.py",
+      "rawSha256": "e3579938b0d1c4991fcfc69506e871323f8e6d1c3a52089caa48bb0e4790079c"
+    },
+    {
+      "file": "scripts/owasco_attenuation_diagnostic.py",
+      "rawSha256": "63275501f0c04ee9515e76de0a10d8470d6a642b3746baab50aa440b2cd308dd"
+    },
+    {
+      "file": "scripts/owasco_direction_diagnostic.py",
+      "rawSha256": "cdcc85324dd68a13b09895b6808351e385e731d622d6a97f8793fbbf754e9a02"
+    },
+    {
+      "file": "scripts/owasco_temporal_validation.py",
+      "rawSha256": "100c2ddd339bfaddae4eeb7820f0b3579822b99a78c78a73674389c4e8ee7c6f"
+    },
+    {
+      "file": "scripts/test_lake_transfer.py",
+      "rawSha256": "ad44e2603230bc28fd06aeb3689eae974a7e8e8c835524ab1b5a4d0624e8018a"
+    },
+    {
+      "file": "scripts/test_owasco_attenuation_diagnostic.py",
+      "rawSha256": "d636c6593d502b036b589e0a3d810abde47d05938d7f9b88d224155fa6f1d806"
+    },
+    {
+      "file": "scripts/test_owasco_direction_diagnostic.py",
+      "rawSha256": "efd85ef2692a875f82665a606c70d1b549e93caa98c7947f304864fb20b0929e"
+    },
+    {
+      "file": "scripts/test_owasco_temporal_validation.py",
+      "rawSha256": "9377e457703c40c19b30b8dd71248cb1b9fba723a8a3ab33e46ccad09e254798"
+    },
+    {
+      "file": "scripts/test_threshold_development.py",
+      "rawSha256": "3c904d228a51b2ff90ca4705d4d969d62c6d50819228c0c076d41433e5d99099"
+    },
+    {
+      "file": "scripts/threshold_development.py",
+      "rawSha256": "153d614d06306add9fe55cc8b5d435edac15557b4ba493035ec083cebe7a5caf"
+    }
+  ],
+  "mission": "Virdacora, formerly TerraVoce: understandable, verifiable environmental evidence serving affected communities; numerical forecast research only, with LLM commentary outside operational consensus.",
+  "sources": [
+    {
+      "title": "SciPy linprog highs-ds reference (current documentation; future fit pinned separately)",
+      "url": "https://docs.scipy.org/doc/scipy/reference/optimize.linprog-highs-ds.html"
+    },
+    {
+      "title": "Scikit-learn linear models: quantile regression",
+      "url": "https://scikit-learn.org/stable/modules/linear_model.html#quantile-regression"
+    }
+  ]
+}
