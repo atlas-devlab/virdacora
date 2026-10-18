@@ -61,3 +61,60 @@ jobs:
 
       - name: Run local blockchain demonstration
         run: pnpm e2e
+
+  postgres-integration:
+    name: Real PostgreSQL storage and API contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    services:
+      postgres:
+        # Exact multi-architecture image digest observed in the local PostgreSQL 18.6 test.
+        image: postgres:18-alpine@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873
+        env:
+          POSTGRES_USER: virdacora_test
+          POSTGRES_PASSWORD: virdacora-test-only
+          POSTGRES_DB: virdacora_test
+        ports:
+          - 5432:5432
+        options: >-
+          --tmpfs /var/lib/postgresql:rw,size=268435456
+          --memory 512m
+          --health-cmd "pg_isready -U virdacora_test -d virdacora_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      # Ephemeral local service credentials, never a production connection.
+      VIRDACORA_TEST_DATABASE_URL: postgresql://virdacora_test:virdacora-test-only@127.0.0.1:5432/virdacora_test
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Set up pnpm 11.7.0
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: '11.7.0'
+          run_install: false
+          cache: false
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Oracle dependencies
+        run: |
+          pnpm --filter @terravoce/protocol build
+          pnpm --filter @terravoce/terralex build
+
+      - name: Require and run the real database tests
+        run: pnpm test:postgres

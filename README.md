@@ -29,6 +29,11 @@ Oracle storage, request-boundary fixes and the reproducible synthetic performanc
 comparison are explained in [Italian and English](docs/ORACLE_RESILIENCE_IT_EN.md).
 Run `pnpm benchmark:oracle` for the local indexed-store comparison.
 
+The [real PostgreSQL validation (IT/EN)](docs/POSTGRES_VALIDATION_IT_EN.md)
+tests storage constraints, concurrent writers and signed API requests against
+an isolated PostgreSQL 18 server. Run `pnpm test:postgres` with the explicit
+dedicated local test URL; the ordinary unit suite does not imply database validation.
+
 ## Research branches and original mission
 
 The mission is to combine verifiable environmental analysis, distributed
