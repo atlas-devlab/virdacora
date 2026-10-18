@@ -43,6 +43,10 @@ cover clean shutdown, SIGKILL and a blocked write using a fresh Docker volume.
 Run `pnpm test:postgres:recovery` with Docker available. The runner never uses
 a production database URL; `/healthz` remains liveness rather than DB readiness.
 
+The [database readiness check (IT/EN)](docs/DATABASE_READINESS_IT_EN.md)
+adds `/readyz`: 200 when the configured store passes a read-only probe, 503 when
+unavailable. Compose uses this endpoint for Oracle health; liveness stays separate.
+
 ## Research branches and original mission
 
 The mission is to combine verifiable environmental analysis, distributed
@@ -134,7 +138,8 @@ For the optional PostgreSQL-backed local service, install Docker and run:
 docker compose up -d --build
 ```
 
-The health endpoint is `http://localhost:8877/healthz`. Stop the services with
+Process liveness is `http://localhost:8877/healthz`; database readiness is
+`http://localhost:8877/readyz`. Stop the services with
 `docker compose stop` to preserve the local database volume. Compose uses
 development credentials; keep this demonstration on a trusted local machine.
 The example configuration contains placeholders, and the Node process reads

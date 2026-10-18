@@ -77,6 +77,39 @@ export const buildApp = (options: AppOptions) => {
 
   app.get("/healthz", async () => ({ status: "ok", policyHash: policy.policyHash }));
 
+  // Share the actual probe until it settles, even if an HTTP deadline expires.
+  // A deadline does not cancel a query or justify starting additional queries.
+  let readinessInFlight: Promise<void> | undefined;
+  const probeReadiness = (): Promise<void> => {
+    if (readinessInFlight !== undefined) return readinessInFlight;
+    const probe = Promise.resolve().then(() => options.store.checkReadiness());
+    readinessInFlight = probe;
+    const release = () => {
+      if (readinessInFlight === probe) readinessInFlight = undefined;
+    };
+    void probe.then(release, release);
+    return probe;
+  };
+
+  app.get("/readyz", async (_request, reply) => {
+    reply.header("Cache-Control", "no-store");
+    let deadline: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await Promise.race([
+        probeReadiness(),
+        new Promise<never>((_resolve, reject) => {
+          deadline = setTimeout(() => reject(new Error("readiness deadline exceeded")), 2_000);
+        })
+      ]);
+      return reply.status(200).send({ status: "ready" });
+    } catch {
+      // Never route store errors through the general/domain error handler.
+      return reply.status(503).send({ status: "not_ready" });
+    } finally {
+      if (deadline !== undefined) clearTimeout(deadline);
+    }
+  });
+
   app.post("/v1/sensors", async (request, reply) => {
     if (!tokenMatches(request.headers["x-admin-token"], options.adminToken)) {
       throw new DomainError("invalid administrator token", 401, "UNAUTHORIZED");

@@ -40,6 +40,47 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe("PostgreSQL connection resilience", () => {
+  it("checks required schema and permissions with one bounded, read-only query", async () => {
+    const store = new PostgresObservationStore(connectionString);
+    pool.query.mockResolvedValueOnce({ rows: [{ ready: true }] });
+
+    await expect(store.checkReadiness()).resolves.toBeUndefined();
+
+    expect(pool.query).toHaveBeenCalledTimes(1);
+    const query = pool.query.mock.calls[0]?.[0] as { text: string; query_timeout: number };
+    expect(query.query_timeout).toBe(2_000);
+    expect(query.text).toMatch(/^SELECT /);
+    expect(query.text).toContain("current_setting('transaction_read_only') = 'off'");
+    for (const table of ["sensors", "observations", "assessments"]) {
+      expect(query.text).toContain(`AND has_table_privilege('${table}', 'INSERT')`);
+      expect(query.text).toContain(`FROM ${table} LIMIT 0`);
+    }
+    for (const column of ["public_key_der_base64", "active", "sequence", "body", "observed_at_ms", "generated_at_ms"]) {
+      expect(query.text).toContain(column);
+    }
+    expect(query.text).not.toMatch(/(?:^|;)\s*(?:INSERT|UPDATE|DELETE|CREATE|ALTER|DROP)\b/i);
+  });
+
+  it.each([{ rows: [{ ready: false }] }, { rows: [] }, { rows: [{ ready: "true" }] }])(
+    "fails readiness unless the database explicitly returns true (case %#)",
+    async ({ rows }) => {
+      const store = new PostgresObservationStore(connectionString);
+      pool.query.mockResolvedValueOnce({ rows });
+
+      await expect(store.checkReadiness()).rejects.toThrow("observation store is not ready");
+      expect(pool.query).toHaveBeenCalledTimes(1);
+    }
+  );
+
+  it("propagates a failed readiness query without retrying it", async () => {
+    const store = new PostgresObservationStore(connectionString);
+    const error = new Error("missing schema or unavailable connection");
+    pool.query.mockRejectedValueOnce(error);
+
+    await expect(store.checkReadiness()).rejects.toBe(error);
+    expect(pool.query).toHaveBeenCalledTimes(1);
+  });
+
   it("handles an idle pool error without crashing or issuing recovery queries", () => {
     vi.spyOn(process, "emitWarning").mockImplementation(() => undefined);
     new PostgresObservationStore(connectionString);

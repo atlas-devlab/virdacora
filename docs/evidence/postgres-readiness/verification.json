@@ -1,0 +1,110 @@
+{
+  "version": "database-readiness-verification-v1",
+  "recordedAtUTC": "2026-10-18T13:29:46.898Z",
+  "baseMain": "7841611751f36f4555514ec6b3caaac7bdd7e5dc",
+  "pr26": {
+    "merged": true,
+    "postMergeCI": "success",
+    "postMergeCIRun": 39131349249
+  },
+  "checks": {
+    "build": "PASS",
+    "workspaceCheck": "PASS",
+    "explicitScriptAndTestTypecheck": "PASS",
+    "composeConfiguration": "PASS",
+    "ordinaryTestsPassed": 129,
+    "ordinaryDatabaseCasesVisiblySkipped": 32,
+    "realPostgresPassed": 32,
+    "realPostgresSkipped": 0,
+    "realRecoveryCasesPassed": 3,
+    "readinessTransitions": "200->503->200 for all three scenarios",
+    "healthzRemained200": true,
+    "sameOracleProcessAppAndPool": true,
+    "priorAcknowledgedSignedRecordsPreserved": true
+  },
+  "httpDeadlineMs": 2000,
+  "probeClientQueryTimeoutMs": 2000,
+  "globalServerStatementTimeoutMs": 10000,
+  "noAutomaticWriteRetries": true,
+  "noProbeDataWrites": true,
+  "probeResultCached": false,
+  "sharedProbeLivesUntilSettled": true,
+  "codeFiles": [
+    {
+      "file": "compose.yaml",
+      "rawSha256": "be5d918378a67cbcf57d158e83eec0abfe0a032f6ffed28b588bb3d3f7cb3757"
+    },
+    {
+      "file": "scripts/postgres-recovery-worker.ts",
+      "rawSha256": "6432b5901d506e741819a307d3b45287c0bac2db343c8e71066a10f07d3a2143"
+    },
+    {
+      "file": "scripts/run-postgres-recovery.ts",
+      "rawSha256": "87461e7e1d9368d17b348a34256247fe95fae0956e542b4a9801926c8462c53c"
+    },
+    {
+      "file": "services/oracle/src/app.ts",
+      "rawSha256": "c13e7b079c237e749c3c482155f0bc7bf796ea13f3d8b26e354a20b3b50db7e7"
+    },
+    {
+      "file": "services/oracle/src/postgres-resilience.test.ts",
+      "rawSha256": "2dc289964306c49ebf21613e2a5feb45b077e35ff461629862fc427ac9eb77d1"
+    },
+    {
+      "file": "services/oracle/src/postgres-store.ts",
+      "rawSha256": "8c9acf4fa7294a2e92282919612fe09113527af28cc4f61abe365120660162f1"
+    },
+    {
+      "file": "services/oracle/src/postgres.integration.test.ts",
+      "rawSha256": "4bc24627996905df70cdb80fe1b61f1fe410d3330a115c89ba1eb09910656199"
+    },
+    {
+      "file": "services/oracle/src/store.ts",
+      "rawSha256": "8f9177f60d35b12d88a13eb5a8aa328c186721b0e3f902a3234a508537a6c222"
+    },
+    {
+      "file": "services/oracle/test/postgres-fixture.ts",
+      "rawSha256": "fc9043f65899b6694861e31293a89d73a72079f0e3ad1acf9b0b59f5e07147f9"
+    },
+    {
+      "file": "services/oracle/src/readiness.test.ts",
+      "rawSha256": "e648e560643a6872b28e13e1ac9d3543d335db69faa14a18e7c73834e0fe5054"
+    },
+    {
+      "file": "README.md",
+      "rawSha256": "bd0b59f5f46ef8199a471d992df14320ea82a53739e443f832def3f4aee07f2c"
+    },
+    {
+      "file": "docs/api.md",
+      "rawSha256": "e32c4c798ee5879f33f8fde325b84d9921ad22112ee39bf6756d82072a1db699"
+    },
+    {
+      "file": "docs/deployment.md",
+      "rawSha256": "8f97a119781443ca6c74d89a310f3dcc702e48cf09d83ccd3e9aeb4956c4d2c2"
+    },
+    {
+      "file": "docs/DATABASE_READINESS_IT_EN.md",
+      "rawSha256": "f1f119d61e3125e2608204f54f6e48ec838d95bb35cbd8eaf0bb11d9b9576160"
+    }
+  ],
+  "evidenceFiles": [
+    {
+      "file": "docs/evidence/postgres-readiness/local-recovery.json",
+      "rawSha256": "f345c378ddc9aea01834929b0859ce595ade4d9b129e56c0d14c7992f7d81f57"
+    },
+    {
+      "file": "docs/evidence/postgres-readiness/local-integration.json",
+      "rawSha256": "bf5133cb416a2fe4331d6e1ea09f31e10c01c0fa907c66009d313e64ca690d58"
+    }
+  ],
+  "newEnvironmentalDataOrFit": false,
+  "newDependenciesOrLockfileChanges": false,
+  "schemasCryptoAnalysisContractsPoliciesUnchanged": true,
+  "independentExternalValidation": false,
+  "limits": [
+    "Readiness is instantaneous, not a guarantee for every future write.",
+    "HTTP expiry does not prove backend query cancellation.",
+    "No individual-role privilege-revocation test.",
+    "No host power-loss, unknown commit outcome, production SLA, failover or environmental field validation claim."
+  ]
+}

@@ -76,9 +76,26 @@ async function verifySnapshot(): Promise<void> {
   assert.equal(latest.statusCode, 200);
   assert.deepEqual(latest.json(), expectedAssessment);
 }
+async function readReadiness(): Promise<200 | 503> {
+  const readiness = await app.inject({ method: "GET", url: "/readyz" });
+  assert(readiness.statusCode === 200 || readiness.statusCode === 503);
+  assert.equal(readiness.headers["cache-control"], "no-store");
+  // An exact small body also guards against leaking SQL, schema, connection
+  // metadata, error messages or the temporary credentials through readiness.
+  assert.deepEqual(readiness.json(), { status: readiness.statusCode === 200 ? "ready" : "not_ready" });
+  return readiness.statusCode;
+}
+async function verifyReadiness(statusCode: 200 | 503): Promise<void> {
+  assert.equal(await readReadiness(), statusCode);
+}
 async function command(name: string): Promise<Record<string, unknown>> {
+  if (name === "before-fault") {
+    await verifyReadiness(200);
+    return { processId: process.pid, readinessBefore: 200, readinessCacheControlNoStore: true };
+  }
   if (name === "seed") {
     assert.equal(expected.length, 0);
+    await verifyReadiness(200);
     const registration = await app.inject({ method: "POST", url: "/v1/sensors",
       headers: { "x-admin-token": "synthetic-recovery-admin" }, payload: {
         sensorId, regionId, publicKeyDerBase64: publicKey, label: "Synthetic recovery test"
@@ -98,7 +115,7 @@ async function command(name: string): Promise<Record<string, unknown>> {
     expectedAssessment = await runAssessment();
     await verifySnapshot();
     return { processId: process.pid, observations: expected.length,
-      evidenceHash: expectedAssessment.evidenceHash, signedSnapshotsVerified: true };
+      evidenceHash: expectedAssessment.evidenceHash, signedSnapshotsVerified: true, readinessBefore: 200 };
   }
   if (name === "while-down") {
     assert.equal(pending, undefined);
@@ -109,22 +126,32 @@ async function command(name: string): Promise<Record<string, unknown>> {
     const response = await app.inject({ method: "POST", url: "/v1/observations", payload: pending });
     assert.equal(response.statusCode, 500);
     assert.deepEqual(response.json(), { error: "INTERNAL_ERROR" });
+    const writeDurationMs = Math.round(performance.now() - started);
     const health = await app.inject({ method: "GET", url: "/healthz" });
     assert.equal(health.statusCode, 200);
+    // Keep this after the failed POST. In the locked-table scenario the first
+    // server statement timeout must still belong to the real observation INSERT.
+    await verifyReadiness(503);
     return { processId: process.pid, unavailableResponse: { statusCode: 500, body: response.json() },
       durationMsDiagnosticOnly: Math.round(performance.now() - started),
+      writeDurationMsDiagnosticOnly: writeDurationMs,
+      livenessStatus: 200, readinessDuring: 503, readinessBodyGeneric: true,
+      readinessCacheControlNoStore: true,
       livenessIsNotDatabaseReadiness: true, pendingSequence: nextSequence };
   }
   if (name === "after-recovery") {
     const deadline = performance.now() + 45_000;
     let recovered = false;
     while (performance.now() < deadline) {
-      try { recovered = (await store.getSensor(sensorId))?.sensorId === sensorId; }
-      catch { /* Read-only readiness probes may fail while PostgreSQL starts. */ }
+      // A preceding HTTP deadline may finish just before its shared probe
+      // settles. Observe readiness recovery through the public endpoint itself.
+      recovered = await readReadiness() === 200;
       if (recovered) break;
       await delay(250);
     }
     assert.equal(recovered, true, "The existing store did not reconnect within the diagnostic bound");
+    assert.equal((await store.getSensor(sensorId))?.sensorId, sensorId);
+    await verifyReadiness(200);
     await verifySnapshot();
     assert.notEqual(pending, undefined);
     const observation = pending!;
@@ -145,7 +172,8 @@ async function command(name: string): Promise<Record<string, unknown>> {
     await verifySnapshot();
     return { processId: process.pid, observations: expected.length,
       evidenceHash: expectedAssessment.evidenceHash, priorAcknowledgedRecordsUnchanged: true,
-      signedSnapshotsVerified: true, newWriteStatus: 202, replayStatus: 409, tamperStatus: 401 };
+      signedSnapshotsVerified: true, newWriteStatus: 202, replayStatus: 409, tamperStatus: 401,
+      readinessAfter: 200, readinessCacheControlNoStore: true };
   }
   if (name === "close") {
     await app.close();

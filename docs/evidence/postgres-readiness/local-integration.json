@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "status": "pass",
+  "startedAtUTC": "2026-10-18T13:28:53.6249174+00:00",
+  "completedAtUTC": "2026-10-18T13:29:00.7751779+00:00",
+  "image": "postgres:18-alpine@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873",
+  "postgresVersion": "18.6",
+  "isolatedTmpfs": true,
+  "explicitLoopbackDynamicPort": true,
+  "owner": "39907dfa-a0cc-4ca9-a916-de41ac7a42aa",
+  "containerName": "virdacora-ready-integration-39907dfa-a0cc-4ca9-a916-de41ac7a42aa",
+  "testExitCode": 0,
+  "totalTests": 32,
+  "passedTests": 32,
+  "failedTests": 0,
+  "pendingTests": 0,
+  "generatedSchemasRemainingBeforeContainerRemoval": "0",
+  "cleanup": {
+    "containerRemoved": true,
+    "credentialFileRemoved": true,
+    "existingResourcesModified": false
+  },
+  "failure": null,
+  "limits": [
+    "Synthetic integration data only; no field validation.",
+    "Temporary local PostgreSQL 18 instance, distinct from the recovery harness."
+  ]
+}

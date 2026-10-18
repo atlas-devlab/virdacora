@@ -33,6 +33,31 @@ export class PostgresObservationStore implements ObservationStore {
     });
   }
 
+  public async checkReadiness(): Promise<void> {
+    // Resolve every column used by this store without reading table contents.
+    // Separate privilege calls are necessary: a comma-separated list means ANY.
+    // This read-only probe cannot guarantee that a subsequent write will succeed.
+    const probe = {
+      text: `SELECT current_setting('transaction_read_only') = 'off'
+          AND has_table_privilege('sensors', 'INSERT')
+          AND has_table_privilege('observations', 'INSERT')
+          AND has_table_privilege('assessments', 'INSERT')
+          AND (SELECT ROW(sensor_id, region_id, public_key_der_base64, label, active)
+                 FROM sensors LIMIT 0) IS NULL
+          AND (SELECT ROW(observation_id, sensor_id, region_id, metric, observed_at,
+                          sequence, body, observed_at_ms)
+                 FROM observations LIMIT 0) IS NULL
+          AND (SELECT ROW(assessment_id, region_id, metric, generated_at, body,
+                          generated_at_ms)
+                 FROM assessments LIMIT 0) IS NULL AS ready`,
+      query_timeout: 2_000
+    };
+    const result = await this.pool.query<{ ready: boolean }>(probe);
+    if (result.rows[0]?.ready !== true) {
+      throw new Error("observation store is not ready");
+    }
+  }
+
   public async registerSensor(sensor: SensorRegistration): Promise<StoredSensor> {
     try {
       const result = await this.pool.query<StoredSensor>(

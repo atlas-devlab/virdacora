@@ -17,6 +17,7 @@ export interface StoredObservation {
 }
 
 export interface ObservationStore {
+  checkReadiness(): Promise<void>;
   registerSensor(sensor: SensorRegistration): Promise<StoredSensor>;
   getSensor(sensorId: string): Promise<StoredSensor | undefined>;
   addObservation(entry: StoredObservation): Promise<void>;
@@ -64,6 +65,8 @@ export class MemoryObservationStore implements ObservationStore {
   private readonly observationSeries = new Map<string, IndexedObservation[]>();
   private readonly assessmentIds = new Set<string>();
   private readonly assessments = new Map<string, IndexedAssessment>();
+
+  public async checkReadiness(): Promise<void> {}
 
   public async registerSensor(sensor: SensorRegistration): Promise<StoredSensor> {
     if (this.sensors.has(sensor.sensorId)) {

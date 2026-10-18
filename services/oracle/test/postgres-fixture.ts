@@ -49,7 +49,7 @@ export interface PostgresFixture {
   initialMigration: string;
   timestampMigration: string;
   migration: string;
-  createStore(): PostgresObservationStore;
+  createStore(options?: { readOnly?: boolean }): PostgresObservationStore;
   closeStore(store: PostgresObservationStore): Promise<void>;
   // buildApp owns its store through onClose; replace that store's cleanup here.
   useStoreOwner(store: PostgresObservationStore, closeOwner: () => Promise<unknown>): void;
@@ -111,9 +111,15 @@ export async function createPostgresFixture(
     if (options.legacySchema !== true) await inspector.query(timestampMigration);
     return {
       schema, inspector, initialMigration, timestampMigration, migration,
-      createStore() {
+      createStore(storeOptions = {}) {
         if (closed) throw new Error("PostgreSQL test fixture is closed");
-        const store = new PostgresObservationStore(connectionString);
+        const storeUrl = new URL(connectionString);
+        if (storeOptions.readOnly === true) {
+          // This changes only the new test client's session default. It never
+          // alters a database, role, inspector or another fixture's connection.
+          storeUrl.searchParams.set("options", `${storeUrl.searchParams.get("options")} -cdefault_transaction_read_only=on`);
+        }
+        const store = new PostgresObservationStore(storeUrl.toString());
         closers.set(store, () => store.close());
         return store;
       },
