@@ -31,7 +31,8 @@
     "irrigation:verify": "python scripts/awash_irrigation.py verify && pnpm --filter @terravoce/environmental-case irrigation:verify",
     "source:capture": "pnpm --filter @terravoce/environmental-case source:capture",
     "source:verify": "pnpm --filter @terravoce/environmental-case source:verify",
-    "source:e2e": "pnpm --filter @terravoce/contracts source:e2e"
+    "source:e2e": "pnpm --filter @terravoce/contracts source:e2e",
+    "benchmark:transport": "tsx scripts/benchmark-bounded-fetch.ts"
   },
   "devDependencies": {
     "@types/node": "24.13.3",

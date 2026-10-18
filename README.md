@@ -31,6 +31,10 @@ refers here to the experimental policy language in this repository.
 > Per una spiegazione completa in italiano, leggi la
 > [guida operativa](GUIDA_OPERATIVA.md).
 
+Future Willamette acquisitions use a bounded UTF-8 transport: see the
+[Italian/English implementation and synthetic benchmark](docs/BOUNDED_TRANSPORT_IT_EN.md).
+This does not recapture or change the archived experiments.
+
 ## First real-data case: review USGS oxygen measurements
 
 The [real-data module](services/environmental-case/README.md) replays 673 approved
