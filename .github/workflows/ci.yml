@@ -84,12 +84,17 @@ jobs:
           python3 scripts/explore_evidence_quorum.py
           python3 scripts/audit_autonomous_source.py
 
+      - name: Run synthetic LAD and complete Python regression tests
+        run: |
+          python3 -m venv .venv-owasco-lad-ci
+          .venv-owasco-lad-ci/bin/python -m pip install --disable-pip-version-check -r scripts/requirements-owasco-lad.txt
+          .venv-owasco-lad-ci/bin/python -m unittest discover -s scripts -p 'test_*.py'
+
       - name: Validate Oracle bridge digest interoperability
         run: |
           python3 -m venv services/autonomy/.venv
           services/autonomy/.venv/bin/python -m pip install -r services/autonomy/requirements.txt
           services/autonomy/.venv/bin/python -m pytest services/autonomy/tests -q
-          python3 -m unittest discover -s scripts -p 'test_*.py'
           python3 scripts/audit_willamette.py --external --summary --verify-artifacts docs/evidence/willamette-forecast
           python3 scripts/audit_training_readiness.py --summary --verify docs/evidence/willamette-forecast/training-readiness.json
           python3 scripts/experiment_multiseason.py verify-fit
@@ -111,6 +116,14 @@ jobs:
             python3 scripts/owasco_attenuation_diagnostic.py --protocol docs/datasets/owasco-attenuation-diagnostic/protocol.json --verify-report docs/evidence/owasco-attenuation-diagnostic/diagnostic.json
             python3 scripts/audit_owasco_attenuation.py
             python3 scripts/owasco_local_median_preflight.py --protocol docs/datasets/owasco-local-median/protocol.json --verify-report docs/evidence/owasco-local-median/preflight.json
+            if [ -f docs/evidence/owasco-local-median/frozen-model.json ]; then
+              python3 scripts/owasco_local_median.py verify-model
+              python3 scripts/audit_owasco_local_median.py
+            fi
+            if [ -f docs/evidence/owasco-local-median/development.json.gz ]; then
+              python3 scripts/owasco_local_median.py verify-report
+              python3 scripts/audit_owasco_local_median.py --report
+            fi
           else
             python3 scripts/stability_protocol.py
           fi

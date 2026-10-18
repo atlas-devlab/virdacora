@@ -1,0 +1,52 @@
+{
+  "version": "owasco-local-lad-pre-fit-review-v1",
+  "createdAtUTC": "2026-10-18T12:08:45.226696+00:00",
+  "protocolRawSha256": "e92fa18d16ed82b72e45089e8a0c86d9f49c924ce8cd449aec090a9cd34e6b51",
+  "codeFiles": [
+    {
+      "file": "scripts/owasco_local_median.py",
+      "rawSha256": "2043367360b81ac25dcb98fe63701feb328f071cdd009d0edec527c7053b8a01"
+    },
+    {
+      "file": "scripts/owasco_lad_core.py",
+      "rawSha256": "b7246cf75c816049955fe02416b4bd05c21c4b809b350543185abf5c70df3104"
+    },
+    {
+      "file": "scripts/owasco_lad_data.py",
+      "rawSha256": "d711ceff57b00ccb132224fe9e22b889a3d0311e7ee6f7496a8356a00c1a48bd"
+    },
+    {
+      "file": "scripts/owasco_lad_environment.py",
+      "rawSha256": "4da9aa500191941be1bcc211b262cd60256810673efbfc59b28e6db9183b84c2"
+    },
+    {
+      "file": "scripts/owasco_local_median_preflight.py",
+      "rawSha256": "b30ca744c22aafe1baae18322fa53c9750df8b356b0f1499cd42da6fe74d32fb"
+    },
+    {
+      "file": "scripts/audit_owasco_local_median.py",
+      "rawSha256": "35da5a02bec654a7a690862333207c1436c59a4d15ef4312189cba8451c2fa8a"
+    },
+    {
+      "file": "scripts/requirements-owasco-lad.txt",
+      "rawSha256": "8cd5574611fea29fa53a02f2a996c8fb3454f2ab50d9ca08b8110b4dded6c810"
+    }
+  ],
+  "syntheticTests": {
+    "passed": 288,
+    "newTests": 95,
+    "environmentalFitExecuted": false
+  },
+  "historicalPinnedFilesCheckedUnchanged": 53,
+  "reviews": [
+    "Numerical core and constraints reviewed before integration",
+    "Role-isolated loader and workflow reviewed separately",
+    "Separate stdlib arithmetic auditor reviewed without production imports"
+  ],
+  "reviewProvenance": "All reviews and the separate arithmetic auditor are from the same Codex family, not independent environmental validation.",
+  "environmentalFitExecuted": false,
+  "candidateDevelopmentScoreExecuted": false,
+  "septemberOpened": false,
+  "operationalChanges": false,
+  "next": "Commit/push code, pass synthetic CI, then freeze implementation before one July fit."
+}

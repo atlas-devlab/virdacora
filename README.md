@@ -317,3 +317,9 @@ Questa modifica verifica soltanto integrità e separazione degli archivi: nessun
 nuovo fit o punteggio, settembre chiuso. Agosto è già stato studiato e non è
 una validazione cieca. English explanation and reproducible metadata-only
 checks are included in the linked protocol.
+
+L'[implementazione ed esecuzione IT/EN](docs/OWASCO_LOCAL_MEDIAN_EXECUTION_IT_EN.md)
+separa il fit di luglio dal successivo controllo su agosto, con provenienza
+degli ingressi e audit matematico distinto. Lo stato effettivo e i limiti sono
+riportati nelle ricevute e nel documento; il solo passaggio dei test software
+non dimostra capacità predittiva sul lago.

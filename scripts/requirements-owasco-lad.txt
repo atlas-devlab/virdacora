@@ -1,0 +1,3 @@
+# Numerical fit and synthetic CI only; no LLM/API/network source ingestion.
+numpy==2.3.5
+scipy==1.17.1
