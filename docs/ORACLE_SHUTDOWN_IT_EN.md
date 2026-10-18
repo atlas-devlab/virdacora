@@ -83,6 +83,16 @@ entrambi gli errori di trasporto da HTTP 503 e invia una misura tardiva valida
 con sequenza diversa: soltanto dopo l'uscita e il riavvio controlla che questa
 seconda misura non sia nell'archivio. Un errore di rete da solo non prova un
 commit mancante. La ricevuta di questo tentativo resta separata.
+
+Il primo job CI del nuovo runner si è fermato nella preparazione, prima di
+eseguire i casi e registrare la versione del database. Il vecchio controllo
+interno era compatibile con un falso pronto: l'immagine PostgreSQL avvia un
+server temporaneo solo su socket durante l'inizializzazione. Ora `pg_isready`
+richiede esplicitamente TCP su `127.0.0.1`, ed eventuali errori della preparazione
+registrano fase e solo un codice sicuro. La causa esatta del primo fallimento
+non è dimostrabile univocamente dalla vecchia ricevuta; questa modifica esclude
+quel falso pronto, senza dichiarare superata una prova che non era iniziata.
+
 I test unitari verificano separatamente il limite dei 20 secondi con timer
 simulati, errori sincroni e asincroni, segnali ripetuti, conclusioni tardive e
 rimozione di listener e timer. Non sono una misura reale di 20 secondi su Linux.
@@ -170,6 +180,13 @@ retained. The test now reports reset/refusal as transport errors and sends a
 distinct valid late observation; its absence is checked after clean exit and
 restart, rather than inferred from the transport error alone.
 
+The first new CI job failed during setup before any signal case or recorded
+database version. Its receipt does not uniquely establish the cause. The old
+internal check could see PostgreSQL's temporary socket-only initialization
+server. The runner now explicitly requires TCP readiness on 127.0.0.1 and records
+the setup stage and a safe error code on failure, excluding that premature-ready
+path without treating unexecuted cases as successes.
+
 Unit tests cover hung close with fake timers, synchronous/asynchronous failures, repeated signals,
 late completion and timer/listener cleanup. Fake-clock deadline tests are not a
 real-time Linux measurement. Archived receipts distinguish actual baseline and
@@ -201,3 +218,4 @@ environmental models, signatures, ordering, community policies, contracts or fun
 - [Fastify 5.10.0 close implementation](https://github.com/fastify/fastify/blob/v5.10.0/fastify.js#L373): explicit connection handling avoids the observed default close path.
 - [Node.js signal events and platform differences](https://nodejs.org/docs/latest-v24.x/api/process.html#signal-events).
 - [Compose stop_grace_period](https://docs.docker.com/reference/compose-file/services/#stop_grace_period).
+- [Official PostgreSQL image initialization](https://github.com/docker-library/postgres/blob/master/docker-entrypoint.sh#L264): temporary socket-only server before TCP startup.

@@ -38,6 +38,8 @@ let poolErrorObserved = false;
 const cases: Record<string, unknown>[] = [];
 const failures: string[] = [];
 const cleanup: Record<string, boolean> = {};
+let setupStage = "INITIALIZE";
+let setupErrorCode: string | undefined;
 const controls: Record<string, unknown> = {
   owner, syntheticDataOnly: true, postgresImage, noAutomaticWriteRetries: true,
   productionDatabaseUrlRead: false, actualLinuxContainerSignals: true,
@@ -352,6 +354,7 @@ async function runCase(signal: "SIGTERM" | "SIGINT", adminToken: string): Promis
 }
 
 try {
+  setupStage = "CLI_AND_DOCKER";
   active();
   const arguments_ = process.argv.slice(2);
   requireCondition(arguments_.length === 0 || (arguments_.length === 2 && arguments_[0] === "--oracle-image"), "INVALID_CLI_ARGUMENTS");
@@ -362,6 +365,7 @@ try {
   await docker(["version", "--format", "{{.Server.Version}}"]);
   if (!(await docker(["image", "inspect", postgresImage], true)).ok) await docker(["pull", postgresImage]);
   if (arguments_.length === 0) {
+    setupStage = "BUILD_ORACLE_IMAGE";
     await docker(["build", "--label", `${ownerLabel}=${owner}`, "--file", "services/oracle/Dockerfile", "--tag", oracleImage, "."], false, false, 300_000);
     ownImageBuilt = true;
   }
@@ -371,6 +375,7 @@ try {
   controls.oracleImage = oracleImage;
   controls.oracleImageId = oracleImageId;
   controls.imageBuiltByRunner = ownImageBuilt;
+  setupStage = "CREATE_TEST_NETWORK_AND_CREDENTIALS";
   networkId = (await docker(["network", "create", "--label", `${ownerLabel}=${owner}`, networkName])).stdout;
   await inspectOwnedNetwork();
   temporaryDirectory = await mkdtemp(join(tmpdir(), "virdacora-shutdown-"));
@@ -380,28 +385,35 @@ try {
   const oracleEnv = join(temporaryDirectory, "oracle.env");
   await writeFile(postgresEnv, `POSTGRES_USER=virdacora_test\nPOSTGRES_DB=virdacora_test\nPOSTGRES_PASSWORD=${password}\n`, { mode: 0o600 });
   await writeFile(oracleEnv, `DATABASE_URL=postgresql://virdacora_test:${password}@${postgresName}:5432/virdacora_test?application_name=${applicationName}\nADMIN_API_TOKEN=${adminToken}\nORACLE_API_TOKEN=${randomBytes(24).toString("hex")}\nPOLICY_PATH=/app/policies/po-water-v1.terra\nPORT=8787\nHOST=0.0.0.0\n`, { mode: 0o600 });
+  setupStage = "CREATE_AND_START_POSTGRES";
   postgresId = (await docker(["create", "--name", postgresName, "--label", `${ownerLabel}=${owner}`,
     "--network", networkName, "--env-file", postgresEnv, "--publish", "127.0.0.1::5432",
     "--tmpfs", "/var/lib/postgresql:rw,size=268435456", "--memory", "512m", "--cpus", "2", postgresImage])).stdout;
   assert.match(postgresId, /^[a-f0-9]{64}$/);
   await inspectOwnedContainer(postgresId, postgresName);
   await docker(["start", postgresId]);
+  setupStage = "WAIT_FOR_POSTGRES_TCP";
   const pgDeadline = performance.now() + 45_000;
   let postgresReady = false;
   while (performance.now() < pgDeadline) {
     active();
-    if ((await docker(["exec", postgresId, "pg_isready", "-U", "virdacora_test", "-d", "virdacora_test"], true)).ok) {
+    // The official image starts a socket-only temporary server during initdb.
+    // Require TCP so that server cannot produce a premature ready signal.
+    if ((await docker(["exec", postgresId, "pg_isready", "-h", "127.0.0.1", "-U", "virdacora_test", "-d", "virdacora_test"], true)).ok) {
       postgresReady = true; break;
     }
     await delay(100);
   }
   requireCondition(postgresReady, "POSTGRES_START_TIMEOUT");
+  controls.postgresTcpReadinessRequired = true;
+  setupStage = "INSPECT_POSTGRES_BINDING";
   const pgState = await inspectOwnedContainer(postgresId, postgresName);
   const pgBinding = pgState.NetworkSettings?.Ports?.["5432/tcp"];
   assert.equal(pgBinding?.length, 1);
   assert.equal(pgBinding?.[0]?.HostIp, "127.0.0.1");
   const pgPort = String(pgBinding?.[0]?.HostPort);
   assert.match(pgPort, /^\d{1,5}$/);
+  setupStage = "CONNECT_POSTGRES_INSPECTOR";
   const oracleRequire = createRequire(new URL("../services/oracle/package.json", import.meta.url));
   const { Pool } = oracleRequire("pg") as { Pool: new (options: Record<string, unknown>) => DatabasePool };
   pool = new Pool({ connectionString: `postgresql://virdacora_test:${password}@127.0.0.1:${pgPort}/virdacora_test`,
@@ -410,17 +422,24 @@ try {
   const version = await pool.query("SELECT current_setting('server_version') AS version");
   assert.match(String(version.rows[0]?.version), /^18\./);
   controls.postgresVersion = version.rows[0]?.version;
+  setupStage = "APPLY_MIGRATIONS";
   const migrations = await Promise.all(["001_init.sql", "002_timestamp_order.sql"].map(file =>
     readFile(new URL(`../services/oracle/db/${file}`, import.meta.url), "utf8")));
   await pool.query(migrations.join("\n"));
   oraclePort = await chooseOraclePort();
+  setupStage = "CREATE_ORACLE";
   oracleId = (await docker(["create", "--name", oracleName, "--label", `${ownerLabel}=${owner}`,
     "--network", networkName, "--env-file", oracleEnv, "--publish", `127.0.0.1:${oraclePort}:8787`,
     "--memory", "256m", "--cpus", "2", oracleImage])).stdout;
   assert.match(oracleId, /^[a-f0-9]{64}$/);
+  setupStage = "RUN_SIGNAL_CASES";
   for (const signal of ["SIGTERM", "SIGINT"] as const) await runCase(signal, adminToken);
   requireCondition(!poolErrorObserved, "INSPECTOR_POOL_ERROR_OBSERVED");
 } catch (error) {
+  if (typeof error === "object" && error !== null && "code" in error &&
+      typeof error.code === "string" && /^[A-Z0-9_]{1,64}$/.test(error.code)) {
+    setupErrorCode = error.code;
+  }
   failures.push(error instanceof ShutdownFailure ? error.code : "SHUTDOWN_SETUP_OR_ASSERTION_FAILED");
 } finally {
   if (pool !== undefined) {
@@ -463,7 +482,7 @@ try {
   if (interrupted) failures.push("RUN_INTERRUPTED");
   const status = failures.length === 0 && cases.length === 2 && cases.every(item => item.status === "pass") ? "pass" : "fail";
   const report = { schemaVersion: 1, status, startedAt, completedAt: new Date().toISOString(), controls,
-    cases, cleanup, failures: [...new Set(failures)], limitations: [
+    cases, cleanup, setupStage, setupErrorCode, failures: [...new Set(failures)], limitations: [
       "Synthetic signed requests against the compiled Oracle server running as PID 1 in Linux containers.",
       "Positive drain cases only; a never-settling close deadline is tested separately with a unit fake clock.",
       "Transport errors are distinguished from real HTTP responses; no synthetic HTTP status zero.",

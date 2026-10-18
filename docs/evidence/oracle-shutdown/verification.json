@@ -1,6 +1,6 @@
 {
   "version": "oracle-shutdown-verification-v1",
-  "recordedAtUTC": "2026-10-18T13:58:01.301Z",
+  "recordedAtUTC": "2026-10-18T14:02:00.320Z",
   "baseMain": "d2a6f2bf4c8c81641d78d74c0ce815da472f46b4",
   "pr27": {
     "merged": true,
@@ -16,7 +16,10 @@
     "databaseCasesVisiblySkippedInOrdinarySuite": 32,
     "newShutdownTests": 12,
     "realLinuxSignalCasesPassed": 2,
-    "lateObservationAbsenceCheckedAfterCleanExitAndRestart": true
+    "lateObservationAbsenceCheckedAfterCleanExitAndRestart": true,
+    "defaultRunnerBuiltOwnImageAndPassed": true,
+    "defaultRunnerImageCleaned": true,
+    "postgresTcpReadinessRequired": true
   },
   "baseline": {
     "status": "expected failure",
@@ -27,7 +30,8 @@
   "intermediateFailures": {
     "entrypointPreflight": "test error, before signals; not application failure",
     "handlerOnly": "real active HTTP ECONNRESET; fixed by explicit forceCloseConnections:false",
-    "lateConnectionAssumption": "Docker proxy reset rather than refusal; now distinct late signed sequence and DB absence checks plus transport distinction"
+    "lateConnectionAssumption": "Docker proxy reset rather than refusal; now distinct late signed sequence and DB absence checks plus transport distinction",
+    "firstCISetup": "No cases executed; exact cause not uniquely proved. RequireTCP rather than initdb Unixsocket, add safe setupStage/errorCode diagnostics."
   },
   "realHttpRegression": {
     "before": "FAIL ECONNRESET",
@@ -60,7 +64,7 @@
     },
     {
       "file": "docs/ORACLE_SHUTDOWN_IT_EN.md",
-      "rawSha256": "603e8433bce47f024adfa36cad6e50dc3558419699ca777e2ea9dced2c62415f"
+      "rawSha256": "34e49d70f0b8aebd286ec8ac05e8e07b0c1096626beb7007350d6a34b74a72b6"
     },
     {
       "file": "services/oracle/src/server.ts",
@@ -84,7 +88,7 @@
     },
     {
       "file": "scripts/run-oracle-shutdown.ts",
-      "rawSha256": "fd9e83738c685138c715d154052cbd12438e3ff7708f93f703cbe046647c5943"
+      "rawSha256": "eb720de9c72e049f32a823122506c4c3f7162c7afbf7357a3ff2e501aa82ab46"
     }
   ],
   "evidenceFiles": [
@@ -106,7 +110,11 @@
     },
     {
       "file": "docs/evidence/oracle-shutdown/local-results.json",
-      "rawSha256": "15d88efd8af2506750ec10afb26a681a8250cffc1796f66d982583994261ac89"
+      "rawSha256": "23e3c02687dcc0ef468e9d7319200128e26f786456428224453429c89af046b5"
+    },
+    {
+      "file": "docs/evidence/oracle-shutdown/ci-first-setup-failure.json",
+      "rawSha256": "e0aa4507d14924ac5b61ea655699f1eb60e6247b3d4929eb23fd1c52d84f69ba"
     }
   ],
   "lockfileAndDependenciesUnchanged": true,
