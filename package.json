@@ -17,7 +17,8 @@
     "demo": "pnpm --filter @terravoce/oracle demo",
     "e2e": "pnpm build && pnpm --filter @terravoce/contracts e2e",
     "benchmark:oracle": "tsx scripts/benchmark-oracle-store.ts",
-    "test:postgres": "tsx scripts/run-postgres-tests.ts"
+    "test:postgres": "tsx scripts/run-postgres-tests.ts",
+    "test:postgres:recovery": "tsx scripts/run-postgres-recovery.ts"
   },
   "devDependencies": {
     "@types/node": "24.13.3",

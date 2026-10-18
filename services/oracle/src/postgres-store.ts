@@ -21,7 +21,16 @@ export class PostgresObservationStore implements ObservationStore {
   private readonly pool: Pool;
 
   public constructor(connectionString: string) {
-    this.pool = new Pool({ connectionString, max: 10 });
+    this.pool = new Pool({ connectionString, max: 10, connectionTimeoutMillis: 5_000,
+      statement_timeout: 10_000, query_timeout: 12_000 });
+    // pg already removes a failed idle client. Handle its background event so
+    // the process survives; later operations obtain a new connection normally.
+    // Never log the original error/client or retry a write of uncertain outcome.
+    this.pool.on("error", () => {
+      process.emitWarning("PostgreSQL idle connection was lost; subsequent operations will reconnect", {
+        code: "POSTGRES_IDLE_CONNECTION_LOST"
+      });
+    });
   }
 
   public async registerSensor(sensor: SensorRegistration): Promise<StoredSensor> {

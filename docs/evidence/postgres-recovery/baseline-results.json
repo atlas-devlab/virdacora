@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "status": "fail",
+  "completedAt": "2026-10-18T13:10:43.078Z",
+  "durationMsDiagnosticOnly": 7815,
+  "controls": {
+    "image": "postgres:18-alpine@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873",
+    "owner": "f9fdb809-6c90-4d5f-bf2a-b48c783c2f3f",
+    "syntheticDataOnly": true,
+    "writesRetriedAutomatically": false,
+    "sameOracleProcessAndStoreIntendedAcrossBothInterruptions": true,
+    "productionDatabaseUrlRead": false,
+    "explicitLoopbackPortStableAcrossRestarts": true,
+    "stopSignal": "SIGINT",
+    "volumeMount": {
+      "type": "volume",
+      "destination": "/var/lib/postgresql",
+      "freshOwnerVerified": true
+    },
+    "containerMemoryLimitBytes": 536870912,
+    "databaseSettings": {
+      "version": "18.6",
+      "fsync": "on",
+      "synchronous_commit": "on",
+      "full_page_writes": "on"
+    },
+    "workerProcessId": 15908,
+    "seed": {
+      "processId": 15908,
+      "observations": 7,
+      "evidenceHash": "0xe8b246e0cd51f28f1480fe3736728374a517381f7f0c6688e1944142e2a6287a",
+      "signedSnapshotsVerified": true
+    },
+    "workerProducedStderr": true,
+    "workerUnhandledErrorObserved": true,
+    "workerExitCode": 1,
+    "sameOracleProcessAndStoreAcrossBothInterruptionsVerified": false
+  },
+  "cases": [],
+  "cleanup": {
+    "workerExited": true,
+    "containerRemoved": true,
+    "volumeRemoved": true,
+    "credentialFileRemoved": true
+  },
+  "failures": [
+    "WORKER_UNAVAILABLE",
+    "WORKER_DID_NOT_EXIT_CLEANLY"
+  ],
+  "limitations": [
+    "Synthetic API/store recovery test; no environmental field validation or forecast-skill claim.",
+    "SIGKILL interrupts the PostgreSQL container process, not the host, Docker VM, disk or electrical power.",
+    "Acknowledged records are checked; interrupted requests with unknown commit outcomes are not tested.",
+    "No automatic write retries, exactly-once guarantee, replication, failover or availability SLA.",
+    "Durations are diagnostics, not performance benchmarks or service objectives."
+  ]
+}
