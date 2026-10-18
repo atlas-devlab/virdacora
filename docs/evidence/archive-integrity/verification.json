@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "kind": "archived-evidence-integrity",
+  "baseCommit": "37b70ac3eac61b38df2e622389526a782336b118",
+  "recordedAtUTC": "2026-10-18T16:04:26.7056699Z",
+  "validationScope": "Local synthetic signed-data and isolated database verification; remote CI is reported separately",
+  "runtime": {
+    "node": "v24.18.0",
+    "pnpm": "11.25.0",
+    "vitest": "4.1.10",
+    "postgres": "18.6"
+  },
+  "checks": {
+    "workspaceBuild": "passed",
+    "workspaceCheck": "passed",
+    "explicitStrictTypeScriptIncludingOracleTests": "passed",
+    "focused": {
+      "baselineTotal": 18,
+      "baselineExpectedFailures": 16,
+      "baselinePasses": 2,
+      "afterFixPassed": 18
+    },
+    "ordinary": {
+      "oraclePassed": 175,
+      "protocolPassed": 1,
+      "terralexPassed": 3,
+      "contractsPassed": 10,
+      "totalPassed": 189,
+      "postgresSkippedInOrdinary": 40
+    },
+    "realPostgres": {
+      "passed": 40,
+      "failed": 0,
+      "skipped": 0,
+      "newArchiveCases": 4,
+      "ownedTmpfsContainerRemoved": true
+    },
+    "gitDiffCheck": "passed"
+  },
+  "invariants": [
+    "All selected raw evidence snapshots are taken synchronously before registry lookup",
+    "Strict row/body schemas, ID hash, request region/metric, sensor identity/region and signature are checked before analysis/persistence/policy",
+    "Duplicate observation IDs and sensor/sequence pairs fail closed",
+    "Only one lookup per distinct sensor per run; no key cache between runs",
+    "Data originals are not repaired, skipped, deleted, re-signed or unit-normalized in storage",
+    "Historical inactivity and age do not invalidate an otherwise authentic archive",
+    "Valid inputs preserve numerical assessment, modelVersion and evidenceHash"
+  ],
+  "databaseCases": [
+    "JSONBvalue altered with original ID/signature is rejected; exact-body restoration recovers original result",
+    "Forged stored observationId rejected while signed body remains intact",
+    "After a valid warmup run, a different registry key is rejected and restoration recovers without stale positive cache",
+    "Authentic historical rows older than30days remain usable for inactive sensor; new submission still403"
+  ],
+  "limits": [
+    "Current registry is a trust dependency; no historical key-authorization log",
+    "No detection of omitted rows or SQL selection metadata manipulation",
+    "No proof of physical accuracy or operator independence",
+    "Existing saved assessments/latest endpoint are not reverified by this patch",
+    "Pure analysis callers remain responsible for input verification",
+    "No forecast training, new environmental observations, SQL migration, new dependency, contract/governance/fund action"
+  ],
+  "sourceSha256": {
+    "services/oracle/src/app.ts": "be6f7eee0be403d5b615305ed148fdf87d21974a60d154ff1a7b399afb871af0",
+    "services/oracle/src/evidence-integrity.ts": "c603e24876f86085e4a5a4be52c192603d8208ee0bee5e7bd0fc9dcad81df001",
+    "services/oracle/src/archive-integrity.test.ts": "4500b354a9d9904968095556e6526341a2a424ae363b9fc3da2a2a5f560bf041",
+    "services/oracle/src/postgres.integration.test.ts": "38b27c44d26c3c853d8b7ef268580ba59d2b28e891518a1674d2f05e6f8b0ca4"
+  }
+}

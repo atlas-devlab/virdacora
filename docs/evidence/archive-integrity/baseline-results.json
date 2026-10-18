@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "evidenceSource": "Captured first focused Vitest run before production implementation; not rerun to create receipt",
+  "baselineHead": "37b70ac3eac61b38df2e622389526a782336b118",
+  "recordedAtUTC": "2026-10-18T18:01:19.0579695+02:00",
+  "command": "pnpm exec vitest run services/oracle/src/archive-integrity.test.ts --reporter=verbose",
+  "sourceFile": "services/oracle/src/archive-integrity.test.ts",
+  "sourceFileSha256": "4500b354a9d9904968095556e6526341a2a424ae363b9fc3da2a2a5f560bf041",
+  "result": "expected-red",
+  "exitCode": 1,
+  "total": 18,
+  "failed": 16,
+  "passed": 2,
+  "startTimeReportedByVitest": "18:01:02",
+  "durationSecondsReportedByVitest": 1.09,
+  "passingCases": [
+    "Authentic signed archived payloads preserve previous numerical assessment and hash",
+    "Authentic historical evidence remains usable after sensor deactivation; new POST403"
+  ],
+  "failureSummary": [
+    "Thirteen archive-rejection cases wrongly returned201 rather than422",
+    "Database lookup failure case wrongly returned201 rather than500 because no registry lookup occurred",
+    "Per-distinct-sensor cache case observed0lookups instead of2",
+    "Snapshot test observed response before first registry lookup"
+  ],
+  "limitations": [
+    "Synthetic controlled signed evidence; no field validation",
+    "This receipt records expected failures before the fix"
+  ],
+  "outputHandling": "Captured console output retained in the local workspace; this public receipt keeps the sanitized summary only."
+}

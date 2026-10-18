@@ -58,6 +58,11 @@ The [oxygen unit contract (IT/EN)](docs/OXYGEN_UNITS_IT_EN.md) interprets
 signed evidence. Unsupported oxygen units fail explicitly; current-version
 latest results are separated from historical interpretations.
 
+The [archived evidence check (IT/EN)](docs/ARCHIVE_INTEGRITY_IT_EN.md) rechecks
+selected observation signatures, IDs and request/sensor associations before a
+new assessment. Invalid evidence blocks the whole run without rewriting history
+or producing an action draft; valid inputs retain their numerical results and hashes.
+
 ## Research branches and original mission
 
 The mission is to combine verifiable environmental analysis, distributed

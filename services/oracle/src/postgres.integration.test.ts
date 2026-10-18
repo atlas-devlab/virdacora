@@ -69,6 +69,46 @@ describe.skipIf(databaseUrl === undefined)("real PostgreSQL observation storage"
   }, 20_000);
   afterEach(async () => { await fixture?.close(); }, 20_000);
 
+  const createSignedArchive = async (historical = false) => {
+    const pair = generateKeyPairSync("ed25519");
+    const publicKey = pair.publicKey.export({ format: "der", type: "spki" }).toString("base64");
+    const privateKey = pair.privateKey.export({ format: "der", type: "pkcs8" }).toString("base64");
+    const now = new Date("2026-10-18T12:00:00.000Z");
+    const app = buildApp({ store, policySource, adminToken: "synthetic-admin",
+      oracleToken: "synthetic-oracle", now: () => now });
+    fixture.useStoreOwner(store, () => app.close());
+    const sensor = { ...registration, regionId: "IT-PO-DELTA", publicKeyDerBase64: publicKey };
+    if (historical) await store.registerSensor(sensor);
+    else expect((await app.inject({ method: "POST", url: "/v1/sensors",
+      headers: { "x-admin-token": "synthetic-admin" }, payload: sensor })).statusCode).toBe(201);
+    const origin = historical ? Date.parse("2026-08-01T00:00:00.000Z") : now.getTime() - 5 * 3_600_000;
+    const rows = Array.from({ length: 6 }, (_, index): StoredObservation => {
+      const { signature: _signature, ...unsigned } = entry(index + 1, { regionId: sensor.regionId,
+        observedAt: new Date(origin + index * 3_600_000).toISOString(), value: 6 }).observation;
+      return { observationId: observationId(unsigned), observation: signObservation(unsigned, privateKey) };
+    });
+    for (const row of rows) {
+      if (historical) await store.addObservation(row); // Represents already accepted, genuinely signed history.
+      else expect((await app.inject({ method: "POST", url: "/v1/observations", payload: row.observation })).statusCode)
+        .toBe(202);
+    }
+    const run = () => app.inject({ method: "POST", url: "/v1/assessments/run",
+      headers: { "x-oracle-token": "synthetic-oracle" }, payload: {
+        regionId: sensor.regionId, metric: "water.oxygen.mg_l", forecastHorizonHours: 1,
+        requestedAction: "WATER_AERATION", requestedAmount: 0, asset: "USDC"
+      } });
+    const snapshot = async () => (await fixture.inspector.query<StoredObservation>(
+      `SELECT observation_id AS "observationId", body AS observation FROM observations
+        ORDER BY observed_at_ms, observation_id COLLATE "C"`)).rows;
+    expect(await snapshot()).toEqual(rows);
+    return { app, publicKey, privateKey, now, sensor, rows, run, snapshot };
+  };
+
+  const expectNoStoredAssessment = async () => {
+    expect((await fixture.inspector.query("SELECT count(*)::integer AS count FROM assessments")).rows)
+      .toEqual([{ count: 0 }]);
+  };
+
   it("applies the actual migration twice in a private schema with no public fallback", async () => {
     await fixture.inspector.query(fixture.migration);
     const tables = await fixture.inspector.query<{ tablename: string }>(
@@ -786,6 +826,125 @@ describe.skipIf(databaseUrl === undefined)("real PostgreSQL observation storage"
     expect(archived.find(({ assessmentId }) => assessmentId === current.assessmentId)?.body).toEqual(current);
     expect(await store.listObservations("IT-PO-DELTA", "water.oxygen.mg_l", 512)).toEqual(rows);
     for (const row of rows) expect(verifyObservation(row.observation, publicKey)).toBe(true);
+  });
+
+  it("rejects altered archived JSONB without repair and recovers after the exact signed original is restored", async () => {
+    const archive = await createSignedArchive();
+    const originals = structuredClone(archive.rows);
+    const altered = archive.rows[2]!;
+    const expected = analyzeObservations(originals, 3_600);
+    await fixture.inspector.query(
+      "UPDATE observations SET body = jsonb_set(body, '{value}', '6000'::jsonb) WHERE observation_id = $1",
+      [altered.observationId]);
+
+    const rejected = await archive.run();
+
+    expect(rejected.statusCode).toBe(422);
+    expect(rejected.json().error).toBe("INVALID_ARCHIVED_EVIDENCE");
+    for (const field of ["assessment", "decision", "actionDraft"]) expect(rejected.json()).not.toHaveProperty(field);
+    await expectNoStoredAssessment();
+    const corruptedSnapshot = await archive.snapshot();
+    expect(corruptedSnapshot).toEqual(originals.map((row, index) => index === 2
+      ? { ...row, observation: { ...row.observation, value: 6_000 } } : row));
+    expect(verifyObservation(corruptedSnapshot[2]!.observation, archive.publicKey)).toBe(false);
+    // Readiness describes the accessible database, not cryptographic validity of its rows.
+    expect((await archive.app.inject({ method: "GET", url: "/readyz" })).statusCode).toBe(200);
+
+    await fixture.inspector.query("UPDATE observations SET body = $1::jsonb WHERE observation_id = $2",
+      [originals[2]!.observation, altered.observationId]);
+    const recovered = await archive.run();
+    expect(recovered.statusCode).toBe(201);
+    expect(recovered.json().assessment).toEqual(expected);
+    expect(await archive.snapshot()).toEqual(originals);
+    expect((await archive.app.inject({ method: "GET", url: "/readyz" })).statusCode).toBe(200);
+    for (const row of await archive.snapshot()) {
+      expect(verifyObservation(row.observation, archive.publicKey)).toBe(true);
+      const { signature: _signature, ...unsigned } = row.observation;
+      expect(observationId(unsigned)).toBe(row.observationId);
+    }
+  });
+
+  it("rejects a forged archived observation ID even while its original signed body remains intact", async () => {
+    const archive = await createSignedArchive();
+    const original = archive.rows[2]!;
+    const forgedId = `0x${"0".repeat(64)}`;
+    expect(archive.rows.every(({ observationId: storedId }) => storedId !== forgedId)).toBe(true);
+    await fixture.inspector.query("UPDATE observations SET observation_id = $1 WHERE observation_id = $2",
+      [forgedId, original.observationId]);
+
+    const rejected = await archive.run();
+
+    expect(rejected.statusCode).toBe(422);
+    expect(rejected.json().error).toBe("INVALID_ARCHIVED_EVIDENCE");
+    for (const field of ["assessment", "decision", "actionDraft"]) expect(rejected.json()).not.toHaveProperty(field);
+    await expectNoStoredAssessment();
+    const archived = (await fixture.inspector.query<StoredObservation>(
+      'SELECT observation_id AS "observationId", body AS observation FROM observations WHERE observation_id = $1',
+      [forgedId])).rows[0];
+    expect(archived).toEqual({ observationId: forgedId, observation: original.observation });
+    expect(verifyObservation(archived!.observation, archive.publicKey)).toBe(true);
+    const { signature: _signature, ...unsigned } = archived!.observation;
+    expect(observationId(unsigned)).toBe(original.observationId);
+    expect(observationId(unsigned)).not.toBe(archived!.observationId);
+    expect((await fixture.inspector.query("SELECT count(*)::integer AS count FROM observations")).rows)
+      .toEqual([{ count: archive.rows.length }]);
+  });
+
+  it("rechecks the current sensor public key for every assessment request without changing archived bodies", async () => {
+    const archive = await createSignedArchive();
+    const originals = structuredClone(archive.rows);
+    const expected = analyzeObservations(originals, 3_600);
+    // Warm a possible positive cache before changing the registry. A failed
+    // first request followed only by recovery would not catch that cache.
+    const initial = await archive.run();
+    expect(initial.statusCode).toBe(201);
+    expect(initial.json().assessment).toEqual(expected);
+    const assessmentsBefore = (await fixture.inspector.query("SELECT assessment_id, body FROM assessments")).rows;
+    expect(assessmentsBefore).toHaveLength(1);
+    const differentKey = generateKeyPairSync("ed25519").publicKey.export({ format: "der", type: "spki" }).toString("base64");
+    await fixture.inspector.query("UPDATE sensors SET public_key_der_base64 = $1 WHERE sensor_id = $2",
+      [differentKey, archive.sensor.sensorId]);
+
+    const rejected = await archive.run();
+
+    expect(rejected.statusCode).toBe(422);
+    expect(rejected.json().error).toBe("INVALID_ARCHIVED_EVIDENCE");
+    for (const field of ["assessment", "decision", "actionDraft"]) expect(rejected.json()).not.toHaveProperty(field);
+    expect((await fixture.inspector.query("SELECT assessment_id, body FROM assessments")).rows).toEqual(assessmentsBefore);
+    expect(await archive.snapshot()).toEqual(originals);
+    expect((await store.getSensor(archive.sensor.sensorId))?.publicKeyDerBase64).toBe(differentKey);
+
+    await fixture.inspector.query("UPDATE sensors SET public_key_der_base64 = $1 WHERE sensor_id = $2",
+      [archive.publicKey, archive.sensor.sensorId]);
+    const recovered = await archive.run();
+    expect(recovered.statusCode).toBe(201);
+    expect(recovered.json().assessment).toEqual(expected);
+    expect((await fixture.inspector.query("SELECT assessment_id, body FROM assessments")).rows).toEqual(assessmentsBefore);
+    expect(await archive.snapshot()).toEqual(originals);
+    expect((await store.getSensor(archive.sensor.sensorId))?.publicKeyDerBase64).toBe(archive.publicKey);
+  });
+
+  it("keeps valid old signed evidence usable after sensor deactivation while rejecting new submissions", async () => {
+    const archive = await createSignedArchive(true);
+    const originals = structuredClone(archive.rows);
+    expect(archive.rows.every(({ observation }) =>
+      Date.parse(observation.observedAt) < archive.now.getTime() - 30 * 24 * 3_600_000)).toBe(true);
+    await fixture.inspector.query("UPDATE sensors SET active = false WHERE sensor_id = $1", [archive.sensor.sensorId]);
+    expect((await store.getSensor(archive.sensor.sensorId))?.active).toBe(false);
+
+    const historical = await archive.run();
+
+    expect(historical.statusCode).toBe(201);
+    expect(historical.json().assessment).toEqual(analyzeObservations(originals, 3_600));
+    const freshUnsigned = { sensorId: archive.sensor.sensorId, regionId: archive.sensor.regionId,
+      metric: "water.oxygen.mg_l", value: 6, unit: "mg/L", observedAt: archive.now.toISOString(), sequence: 7 };
+    const fresh = signObservation(freshUnsigned, archive.privateKey);
+    expect(verifyObservation(fresh, archive.publicKey)).toBe(true);
+    const rejected = await archive.app.inject({ method: "POST", url: "/v1/observations", payload: fresh });
+    expect(rejected.statusCode).toBe(403);
+    expect(rejected.json().error).toBe("SENSOR_INACTIVE");
+    expect(await archive.snapshot()).toEqual(originals);
+    for (const row of await archive.snapshot()) expect(verifyObservation(row.observation, archive.publicKey)).toBe(true);
   });
 
   it("uses actual Ed25519 API verification with PostgreSQL and preserves rejected sequence availability", async () => {
