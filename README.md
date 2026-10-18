@@ -308,15 +308,18 @@ regressione attuale non supera la baseline su quella finestra. Il collegamento
 dell'advisory al consenso resta da implementare, come descritto nel
 [progetto tecnico](docs/AI_DESIGN.md).
 
-## Prossimo esperimento Owasco: protocollo, senza addestramento
+## Esperimento Owasco: protocollo ed esito della regressione locale
 
 Il [protocollo IT/EN della regressione locale LAD](docs/OWASCO_LOCAL_MEDIAN_PROTOCOL_IT_EN.md)
 fissa luglio 2020 per l'addestramento e agosto per un solo controllo di sviluppo
 dell'ossigeno a un'ora, con MAE contro l'ultima misura come criterio principale.
-Questa modifica verifica soltanto integrità e separazione degli archivi: nessun
-nuovo fit o punteggio, settembre chiuso. Agosto è già stato studiato e non è
-una validazione cieca. English explanation and reproducible metadata-only
-checks are included in the linked protocol.
+La PR #20 conservava soltanto il protocollo e i controlli di integrità, senza
+addestramento. La successiva PR #21 implementa ed esegue quella ricetta:
+il singolo fit su luglio sceglie coefficienti tutti nulli. Su agosto la nuova
+candidata coincide con l'ultima misura in tutte le 1.306 righe: MAE identica,
+0,055513 mg/L, e guadagno zero. Esito **STOP_CANDIDATE**, senza promozione.
+Settembre resta chiuso. Agosto era già stato studiato e non è una validazione
+cieca. English explanation and reproducible checks accompany both stages.
 
 L'[implementazione ed esecuzione IT/EN](docs/OWASCO_LOCAL_MEDIAN_EXECUTION_IT_EN.md)
 separa il fit di luglio dal successivo controllo su agosto, con provenienza

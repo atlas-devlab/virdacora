@@ -162,3 +162,106 @@ remains separate and is skipped on ordinary PR runs.
 No environmental fit or development score had been executed when this
 implementation document was first committed. Subsequent sections and evidence
 receipts will record actual stage results without rewriting the frozen recipe.
+
+### Italiano: esecuzione del 18 ottobre 2026
+
+Il codice è stato pubblicato nel commit `c2c1e4e`, dopo 288 test locali passati
+(95 nuovi test sintetici). La CI GitHub
+[39126095374](https://github.com/atlas-devlab/virdacora/actions/runs/39126095374)
+è passata prima del fit. La ricevuta di implementazione è stata creata alle
+12:11:10 UTC e pubblicata in `0b3a1ab`. Il solo fit di luglio è iniziato alle
+12:11:25 UTC. Il modello e l'audit di luglio sono stati pubblicati in
+`3f1d8c41d8364a7552d2a486b57d74c02f46f311` prima dello score di agosto,
+iniziato alle 12:11:50 UTC. Le ricevute conservano gli orari completi.
+
+| Periodo e ruolo | Righe | MAE ultima misura P (mg/L) | MAE candidata L (mg/L) |
+|---|---:|---:|---:|
+| Luglio 2020, addestramento | 1.275 | 0,038666667 | 0,038666667 |
+| Agosto 2020, controllo di sviluppo | 1.306 | 0,055513017 | 0,055513017 |
+
+**Esito primario: STOP_CANDIDATE.** Il solver ha restituito intercetta e otto
+pesi tutti `-0.0`, equivalenti a zero. Quindi `deltaHat = 0` e `L = P`.
+Su agosto: zero previsioni cambiate, zero invalide, 1.306 pareggi contro P;
+nessun caso in cui L aiuti o danneggi P. I campi degli esempi di miglioramento
+e peggioramento sono correttamente nulli, non casi scelti a posteriori.
+
+Rispetto alla regressione storica R, la cui MAE su agosto è 0,066183550 mg/L,
+L evita correzioni complessivamente dannose in quella coorte. Tuttavia il
+criterio concordato era battere P: il guadagno contro P è esattamente zero.
+Non presentiamo questo ritorno alla baseline come nuova capacità predittiva.
+
+Ecco due righe reali archiviate, riportate soltanto per capire il comportamento:
+
+| Origine → target UTC | Ultima misura | L | Osservazione a un'ora | Errore L |
+|---|---:|---:|---:|---:|
+| 01/08/2020 05:30 → 06:30 | 9,2 | 9,2 | 9,2 | 0,0 mg/L |
+| 15/08/2020 05:00 → 06:00 | 10,2 | 10,2 | 11,2 | 1,0 mg/L |
+
+La prima è la prima riga cronologica: L evita la piccola correzione della
+regressione storica (9,191086853), mentre l'osservazione pubblicata rimane 9,2.
+La seconda è il primo massimo errore assoluto di L nel report: persistenza e L
+non anticipano il cambiamento; R vale 10,228608925 e sbaglia leggermente meno
+su quella singola riga. Sono esempi descrittivi, non nuovi criteri di selezione.
+L'uguaglianza fra valori pubblicati non dimostra stabilità fisica del lago.
+
+Il solver termina con successo dopo 807 iterazioni. L'auditor separato trova
+obiettivi primale e duale entrambi 0,03866666666666664 e gap numerico zero;
+massima violazione dei vincoli circa `2,97e-15`. Questo sostiene l'ottimalità
+numerica sul training entro le tolleranze fissate. Non prova unicità dei pesi,
+assenza generale di informazione negli ingressi o affidabilità futura.
+
+Il replay senza pacchetti scientifici e l'audit del report completo passano.
+I 53 file storici vincolati sono invariati. Non è stato eseguito un secondo
+fit o uno score alternativo; settembre resta chiuso. La dimostrazione con
+quattro repliche e nodo spento non è stata rieseguita: è separata e saltata
+nella CI ordinaria della PR.
+
+Conserviamo questa candidata come risultato negativo riproducibile e ci
+fermiamo prima di scegliere un'altra ricetta. Il prossimo disegno va discusso
+separatamente: non si cerca un altro ottimo o un ritocco guardando agosto.
+
+### English: observed execution and outcome
+
+Implementation commit `c2c1e4e`, 288 passing local tests (95 new synthetic
+tests), and successful GitHub run 39126095374 preceded the fit. The
+implementation receipt was published in `0b3a1ab`. One July fit started at
+12:11:25 UTC on 18 October 2026; the exact model and July arithmetic audit
+were published in `3f1d8c41d8364a7552d2a486b57d74c02f46f311` before the one
+August score, which started at 12:11:50 UTC.
+
+All nine fitted coefficients are zero. July training MAE equals persistence
+at 0.03866666666666664 mg/L. All 1,306 August predictions also equal
+persistence: both full-cohort MAEs are 0.05551301684532926 mg/L, with zero
+changed or invalid predictions and zero gain. The primary outcome is
+**STOP_CANDIDATE**. The older transferred regression's August MAE is
+0.06618354966060074 mg/L; avoiding its aggregate excess error does not beat
+the agreed persistence baseline or establish added predictive skill.
+
+At the first August origin (05:30 UTC on August 1), P and L are 9.2 mg/L,
+matching the archived one-hour observation; old R is about 9.191087. At the
+first maximum-error origin (05:00 UTC on August 15), P and L are 10.2 but
+the archived target is 11.2 mg/L. Their error is 1 mg/L; R, about 10.228609,
+does slightly better on that row. These descriptive examples do not replace
+the full-cohort criterion. Equal published values do not establish physical
+stability. There are no helps/harms examples against P because every row ties.
+
+The solver completed 807 iterations. The separate stdlib audit passes the
+primal/dual certificate (both objectives about 0.038666667, numerical gap
+zero) and verifies all August arithmetic, groups and days. Read-only replay
+also passes without scientific packages. This supports the specified
+sample-level numerical solution, not uniqueness, lack of information in the
+inputs, sensor accuracy, future skill or independent environmental validation.
+All 53 historical pinned files remain unchanged. No alternative fit, score,
+September opening or operational promotion followed this result. The separate
+four-replica outage demonstration was not rerun. A different recipe would
+require a separately agreed experiment.
+
+### Evidence / Prove
+
+- [Implementation freeze](evidence/owasco-local-median/implementation-freeze.json)
+- [Frozen model and environment](evidence/owasco-local-median/frozen-model.json)
+- [July arithmetic audit](evidence/owasco-local-median/training-audit.json)
+- [August summary](evidence/owasco-local-median/development-summary.json)
+- [Complete August rows (gzip)](evidence/owasco-local-median/development.json.gz)
+- [Full arithmetic audit](evidence/owasco-local-median/development-audit.json)
+- [Execution receipt and artifact hashes](evidence/owasco-local-median/execution-receipt.json)
