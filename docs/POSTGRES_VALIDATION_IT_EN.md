@@ -1,5 +1,11 @@
 # PostgreSQL reale: integrazione e verifiche / real database validation
 
+Questo documento e le sue ricevute descrivono la PR #24 prima della correzione
+temporale. La [regola comune e la migrazione successiva](TIMESTAMP_ORDER_IT_EN.md)
+sostituiscono il limite di ordinamento qui documentato e ampliano la suite a 29 prove.
+This document records PR #24 before the timestamp fix; see the linked update for
+the current ordering contract, migration and expanded test suite.
+
 ## Italiano
 
 Virdacora deve conservare prove ambientali riproducibili e rifiutare i replay

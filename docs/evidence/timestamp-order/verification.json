@@ -1,0 +1,108 @@
+{
+  "version": "timestamp-order-verification-v1",
+  "recordedAtUTC": "2026-10-18T13:00:26.2820881+00:00",
+  "baseMain": "c204caeb2fbba78350898d73898cf58765185e08",
+  "pr24": {
+    "postMergeCIRun": 39129257085,
+    "merged": true,
+    "postMergeCI": "success",
+    "merge": "c204caeb2fbba78350898d73898cf58765185e08"
+  },
+  "orderingContract": {
+    "tie": "lowercase hexadecimal ID ASCII / PostgreSQL COLLATE C",
+    "originalTextAndBodies": "preserved",
+    "tails": "latest N pairs returned ascending",
+    "assessment": "maximum pair",
+    "subMillisecond": "ignore beyond third fractional digit, no rounding",
+    "time": "Date.parse finite integer UTC epoch milliseconds"
+  },
+  "codeFiles": [
+    {
+      "file": "services/oracle/src/timestamp-order.ts",
+      "rawSha256": "6bca4ed919a8918d0f439dcdb8850095d946b467ec5b273b9ace5b30a76ba57a"
+    },
+    {
+      "file": "services/oracle/src/timestamp-order.test.ts",
+      "rawSha256": "8aa478b350924eb710da40b9a612fec0f2f724667347d4950946bdf80a6d7b04"
+    },
+    {
+      "file": "services/oracle/src/store.ts",
+      "rawSha256": "b3c007b1e370d12863e4698c2a7d7af19f493701fd863c710b5df91fe07d8f7a"
+    },
+    {
+      "file": "services/oracle/src/store.test.ts",
+      "rawSha256": "3b8421ae2ce176a2d57926c26014eab39aee30af7de069d44ae04fe8f8eb73e4"
+    },
+    {
+      "file": "services/oracle/src/postgres-store.ts",
+      "rawSha256": "61b40e2404c04991256a2d397aca0da1c45f46ec76a2721f48427a86e0a07603"
+    },
+    {
+      "file": "services/oracle/src/analysis.ts",
+      "rawSha256": "1ff5e955db534f8a09f257de78fe5d149221ea8210f196d4c693153092f42468"
+    },
+    {
+      "file": "services/oracle/src/postgres.integration.test.ts",
+      "rawSha256": "6890f33bb0c9d5cbcabd0dfdb13dcc215720a93e26fe51f192478ad8c1e04425"
+    },
+    {
+      "file": "services/oracle/test/postgres-fixture.ts",
+      "rawSha256": "0fb47adc9149af61495c268e1a351d06eeb199c7417f74fa8f32e9f49ead17ee"
+    },
+    {
+      "file": "services/oracle/db/002_timestamp_order.sql",
+      "rawSha256": "cb813d833247abe5b746887068dfc2aef992340596bbb292cf926ddea8d96574"
+    },
+    {
+      "file": "compose.yaml",
+      "rawSha256": "39c48d4c76e1a5f711cfd77419555b74da1a37e06336d9b02648b8482e1191e8"
+    }
+  ],
+  "localResultsRawSha256": "1e0021e155fc0af0b354d8175f03eecaeed2330f8b9db983dfe535898d8f8508",
+  "checks": {
+    "explicitTestTypecheck": "PASS",
+    "realPostgresPassed": 29,
+    "ordinaryWorkspacePassed": 104,
+    "workspaceCheck": "PASS",
+    "composeConfiguration": "PASS",
+    "syntheticPayloadSmoke": "PASS",
+    "build": "PASS",
+    "realPostgresFailed": 0,
+    "ordinaryDatabaseVisiblySkipped": 29,
+    "realPostgresSkipped": 0
+  },
+  "unchanged": [
+    "protocol and signing schema",
+    "contracts",
+    "policies",
+    "001_init.sql",
+    "pnpm-lock.yaml"
+  ],
+  "cleanup": {
+    "completedAtUTC": "2026-10-18T15:00:25.6646507+02:00",
+    "serverVersion": "18.6",
+    "remainingTestSchemas": 0,
+    "publicTableCount": 0,
+    "containerRemoved": true,
+    "temporaryCredentialFilesRemoved": [
+      "container.env",
+      "test.env"
+    ],
+    "existingContainersOrVolumesModified": false,
+    "tmpfsConfiguredByLaunchCommand": {
+      "/var/lib/postgresql": "rw,size=268435456"
+    },
+    "inspectionReportedNoVolumeMounts": true
+  },
+  "newEnvironmentalDataOrFit": false,
+  "fieldValidation": false,
+  "independentExternalReview": false,
+  "limits": [
+    "Parity covers valid timestamps accepted by both backends, not every ISO string accepted by the protocol",
+    "Integer millisecond priority does not assert physical simultaneity",
+    "Index availability EXPLAIN is forced and is not a latency or production planner benchmark",
+    "No crash recovery or production load test",
+    "Existing volumes require explicit maintenance migration; the previous writer cannot omit NOT NULL ordering keys"
+  ],
+  "evidenceEncoding": "UTF-8 without BOM, LF"
+}

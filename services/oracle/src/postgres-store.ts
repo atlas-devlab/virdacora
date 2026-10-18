@@ -6,6 +6,7 @@ import type {
 import { Pool } from "pg";
 
 import { DomainError } from "./errors.js";
+import { timestampMilliseconds } from "./timestamp-order.js";
 import {
   validateObservationLimit,
   type ObservationStore,
@@ -55,11 +56,12 @@ export class PostgresObservationStore implements ObservationStore {
 
   public async addObservation(entry: StoredObservation): Promise<void> {
     const snapshot = { observationId: entry.observationId, observation: { ...entry.observation } };
+    const observedAt = timestampMilliseconds(snapshot.observation.observedAt);
     try {
       await this.pool.query(
         `INSERT INTO observations
-           (observation_id, sensor_id, region_id, metric, observed_at, sequence, body)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+           (observation_id, sensor_id, region_id, metric, observed_at, sequence, body, observed_at_ms)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
         [
           snapshot.observationId,
           snapshot.observation.sensorId,
@@ -67,7 +69,8 @@ export class PostgresObservationStore implements ObservationStore {
           snapshot.observation.metric,
           snapshot.observation.observedAt,
           snapshot.observation.sequence,
-          snapshot.observation
+          snapshot.observation,
+          observedAt
         ]
       );
     } catch (error) {
@@ -91,7 +94,7 @@ export class PostgresObservationStore implements ObservationStore {
       `SELECT observation_id AS "observationId", body AS observation
          FROM observations
         WHERE region_id = $1 AND metric = $2
-        ORDER BY observed_at DESC, observation_id DESC
+        ORDER BY observed_at_ms DESC, observation_id COLLATE "C" DESC
         LIMIT $3`,
       [regionId, metric, limit]
     );
@@ -100,17 +103,19 @@ export class PostgresObservationStore implements ObservationStore {
 
   public async saveAssessment(assessment: Assessment): Promise<void> {
     const snapshot = { ...assessment };
+    const generatedAt = timestampMilliseconds(snapshot.generatedAt);
     await this.pool.query(
       `INSERT INTO assessments
-         (assessment_id, region_id, metric, generated_at, body)
-       VALUES ($1, $2, $3, $4, $5)
+         (assessment_id, region_id, metric, generated_at, body, generated_at_ms)
+       VALUES ($1, $2, $3, $4, $5, $6)
        ON CONFLICT (assessment_id) DO NOTHING`,
       [
         snapshot.assessmentId,
         snapshot.regionId,
         snapshot.metric,
         snapshot.generatedAt,
-        snapshot
+        snapshot,
+        generatedAt
       ]
     );
   }
@@ -122,7 +127,7 @@ export class PostgresObservationStore implements ObservationStore {
     const result = await this.pool.query<{ body: Assessment }>(
       `SELECT body FROM assessments
         WHERE region_id = $1 AND metric = $2
-        ORDER BY generated_at DESC, assessment_id DESC
+        ORDER BY generated_at_ms DESC, assessment_id COLLATE "C" DESC
         LIMIT 1`,
       [regionId, metric]
     );

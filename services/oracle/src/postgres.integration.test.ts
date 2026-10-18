@@ -1,7 +1,7 @@
 import { generateKeyPairSync } from "node:crypto";
 
 import type { Assessment, SensorRegistration } from "@terravoce/protocol";
-import { signObservation } from "@terravoce/protocol";
+import { observationId, signObservation, verifyObservation } from "@terravoce/protocol";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
@@ -40,7 +40,9 @@ const reference = (rows: StoredObservation[], regionId: string, metric: string, 
   rows.filter(({ observation }) => observation.regionId === regionId && observation.metric === metric)
     .sort((left, right) => {
       const time = Date.parse(left.observation.observedAt) - Date.parse(right.observation.observedAt);
-      return time === 0 ? left.observationId.localeCompare(right.observationId) : time;
+      return time === 0
+        ? left.observationId < right.observationId ? -1 : left.observationId > right.observationId ? 1 : 0
+        : time;
     }).slice(-limit);
 const policySource = `
 policy "po-water-oxygen" version 1 {
@@ -261,25 +263,302 @@ describe.skipIf(databaseUrl === undefined)("real PostgreSQL observation storage"
     await expect(reopened.addObservation(originalObservation)).rejects.toMatchObject({ code: "OBSERVATION_REPLAY" });
   });
 
-  it("documents the known PostgreSQL microsecond versus memory millisecond ordering difference", async () => {
+  it.each([
+    { name: "submillisecond values with inversely ordered IDs", ids: [1, 2], times: [
+      "2026-10-01T00:00:00.1239Z", "2026-10-01T00:00:00.1231Z"
+    ] },
+    { name: "seven and nine fractional digits before a millisecond boundary", ids: [1, 2, 3], times: [
+      "2026-10-01T00:00:00.1239999Z", "2026-10-01T00:00:00.124000000Z",
+      "2026-10-01T00:00:00.123000001Z"
+    ] },
+    { name: "rounding across a UTC day boundary", ids: [1, 2, 3], times: [
+      "2026-09-30T23:59:59.999999999Z", "2026-10-01T00:00:00.000000000Z",
+      "2026-09-30T23:59:59.999000001Z"
+    ] },
+    { name: "negative epoch values before 1970", ids: [1, 2, 3], times: [
+      "1969-12-31T23:59:59.9999999Z", "1970-01-01T00:00:00.000000000Z",
+      "1969-12-31T23:59:59.999000001Z"
+    ] },
+    { name: "equivalent UTC offsets and fractional spellings", ids: [1, 2, 3], times: [
+      "2026-10-01T00:00:00.1239999Z", "2026-10-01T01:00:00.123+01:00",
+      "2026-09-30T19:00:00.123000001-05:00"
+    ] },
+    { name: "minute precision without seconds", ids: [1, 2, 3], times: [
+      "2026-10-01T00:00Z", "2026-10-01T01:00+01:00", "2026-10-01T00:00:00.000000001Z"
+    ] },
+    { name: "ASCII digit-to-letter ID ties", ids: [9, 10, 15], times: [
+      "2026-10-01T00:00:00.1239Z", "2026-10-01T00:00:00.1231Z", "2026-10-01T00:00:00.123Z"
+    ] }
+  ])("matches memory millisecond tails and latest assessments for $name", async ({ times, ids }) => {
     await store.registerSensor(registration);
     const memory = new MemoryObservationStore();
-    const rows = [entry(1, { observedAt: "2026-10-01T00:00:00.1239Z" }),
-      entry(2, { observedAt: "2026-10-01T00:00:00.1231Z" })];
-    for (const row of rows) { await store.addObservation(row); await memory.addObservation(row); }
-    const postgresRows = await store.listObservations("region-01", "water.oxygen.mg_l", 512);
-    const memoryRows = await memory.listObservations("region-01", "water.oxygen.mg_l", 512);
-    expect(postgresRows).toEqual([rows[1], rows[0]]);
-    expect(memoryRows).toEqual([rows[0], rows[1]]);
-    expect(postgresRows).not.toEqual(memoryRows);
-    const newer = assessment(1, { generatedAt: "2026-10-01T00:00:00.1239Z" });
-    const higherIdOlderTime = assessment(2, { generatedAt: "2026-10-01T00:00:00.1231Z" });
-    for (const row of [newer, higherIdOlderTime]) { await store.saveAssessment(row); await memory.saveAssessment(row); }
-    expect(await store.latestAssessment("region-01", "water.oxygen.mg_l")).toEqual(newer);
-    expect(await memory.latestAssessment("region-01", "water.oxygen.mg_l")).toEqual(higherIdOlderTime);
-    // This is a characterization of an existing limitation, not parity or a precision fix.
+    await memory.registerSensor(registration);
+    const rows = times.map((observedAt, index) => ({
+      ...entry(index + 1, { observedAt }), observationId: id(ids[index]!)
+    }));
+    // Different insertion orders must not change either the bounded tail or latest result.
+    for (const row of [...rows].reverse()) await store.addObservation(row);
+    for (const row of rows) await memory.addObservation(row);
+    for (const limit of [1, 2, rows.length, rows.length + 1]) {
+      const expected = reference(rows, "region-01", "water.oxygen.mg_l", limit);
+      expect(await store.listObservations("region-01", "water.oxygen.mg_l", limit)).toEqual(expected);
+      expect(await memory.listObservations("region-01", "water.oxygen.mg_l", limit)).toEqual(expected);
+    }
+    const keys = await fixture.inspector.query<{ observationId: string; milliseconds: string }>(
+      `SELECT observation_id AS "observationId", observed_at_ms::text AS milliseconds FROM observations`);
+    for (const row of rows) {
+      expect(keys.rows.find(key => key.observationId === row.observationId)?.milliseconds)
+        .toBe(String(Date.parse(row.observation.observedAt)));
+    }
+    const assessments = rows.map(row => assessment(row.observation.sequence, {
+      assessmentId: row.observationId, generatedAt: row.observation.observedAt
+    }));
+    for (const row of assessments) await store.saveAssessment(row);
+    for (const row of [...assessments].reverse()) await memory.saveAssessment(row);
+    const latestId = reference(rows, "region-01", "water.oxygen.mg_l", 1)[0]!.observationId;
+    const expectedLatest = assessments.find(row => row.assessmentId === latestId);
+    expect(await store.latestAssessment("region-01", "water.oxygen.mg_l")).toEqual(expectedLatest);
+    expect(await memory.latestAssessment("region-01", "water.oxygen.mg_l")).toEqual(expectedLatest);
     await memory.close();
   });
+
+  it("upgrades legacy rows from their signed raw timestamps without rewriting bodies or PostgreSQL timestamps", async () => {
+    await fixture.close();
+    fixture = await createPostgresFixture(databaseUrl!, { legacySchema: true });
+    store = fixture.createStore();
+    const pair = generateKeyPairSync("ed25519");
+    const publicKey = pair.publicKey.export({ format: "der", type: "spki" }).toString("base64");
+    const privateKey = pair.privateKey.export({ format: "der", type: "pkcs8" }).toString("base64");
+    await store.registerSensor({ ...registration, publicKeyDerBase64: publicKey });
+    const times = ["1969-12-31T23:59:59.9999999Z", "2026-09-30T23:59:59.999999999Z",
+      "2026-10-01T01:00:00.1239999+01:00", "2026-10-01T00:00Z"];
+    const rows = times.map((observedAt, index): StoredObservation => {
+      const { signature: _signature, ...unsigned } = entry(index + 1, { observedAt }).observation;
+      return { observationId: observationId(unsigned), observation: signObservation(unsigned, privateKey) };
+    });
+    const assessments = times.map((generatedAt, index) => assessment(index + 1, { generatedAt }));
+    for (const row of rows) {
+      await fixture.inspector.query(
+        `INSERT INTO observations (observation_id, sensor_id, region_id, metric, observed_at, sequence, body)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [row.observationId, row.observation.sensorId, row.observation.regionId, row.observation.metric,
+          row.observation.observedAt, row.observation.sequence, row.observation]);
+    }
+    for (const row of assessments) {
+      await fixture.inspector.query(
+        `INSERT INTO assessments (assessment_id, region_id, metric, generated_at, body)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [row.assessmentId, row.regionId, row.metric, row.generatedAt, row]);
+    }
+    const snapshot = async () => ({
+      observations: (await fixture.inspector.query(
+        `SELECT observation_id, observed_at::text AS timestamp, body FROM observations
+         ORDER BY observation_id COLLATE "C"`)).rows,
+      assessments: (await fixture.inspector.query(
+        `SELECT assessment_id, generated_at::text AS timestamp, body FROM assessments
+         ORDER BY assessment_id COLLATE "C"`)).rows
+    });
+    const before = await snapshot();
+    const migrationClient = await fixture.inspector.connect();
+    try {
+      // Explicit-offset source text must backfill identically outside a UTC session.
+      await migrationClient.query("SET TimeZone = 'Pacific/Honolulu'");
+      await migrationClient.query(fixture.timestampMigration);
+    } catch (error) {
+      await migrationClient.query("ROLLBACK");
+      throw error;
+    } finally {
+      try { await migrationClient.query("RESET TimeZone"); } finally { migrationClient.release(); }
+    }
+    expect(await snapshot()).toEqual(before);
+    const storedKeys = await fixture.inspector.query<{ observationId: string; milliseconds: string }>(
+      `SELECT observation_id AS "observationId", observed_at_ms::text AS milliseconds FROM observations
+        ORDER BY observation_id COLLATE "C"`);
+    const generatedKeys = await fixture.inspector.query<{ assessmentId: string; milliseconds: string }>(
+      `SELECT assessment_id AS "assessmentId", generated_at_ms::text AS milliseconds FROM assessments
+        ORDER BY assessment_id COLLATE "C"`);
+    for (const row of rows) {
+      expect(storedKeys.rows.find(key => key.observationId === row.observationId)?.milliseconds)
+        .toBe(String(Date.parse(row.observation.observedAt)));
+    }
+    for (const row of assessments) {
+      expect(generatedKeys.rows.find(key => key.assessmentId === row.assessmentId)?.milliseconds)
+        .toBe(String(Date.parse(row.generatedAt)));
+    }
+    const constraints = await fixture.inspector.query<{
+      tableName: string; columnName: string; nullable: string; dataType: string;
+    }>(
+      `SELECT table_name AS "tableName", column_name AS "columnName", is_nullable AS nullable,
+              data_type AS "dataType" FROM information_schema.columns
+        WHERE table_schema = $1 AND column_name IN ('observed_at_ms', 'generated_at_ms')
+        ORDER BY table_name`, [fixture.schema]);
+    expect(constraints.rows).toEqual([
+      { tableName: "assessments", columnName: "generated_at_ms", nullable: "NO", dataType: "bigint" },
+      { tableName: "observations", columnName: "observed_at_ms", nullable: "NO", dataType: "bigint" }
+    ]);
+    const upgraded = await store.listObservations("region-01", "water.oxygen.mg_l", 512);
+    expect(upgraded).toEqual(reference(rows, "region-01", "water.oxygen.mg_l", 512));
+    for (const row of upgraded) {
+      expect(verifyObservation(row.observation, publicKey)).toBe(true);
+      const { signature: _signature, ...unsigned } = row.observation;
+      expect(observationId(unsigned)).toBe(row.observationId);
+    }
+    const sortedAssessments = [...assessments].sort((left, right) =>
+      Date.parse(left.generatedAt) - Date.parse(right.generatedAt) ||
+      (left.assessmentId < right.assessmentId ? -1 : left.assessmentId > right.assessmentId ? 1 : 0));
+    expect(await store.latestAssessment("region-01", "water.oxygen.mg_l")).toEqual(sortedAssessments.at(-1));
+    // Reapply both actual files, including the already completed backfill.
+    await fixture.inspector.query(fixture.migration);
+    expect(await snapshot()).toEqual(before);
+    expect((await fixture.inspector.query(
+      `SELECT observation_id AS "observationId", observed_at_ms::text AS milliseconds FROM observations
+        ORDER BY observation_id COLLATE "C"`)).rows)
+      .toEqual(storedKeys.rows);
+    expect((await fixture.inspector.query(
+      `SELECT assessment_id AS "assessmentId", generated_at_ms::text AS milliseconds FROM assessments
+        ORDER BY assessment_id COLLATE "C"`)).rows)
+      .toEqual(generatedKeys.rows);
+  });
+
+  it.each(["observation", "assessment"] as const)(
+    "rolls back all timestamp migration changes when a legacy %s lacks an explicit time zone", async kind => {
+      await fixture.close();
+      fixture = await createPostgresFixture(databaseUrl!, { legacySchema: true });
+      store = fixture.createStore();
+      await store.registerSensor(registration);
+      const row = entry(1, { observedAt: kind === "observation"
+        ? "2026-10-01T00:00:00" : "2026-10-01T00:00:00Z" });
+      const report = assessment(1, { generatedAt: kind === "assessment"
+        ? "2026-10-01T00:00:00" : "2026-10-01T00:00:00Z" });
+      // Deliberately malformed legacy JSON, with valid separately stored TIMESTAMPTZ metadata.
+      await fixture.inspector.query(
+        `INSERT INTO observations (observation_id, sensor_id, region_id, metric, observed_at, sequence, body)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [row.observationId, row.observation.sensorId, row.observation.regionId, row.observation.metric,
+          "2026-10-01T00:00:00Z", row.observation.sequence, row.observation]);
+      await fixture.inspector.query(
+        `INSERT INTO assessments (assessment_id, region_id, metric, generated_at, body)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [report.assessmentId, report.regionId, report.metric, "2026-10-01T00:00:00Z", report]);
+      const snapshot = async () => ({
+        observations: (await fixture.inspector.query(
+          "SELECT observation_id, observed_at::text AS timestamp, body FROM observations")).rows,
+        assessments: (await fixture.inspector.query(
+          "SELECT assessment_id, generated_at::text AS timestamp, body FROM assessments")).rows
+      });
+      const before = await snapshot();
+      const client = await fixture.inspector.connect();
+      try {
+        await expect(client.query(fixture.timestampMigration)).rejects.toMatchObject({ code: "P0001" });
+        await expect(client.query("SELECT 1")).rejects.toMatchObject({ code: "25P02" });
+      } finally {
+        try { await client.query("ROLLBACK"); } finally { client.release(); }
+      }
+      const columns = await fixture.inspector.query(
+        `SELECT column_name FROM information_schema.columns
+          WHERE table_schema = $1 AND column_name IN ('observed_at_ms', 'generated_at_ms')`, [fixture.schema]);
+      expect(columns.rows).toEqual([]);
+      const indexes = await fixture.inspector.query(
+        `SELECT indexname FROM pg_catalog.pg_indexes WHERE schemaname = $1
+          AND indexname IN ('observations_region_metric_time_ms', 'assessments_region_metric_time_ms')`, [fixture.schema]);
+      expect(indexes.rows).toEqual([]);
+      expect(await snapshot()).toEqual(before);
+    });
+
+  it("provides matching time-and-ID indexes for bounded reads without claiming a performance benchmark", async () => {
+    await store.registerSensor(registration);
+    for (let value = 1; value <= 32; value += 1) {
+      await store.addObservation(entry(value));
+      await store.saveAssessment(assessment(value));
+    }
+    const definitions = await fixture.inspector.query<{ indexname: string; indexdef: string }>(
+      `SELECT indexname, indexdef FROM pg_catalog.pg_indexes
+        WHERE schemaname = $1 AND indexname IN
+          ('observations_region_metric_time_ms', 'assessments_region_metric_time_ms')`, [fixture.schema]);
+    expect(definitions.rows).toHaveLength(2);
+    for (const row of definitions.rows) expect(row.indexdef).toContain('COLLATE "C"');
+    const client = await fixture.inspector.connect();
+    try {
+      await client.query("BEGIN");
+      // Force a diagnostic index-availability check. This does not measure the production planner or latency.
+      await client.query("SET LOCAL enable_seqscan = off");
+      for (const [table, timeColumn, idColumn, expectedIndex] of [
+        ["observations", "observed_at_ms", "observation_id", "observations_region_metric_time_ms"],
+        ["assessments", "generated_at_ms", "assessment_id", "assessments_region_metric_time_ms"]
+      ] as const) {
+        const result = await client.query<{ "QUERY PLAN": { Plan: Record<string, unknown> }[] }>(
+          `EXPLAIN (FORMAT JSON, COSTS OFF) SELECT body FROM ${table}
+            WHERE region_id = $1 AND metric = $2
+            ORDER BY ${timeColumn} DESC, ${idColumn} COLLATE "C" DESC LIMIT $3`,
+          ["region-01", "water.oxygen.mg_l", 1]);
+        const plan = JSON.stringify(result.rows[0]?.["QUERY PLAN"]);
+        expect(plan).toContain(expectedIndex);
+        expect(plan).toMatch(/Index(?: Only)? Scan/);
+        expect(plan).not.toContain('"Node Type":"Sort"');
+      }
+    } finally {
+      await client.query("ROLLBACK");
+      client.release();
+    }
+  });
+
+  it("selects identical signed evidence and analysis hashes through both backends", async () => {
+    const pair = generateKeyPairSync("ed25519");
+    const publicKey = pair.publicKey.export({ format: "der", type: "spki" }).toString("base64");
+    const privateKey = pair.privateKey.export({ format: "der", type: "pkcs8" }).toString("base64");
+    const memory = new MemoryObservationStore();
+    await store.registerSensor({ ...registration, publicKeyDerBase64: publicKey });
+    await memory.registerSensor({ ...registration, publicKeyDerBase64: publicKey });
+    const times = ["2026-10-01T00:00:00.1239999Z", "2026-10-01T00:30:00.0000001Z",
+      "2026-10-01T02:00+01:00", "2026-10-01T01:00:00.123000001Z",
+      "2026-10-01T02:00:00.000Z", "2026-10-01T02:00:00.000000001Z",
+      "2026-10-01T03:00:00.9999999Z"];
+    const rows = times.map((observedAt, index): StoredObservation => {
+      const { signature: _signature, ...unsigned } = entry(index + 1, { observedAt, value: 5 + index / 10 }).observation;
+      return { observationId: observationId(unsigned), observation: signObservation(unsigned, privateKey) };
+    });
+    for (const row of rows) await store.addObservation(row);
+    for (const row of [...rows].reverse()) await memory.addObservation(row);
+    const expected = reference(rows, "region-01", "water.oxygen.mg_l", 5);
+    const postgresRows = await store.listObservations("region-01", "water.oxygen.mg_l", 5);
+    const memoryRows = await memory.listObservations("region-01", "water.oxygen.mg_l", 5);
+    expect(postgresRows).toEqual(expected);
+    expect(memoryRows).toEqual(expected);
+    for (const row of postgresRows) {
+      expect(verifyObservation(row.observation, publicKey)).toBe(true);
+      const { signature: _signature, ...unsigned } = row.observation;
+      expect(observationId(unsigned)).toBe(row.observationId);
+    }
+    const postgresAssessment = analyzeObservations(postgresRows, 3_600);
+    const memoryAssessment = analyzeObservations(memoryRows, 3_600);
+    expect(postgresAssessment).toEqual(memoryAssessment);
+    expect(postgresAssessment.evidenceHash).toBe(analyzeObservations(expected, 3_600).evidenceHash);
+    await store.saveAssessment(postgresAssessment);
+    await memory.saveAssessment(memoryAssessment);
+    expect(await store.latestAssessment("region-01", "water.oxygen.mg_l"))
+      .toEqual(await memory.latestAssessment("region-01", "water.oxygen.mg_l"));
+    await memory.close();
+  });
+
+  it.each(["not-a-timestamp", "2026-99-99T99:99:99Z", ""])(
+    "rejects unparseable timestamps without consuming observation keys or assessment IDs: case %#", async (invalidTime) => {
+      const memory = new MemoryObservationStore();
+      await store.registerSensor(registration);
+      await memory.registerSensor(registration);
+      const invalid = entry(1, { observedAt: invalidTime });
+      for (const target of [store, memory]) {
+        await expect(target.addObservation(invalid)).rejects.toMatchObject({ code: "INVALID_TIME", statusCode: 422 });
+        expect(await target.listObservations("region-01", "water.oxygen.mg_l", 1)).toEqual([]);
+        await target.addObservation(entry(1));
+        expect(await target.listObservations("region-01", "water.oxygen.mg_l", 1)).toEqual([entry(1)]);
+        await expect(target.saveAssessment(assessment(1, { generatedAt: invalidTime })))
+          .rejects.toMatchObject({ code: "INVALID_TIME", statusCode: 422 });
+        expect(await target.latestAssessment("region-01", "water.oxygen.mg_l")).toBeUndefined();
+        await target.saveAssessment(assessment(1));
+        expect(await target.latestAssessment("region-01", "water.oxygen.mg_l")).toEqual(assessment(1));
+      }
+      await memory.close();
+    });
 
   it("uses actual Ed25519 API verification with PostgreSQL and preserves rejected sequence availability", async () => {
     const pair = generateKeyPairSync("ed25519");

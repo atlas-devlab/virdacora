@@ -46,6 +46,8 @@ export function validateTestDatabaseUrl(value: string | undefined): string {
 export interface PostgresFixture {
   schema: string;
   inspector: Pool;
+  initialMigration: string;
+  timestampMigration: string;
   migration: string;
   createStore(): PostgresObservationStore;
   closeStore(store: PostgresObservationStore): Promise<void>;
@@ -54,11 +56,18 @@ export interface PostgresFixture {
   close(): Promise<void>;
 }
 
-export async function createPostgresFixture(baseUrl: string): Promise<PostgresFixture> {
+export async function createPostgresFixture(
+  baseUrl: string,
+  options: { legacySchema?: boolean } = {}
+): Promise<PostgresFixture> {
   const validated = validateTestDatabaseUrl(baseUrl);
   const schema = `virdacora_test_${randomBytes(16).toString("hex")}`;
   if (!schemaPattern.test(schema)) throw new Error("Invalid generated test schema");
-  const migration = await readFile(new URL("../db/001_init.sql", import.meta.url), "utf8");
+  const [initialMigration, timestampMigration] = await Promise.all([
+    readFile(new URL("../db/001_init.sql", import.meta.url), "utf8"),
+    readFile(new URL("../db/002_timestamp_order.sql", import.meta.url), "utf8")
+  ]);
+  const migration = `${initialMigration}\n${timestampMigration}`;
   const admin = new Pool({ connectionString: validated, max: 1, connectionTimeoutMillis: 5_000,
     options: "-csearch_path=pg_catalog -cstatement_timeout=10000 -clock_timeout=5000" });
   let created = false;
@@ -98,9 +107,10 @@ export async function createPostgresFixture(baseUrl: string): Promise<PostgresFi
     if (scope.rows[0]?.schema !== schema || scope.rows[0]?.searchPath !== schema) {
       throw new Error("PostgreSQL fixture schema isolation was not established");
     }
-    await inspector.query(migration);
+    await inspector.query(initialMigration);
+    if (options.legacySchema !== true) await inspector.query(timestampMigration);
     return {
-      schema, inspector, migration,
+      schema, inspector, initialMigration, timestampMigration, migration,
       createStore() {
         if (closed) throw new Error("PostgreSQL test fixture is closed");
         const store = new PostgresObservationStore(connectionString);
