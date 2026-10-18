@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "kind": "oxygen-unit-correction",
+  "baseCommit": "22424933d40e2a362b2c3ff3c0b7bdcc74af8819",
+  "recordedAtUTC": "2026-10-18T15:48:16.8385466Z",
+  "validationScope": "Local source and synthetic signed-data verification; remote PR CI is reported separately",
+  "runtime": {
+    "node": "v24.18.0",
+    "pnpm": "11.25.0",
+    "vitest": "4.1.10",
+    "postgres": "18.6"
+  },
+  "checks": {
+    "workspaceBuild": "passed",
+    "workspaceCheck": "passed",
+    "explicitStrictTypeScriptIncludingOracleTests": "passed",
+    "ordinary": {
+      "oraclePassed": 157,
+      "protocolPassed": 1,
+      "terralexPassed": 3,
+      "contractsPassed": 10,
+      "totalPassed": 171,
+      "postgresSkippedInOrdinary": 36
+    },
+    "realPostgres": {
+      "passed": 36,
+      "failed": 0,
+      "skipped": 0,
+      "dedicatedLocalTmpfs": true,
+      "ownedContainerRemoved": true
+    },
+    "gitDiffCheck": "passed"
+  },
+  "syntheticExamples": {
+    "constant": {
+      "signedRawAlternatives": [
+        "6 mg/L",
+        "6000 ug/L",
+        "6000 µg/L",
+        "6000 μg/L"
+      ],
+      "currentMgL": 6,
+      "oneHourForecastMgL": 6,
+      "slopeMgLPerHour": 0,
+      "anomaly": 0
+    },
+    "nonlinear": {
+      "canonicalMgL": [
+        8,
+        7,
+        6.5,
+        6.25,
+        6
+      ],
+      "currentMgL": 6,
+      "oneHourForecastMgL": 5.325,
+      "slopeMgLPerHour": -0.475,
+      "anomaly": 0.454297,
+      "confidence": 0.403815,
+      "risk": 0.295293
+    }
+  },
+  "invariants": [
+    "Raw signed values, exact unit spellings, timestamps, IDs and signatures preserved in memory/JSONB and after reopening",
+    "Equivalent physical series produce equal numerical outputs, not equal original evidence IDs/hashes",
+    "Unsupported selected legacy oxygen units fail before assessment persistence and policy evaluation",
+    "Current oxygen latest selects only v2; old assessments preserved and not recalculated automatically",
+    "Other metrics retain v1 identity and previous latest behavior"
+  ],
+  "correctedDuringReview": [
+    "Scoped v2 to oxygen only to avoid changing unrelated metric identity"
+  ],
+  "setupIssues": [
+    "Initial Docker name/digest references were not resolved by local image inspect; no container or test was created in that attempt. The existing image was then inspected by immutable ID and its RepoDigest checked before use."
+  ],
+  "limits": [
+    "Synthetic test data, no new field observation or forecasting validation",
+    "Confidence remains heuristic; no physical action or real funds",
+    "No new SQL version index or load performance claim",
+    "Read-only assessment-version filtering adds no SQL schema migration",
+    "Baselines summarize previously captured test output, not an independent rerun; focused cases were subsequently expanded"
+  ],
+  "sourceSha256": {
+    "services/oracle/src/analysis.ts": "6ade3e6395fa8d53a60520361740ac6dd737498fd19cb47b8de077b562139e5c",
+    "services/oracle/src/app.ts": "d325cb9b854d17c47ea1e276a3dca10fb84aa0ac5b71201ed3a8438013a8c545",
+    "services/oracle/src/observation-units.ts": "12dc63ac6b3978471d86a115e4f63d1c156c4939b087b428aba3cb3f9c61abcf",
+    "services/oracle/src/store.ts": "b7095df3c440eeee4d2ec028b7ab0ab558a3ca309a56dc6aba4fc7b6774ae99e",
+    "services/oracle/src/postgres-store.ts": "849007d82fcc68188eeb64a31a60e084811b7bb131f85e26cb736a27a1914932",
+    "services/oracle/src/oxygen-units.test.ts": "368fefc6922b3e71670015839216ab6d93121d71fcea300d42ddf69e0aa93f5d",
+    "services/oracle/src/store.test.ts": "b5e2d10baa773d6ec3d8e981256c73e91784c4f3de185bcbf3661c5aed502cf5",
+    "services/oracle/src/postgres.integration.test.ts": "54259c55177d02e8d83c08c9902bd13449c1e0bc2a9c24facf10cb25fac0e731",
+    "services/oracle/src/timestamp-order.test.ts": "53ec783bc5f1502530064000cb303175288761b0e0ccad0631c39459f27fa236"
+  }
+}

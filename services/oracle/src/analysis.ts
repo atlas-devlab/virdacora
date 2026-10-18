@@ -7,6 +7,9 @@ import {
 
 import type { StoredObservation } from "./store.js";
 import { compareTimestampKeys, timestampMilliseconds } from "./timestamp-order.js";
+import { OXYGEN_METRIC, valueForAnalysis } from "./observation-units.js";
+
+export const OXYGEN_ANALYSIS_MODEL_VERSION = "terravoce-linear-risk-v2-oxygen-units";
 
 export interface MetricProfile {
   direction: "above" | "below";
@@ -83,7 +86,10 @@ export const analyzeObservations = (
 
   const origin = indexed[0]!.milliseconds;
   const hours = indexed.map(({ milliseconds }) => (milliseconds - origin) / 3_600_000);
-  const values = sorted.map(({ observation }) => observation.value);
+  // Keep canonical numbers separate from signed evidence. All numerical paths
+  // below, including the latest value and anomaly calculation, use this vector.
+  const values = sorted.map(({ observation }) => valueForAnalysis(observation));
+  const latestValue = values[values.length - 1]!;
   const regression = linearRegression(hours, values);
   const latestHour = hours[hours.length - 1] ?? 0;
   const horizonHours = forecastHorizonSeconds / 3_600;
@@ -95,7 +101,7 @@ export const analyzeObservations = (
     previous.reduce((sum, value) => sum + (value - previousMean) ** 2, 0) /
     Math.max(1, previous.length - 1);
   const deviation = Math.sqrt(variance);
-  const zScore = deviation === 0 ? 0 : Math.abs(latest.observation.value - previousMean) / deviation;
+  const zScore = deviation === 0 ? 0 : Math.abs(latestValue - previousMean) / deviation;
   const anomalyScore = clamp(1 - Math.exp(-zScore / 2));
 
   const valueScale = Math.max(1, Math.abs(previousMean));
@@ -110,13 +116,13 @@ export const analyzeObservations = (
   const risk = Math.max(riskFor(selectedProfile, forecastValue), anomalyScore * 0.65);
 
   const evidenceCore = {
-    modelVersion: "terravoce-linear-risk-v1",
+    modelVersion: metric === OXYGEN_METRIC ? OXYGEN_ANALYSIS_MODEL_VERSION : "terravoce-linear-risk-v1",
     regionId,
     metric,
     generatedAt: latest.observation.observedAt,
     observationIds: sorted.map(({ observationId }) => observationId),
     forecastHorizonSeconds,
-    currentValue: round(latest.observation.value),
+    currentValue: round(latestValue),
     forecastValue: round(forecastValue),
     slopePerHour: round(regression.slope),
     anomalyScore: round(anomalyScore),

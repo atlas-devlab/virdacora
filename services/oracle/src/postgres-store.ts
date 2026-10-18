@@ -156,14 +156,15 @@ export class PostgresObservationStore implements ObservationStore {
 
   public async latestAssessment(
     regionId: string,
-    metric: string
+    metric: string,
+    modelVersion?: string
   ): Promise<Assessment | undefined> {
     const result = await this.pool.query<{ body: Assessment }>(
       `SELECT body FROM assessments
-        WHERE region_id = $1 AND metric = $2
+        WHERE region_id = $1 AND metric = $2${modelVersion === undefined ? "" : " AND body->>'modelVersion' = $3"}
         ORDER BY generated_at_ms DESC, assessment_id COLLATE "C" DESC
         LIMIT 1`,
-      [regionId, metric]
+      modelVersion === undefined ? [regionId, metric] : [regionId, metric, modelVersion]
     );
     return result.rows[0]?.body;
   }

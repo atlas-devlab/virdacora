@@ -599,6 +599,195 @@ describe.skipIf(databaseUrl === undefined)("real PostgreSQL observation storage"
       await memory.close();
     });
 
+  it("analyzes signed mixed oxygen units identically across PostgreSQL and memory without rewriting originals", async () => {
+    const pair = generateKeyPairSync("ed25519");
+    const publicKey = pair.publicKey.export({ format: "der", type: "spki" }).toString("base64");
+    const privateKey = pair.privateKey.export({ format: "der", type: "pkcs8" }).toString("base64");
+    const now = new Date("2026-10-18T12:00:00.000Z");
+    const app = buildApp({ store, policySource, adminToken: "synthetic-admin",
+      oracleToken: "synthetic-oracle", now: () => now });
+    fixture.useStoreOwner(store, () => app.close());
+    const memory = new MemoryObservationStore();
+    const sensor = { ...registration, regionId: "IT-PO-DELTA", publicKeyDerBase64: publicKey };
+    expect((await app.inject({ method: "POST", url: "/v1/sensors",
+      headers: { "x-admin-token": "synthetic-admin" }, payload: sensor })).statusCode).toBe(201);
+    await memory.registerSensor(sensor);
+    // All four accepted spellings occur; the chronologically latest row is
+    // micrograms, so currentValue must be normalized as well as the regression.
+    const units = ["mg/L", "ug/L", "\u00b5g/L", "\u03bcg/L", "mg/L", "\u00b5g/L"];
+    const rows = units.map((unit, index): StoredObservation => {
+      const { signature: _signature, ...unsigned } = entry(index + 1, {
+        regionId: sensor.regionId, unit, value: unit === "mg/L" ? 6 : 6_000,
+        observedAt: new Date(now.getTime() - (units.length - index) * 3_600_000).toISOString()
+      }).observation;
+      return { observationId: observationId(unsigned), observation: signObservation(unsigned, privateKey) };
+    });
+    const originals = structuredClone(rows);
+    for (const row of rows) {
+      expect((await app.inject({ method: "POST", url: "/v1/observations", payload: row.observation })).statusCode)
+        .toBe(202);
+      await memory.addObservation(row);
+    }
+    const signedSnapshot = async () => (await fixture.inspector.query<StoredObservation>(
+      `SELECT observation_id AS "observationId", body AS observation FROM observations
+        ORDER BY observed_at_ms, observation_id COLLATE "C"`)).rows;
+    expect(await signedSnapshot()).toEqual(originals);
+    const memoryRows = await memory.listObservations(sensor.regionId, "water.oxygen.mg_l", 512);
+    expect(await store.listObservations(sensor.regionId, "water.oxygen.mg_l", 512)).toEqual(memoryRows);
+    const expected = analyzeObservations(memoryRows, 3_600);
+    const result = await app.inject({ method: "POST", url: "/v1/assessments/run",
+      headers: { "x-oracle-token": "synthetic-oracle" }, payload: {
+        regionId: sensor.regionId, metric: "water.oxygen.mg_l", forecastHorizonHours: 1,
+        requestedAction: "WATER_AERATION", requestedAmount: 0, asset: "USDC"
+      } });
+    expect(result.statusCode).toBe(201);
+    expect(result.json().assessment).toEqual(expected);
+    expect(result.json().assessment).toMatchObject({ observationCount: rows.length,
+      currentValue: 6, forecastValue: 6, slopePerHour: 0, anomalyScore: 0 });
+    expect((await app.inject({ method: "POST", url: "/v1/observations", payload: rows.at(-1)!.observation }))
+      .statusCode).toBe(409);
+    expect(await signedSnapshot()).toEqual(originals);
+    await fixture.closeStore(store); // The app drains and closes this pool through its owner.
+    const reopened = fixture.createStore();
+    const reopenedRows = await reopened.listObservations(sensor.regionId, "water.oxygen.mg_l", 512);
+    expect(reopenedRows).toEqual(originals);
+    expect(await reopened.latestAssessment(sensor.regionId, "water.oxygen.mg_l")).toEqual(expected);
+    for (const row of reopenedRows) {
+      expect(verifyObservation(row.observation, publicKey)).toBe(true);
+      const { signature: _signature, ...unsigned } = row.observation;
+      expect(observationId(unsigned)).toBe(row.observationId);
+    }
+    expect(rows).toEqual(originals);
+    expect(await memory.listObservations(sensor.regionId, "water.oxygen.mg_l", 512)).toEqual(originals);
+    await memory.close();
+  });
+
+  it("rejects a newly submitted unsupported oxygen unit before inserting or reserving its sequence", async () => {
+    const pair = generateKeyPairSync("ed25519");
+    const publicKey = pair.publicKey.export({ format: "der", type: "spki" }).toString("base64");
+    const privateKey = pair.privateKey.export({ format: "der", type: "pkcs8" }).toString("base64");
+    const now = new Date("2026-10-18T12:00:00.000Z");
+    const app = buildApp({ store, policySource, adminToken: "synthetic-admin",
+      oracleToken: "synthetic-oracle", now: () => now });
+    fixture.useStoreOwner(store, () => app.close());
+    await store.registerSensor({ ...registration, regionId: "IT-PO-DELTA", publicKeyDerBase64: publicKey });
+    const { signature: _signature, ...unsigned } = entry(1, { regionId: "IT-PO-DELTA",
+      observedAt: now.toISOString(), value: 0.006, unit: "g/L" }).observation;
+    const unsupported = signObservation(unsigned, privateKey);
+    expect(verifyObservation(unsupported, publicKey)).toBe(true);
+
+    const rejected = await app.inject({ method: "POST", url: "/v1/observations", payload: unsupported });
+
+    expect(rejected.statusCode).toBe(422);
+    expect(rejected.json().error).toBe("INVALID_OBSERVATION_UNIT");
+    expect((await fixture.inspector.query("SELECT count(*)::integer AS count FROM observations")).rows)
+      .toEqual([{ count: 0 }]);
+    expect((await fixture.inspector.query("SELECT count(*)::integer AS count FROM assessments")).rows)
+      .toEqual([{ count: 0 }]);
+    const supported = signObservation({ ...unsigned, unit: "mg/L", value: 6 }, privateKey);
+    expect((await app.inject({ method: "POST", url: "/v1/observations", payload: supported })).statusCode).toBe(202);
+    expect(await store.listObservations("IT-PO-DELTA", "water.oxygen.mg_l", 512))
+      .toEqual([{ observationId: observationId({ ...unsigned, unit: "mg/L", value: 6 }), observation: supported }]);
+  });
+
+  it("rejects analysis of an unsupported legacy oxygen unit without an assessment, action draft or signed-data rewrite", async () => {
+    const pair = generateKeyPairSync("ed25519");
+    const publicKey = pair.publicKey.export({ format: "der", type: "spki" }).toString("base64");
+    const privateKey = pair.privateKey.export({ format: "der", type: "pkcs8" }).toString("base64");
+    const now = new Date("2026-10-18T12:00:00.000Z");
+    const app = buildApp({ store, policySource, adminToken: "synthetic-admin",
+      oracleToken: "synthetic-oracle", now: () => now });
+    fixture.useStoreOwner(store, () => app.close());
+    await store.registerSensor({ ...registration, regionId: "IT-PO-DELTA", publicKeyDerBase64: publicKey });
+    const rows = Array.from({ length: 5 }, (_, index): StoredObservation => {
+      const { signature: _signature, ...unsigned } = entry(index + 1, { regionId: "IT-PO-DELTA",
+        unit: index === 2 ? "g/L" : "mg/L", value: index === 2 ? 0.006 : 6,
+        observedAt: new Date(now.getTime() - (5 - index) * 3_600_000).toISOString() }).observation;
+      return { observationId: observationId(unsigned), observation: signObservation(unsigned, privateKey) };
+    });
+    for (const row of rows) await store.addObservation(row); // Simulate an existing archive, bypassing new HTTP validation.
+    const originals = structuredClone(rows);
+
+    const rejected = await app.inject({ method: "POST", url: "/v1/assessments/run",
+      headers: { "x-oracle-token": "synthetic-oracle" }, payload: {
+        regionId: "IT-PO-DELTA", metric: "water.oxygen.mg_l", forecastHorizonHours: 1,
+        requestedAction: "WATER_AERATION", requestedAmount: 0, asset: "USDC"
+      } });
+
+    expect(rejected.statusCode).toBe(422);
+    expect(rejected.json().error).toBe("INVALID_OBSERVATION_UNIT");
+    expect(rejected.json()).not.toHaveProperty("assessment");
+    expect(rejected.json()).not.toHaveProperty("actionDraft");
+    expect((await fixture.inspector.query("SELECT count(*)::integer AS count FROM assessments")).rows)
+      .toEqual([{ count: 0 }]);
+    expect(await store.latestAssessment("IT-PO-DELTA", "water.oxygen.mg_l")).toBeUndefined();
+    const stored = await store.listObservations("IT-PO-DELTA", "water.oxygen.mg_l", 512);
+    expect(stored).toEqual(originals);
+    for (const row of stored) {
+      expect(verifyObservation(row.observation, publicKey)).toBe(true);
+      const { signature: _signature, ...unsigned } = row.observation;
+      expect(observationId(unsigned)).toBe(row.observationId);
+    }
+  });
+
+  it("serves the current oxygen model assessment without letting a larger legacy ID hide it or rewriting history", async () => {
+    const pair = generateKeyPairSync("ed25519");
+    const publicKey = pair.publicKey.export({ format: "der", type: "spki" }).toString("base64");
+    const privateKey = pair.privateKey.export({ format: "der", type: "pkcs8" }).toString("base64");
+    const now = new Date("2026-10-18T12:00:00.000Z");
+    const currentVersion = "terravoce-linear-risk-v2-oxygen-units";
+    const app = buildApp({ store, policySource, adminToken: "synthetic-admin",
+      oracleToken: "synthetic-oracle", now: () => now });
+    fixture.useStoreOwner(store, () => app.close());
+    await store.registerSensor({ ...registration, regionId: "IT-PO-DELTA", publicKeyDerBase64: publicKey });
+    const legacy = assessment(1, { assessmentId: `0x${"f".repeat(64)}`, regionId: "IT-PO-DELTA",
+      modelVersion: "terravoce-linear-risk-v1", generatedAt: now.toISOString() });
+    await store.saveAssessment(legacy);
+    const legacyBefore = (await fixture.inspector.query<{ body: Assessment }>(
+      "SELECT body FROM assessments WHERE assessment_id = $1", [legacy.assessmentId])).rows[0]?.body;
+    expect(legacyBefore).toEqual(legacy);
+    const latestUrl = "/v1/regions/IT-PO-DELTA/metrics/water.oxygen.mg_l/latest";
+    const before = await app.inject({ method: "GET", url: latestUrl });
+    expect(before.statusCode).toBe(404);
+    expect(before.json().error).toBe("ASSESSMENT_NOT_FOUND");
+    expect(await store.latestAssessment("IT-PO-DELTA", "water.oxygen.mg_l", currentVersion)).toBeUndefined();
+    expect(await store.latestAssessment("IT-PO-DELTA", "water.oxygen.mg_l")).toEqual(legacy);
+
+    const rows = Array.from({ length: 6 }, (_, index): StoredObservation => {
+      const { signature: _signature, ...unsigned } = entry(index + 1, { regionId: "IT-PO-DELTA",
+        unit: index % 2 === 0 ? "mg/L" : "\u00b5g/L", value: index % 2 === 0 ? 6 : 6_000,
+        observedAt: new Date(now.getTime() - (5 - index) * 3_600_000).toISOString() }).observation;
+      return { observationId: observationId(unsigned), observation: signObservation(unsigned, privateKey) };
+    });
+    for (const row of rows) {
+      expect((await app.inject({ method: "POST", url: "/v1/observations", payload: row.observation })).statusCode)
+        .toBe(202);
+    }
+    const run = await app.inject({ method: "POST", url: "/v1/assessments/run",
+      headers: { "x-oracle-token": "synthetic-oracle" }, payload: {
+        regionId: "IT-PO-DELTA", metric: "water.oxygen.mg_l", forecastHorizonHours: 1,
+        requestedAction: "WATER_AERATION", requestedAmount: 0, asset: "USDC"
+      } });
+    expect(run.statusCode).toBe(201);
+    const current = run.json<{ assessment: Assessment }>().assessment;
+    expect(current).toMatchObject({ modelVersion: currentVersion, generatedAt: legacy.generatedAt,
+      currentValue: 6, forecastValue: 6, slopePerHour: 0, anomalyScore: 0 });
+    expect(current.assessmentId < legacy.assessmentId).toBe(true);
+    const latest = await app.inject({ method: "GET", url: latestUrl });
+    expect(latest.statusCode).toBe(200);
+    expect(latest.json()).toEqual(current);
+    expect(await store.latestAssessment("IT-PO-DELTA", "water.oxygen.mg_l", currentVersion)).toEqual(current);
+    // Preserve the default max(timestamp, ID) contract across all versions.
+    expect(await store.latestAssessment("IT-PO-DELTA", "water.oxygen.mg_l")).toEqual(legacy);
+    const archived = (await fixture.inspector.query<{ assessmentId: string; body: Assessment }>(
+      'SELECT assessment_id AS "assessmentId", body FROM assessments')).rows;
+    expect(archived).toHaveLength(2);
+    expect(archived.find(({ assessmentId }) => assessmentId === legacy.assessmentId)?.body).toEqual(legacyBefore);
+    expect(archived.find(({ assessmentId }) => assessmentId === current.assessmentId)?.body).toEqual(current);
+    expect(await store.listObservations("IT-PO-DELTA", "water.oxygen.mg_l", 512)).toEqual(rows);
+    for (const row of rows) expect(verifyObservation(row.observation, publicKey)).toBe(true);
+  });
+
   it("uses actual Ed25519 API verification with PostgreSQL and preserves rejected sequence availability", async () => {
     const pair = generateKeyPairSync("ed25519");
     const publicKey = pair.publicKey.export({ format: "der", type: "spki" }).toString("base64");

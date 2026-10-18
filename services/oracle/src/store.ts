@@ -27,7 +27,7 @@ export interface ObservationStore {
     limit: number
   ): Promise<StoredObservation[]>;
   saveAssessment(assessment: Assessment): Promise<void>;
-  latestAssessment(regionId: string, metric: string): Promise<Assessment | undefined>;
+  latestAssessment(regionId: string, metric: string, modelVersion?: string): Promise<Assessment | undefined>;
   close(): Promise<void>;
 }
 
@@ -48,6 +48,8 @@ interface IndexedAssessment {
 }
 
 const seriesKey = (regionId: string, metric: string): string => JSON.stringify([regionId, metric]);
+const assessmentVersionKey = (regionId: string, metric: string, modelVersion: string): string =>
+  JSON.stringify([regionId, metric, modelVersion]);
 
 const copyObservation = (entry: StoredObservation): StoredObservation => ({
   observationId: entry.observationId,
@@ -65,6 +67,7 @@ export class MemoryObservationStore implements ObservationStore {
   private readonly observationSeries = new Map<string, IndexedObservation[]>();
   private readonly assessmentIds = new Set<string>();
   private readonly assessments = new Map<string, IndexedAssessment>();
+  private readonly assessmentsByVersion = new Map<string, IndexedAssessment>();
 
   public async checkReadiness(): Promise<void> {}
 
@@ -129,19 +132,30 @@ export class MemoryObservationStore implements ObservationStore {
     const generatedAt = timestampMilliseconds(assessment.generatedAt);
     if (this.assessmentIds.has(assessment.assessmentId)) return;
     const key = seriesKey(assessment.regionId, assessment.metric);
-    const latest = this.assessments.get(key);
-    if (latest === undefined || compareTimestampKeys(generatedAt, assessment.assessmentId,
-      latest.generatedAt, latest.assessment.assessmentId) > 0) {
-      this.assessments.set(key, { assessment: { ...assessment }, generatedAt });
+    const versionKey = assessmentVersionKey(assessment.regionId, assessment.metric, assessment.modelVersion);
+    const indexed = { assessment: { ...assessment }, generatedAt };
+    // Keep the existing all-model index and an exact-version view. An older
+    // model's larger ID or later origin time must not hide a requested model.
+    for (const [index, indexKey] of [
+      [this.assessments, key], [this.assessmentsByVersion, versionKey]
+    ] as const) {
+      const latest = index.get(indexKey);
+      if (latest === undefined || compareTimestampKeys(generatedAt, assessment.assessmentId,
+        latest.generatedAt, latest.assessment.assessmentId) > 0) {
+        index.set(indexKey, indexed);
+      }
     }
     this.assessmentIds.add(assessment.assessmentId);
   }
 
   public async latestAssessment(
     regionId: string,
-    metric: string
+    metric: string,
+    modelVersion?: string
   ): Promise<Assessment | undefined> {
-    const assessment = this.assessments.get(seriesKey(regionId, metric));
+    const assessment = modelVersion === undefined
+      ? this.assessments.get(seriesKey(regionId, metric))
+      : this.assessmentsByVersion.get(assessmentVersionKey(regionId, metric, modelVersion));
     return assessment === undefined ? undefined : { ...assessment.assessment };
   }
 

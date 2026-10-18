@@ -12,8 +12,9 @@ import { compileTerraLex, evaluatePolicy } from "@terravoce/terralex";
 import Fastify, { errorCodes } from "fastify";
 import { z } from "zod";
 
-import { analyzeObservations } from "./analysis.js";
+import { OXYGEN_ANALYSIS_MODEL_VERSION, analyzeObservations } from "./analysis.js";
 import { DomainError } from "./errors.js";
+import { OXYGEN_METRIC, valueForAnalysis } from "./observation-units.js";
 import type { ObservationStore } from "./store.js";
 
 const assessmentRequestSchema = z.object({
@@ -140,6 +141,9 @@ export const buildApp = (options: AppOptions) => {
       throw new DomainError("observation timestamp outside accepted window", 422, "INVALID_TIME");
     }
 
+    // Validate interpretation only after checking the original signature. Store
+    // that original unchanged; conversion belongs to the analytical vector.
+    valueForAnalysis(observation);
     const { signature: _signature, ...unsigned } = observation;
     const id = observationId(unsigned);
     await options.store.addObservation({ observationId: id, observation });
@@ -193,7 +197,10 @@ export const buildApp = (options: AppOptions) => {
       .parse(request.params);
     const assessment = await options.store.latestAssessment(
       parameters.regionId,
-      parameters.metric
+      parameters.metric,
+      // A legacy result must not hide a corrected interpretation merely because
+      // its hash sorts later at the same measurement timestamp.
+      parameters.metric === OXYGEN_METRIC ? OXYGEN_ANALYSIS_MODEL_VERSION : undefined
     );
     if (assessment === undefined) {
       throw new DomainError("assessment not found", 404, "ASSESSMENT_NOT_FOUND");
