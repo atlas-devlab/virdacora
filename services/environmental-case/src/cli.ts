@@ -4,16 +4,12 @@ import { canonicalJson, sha256Hex } from "@terravoce/protocol";
 import { loadDataset, validateDataset } from "./dataset.js";
 import { deliverResult, prepareCase, verifyResult } from "./case.js";
 import { replay } from "./replay.js";
+import { fetchBoundedUSGSJSON } from "./bounded-fetch.js";
 
 const sourceFolder = resolve("../../docs/datasets/usgs-willamette");
 const command = process.argv[2];
 async function getUSGS(url: string) {
-  if (new URL(url).origin !== "https://api.waterdata.usgs.gov") throw new Error("Untrusted fetch origin");
-  const response = await fetch(url, { signal: AbortSignal.timeout(30000), redirect: "error" });
-  if (!response.ok) throw new Error(`USGS HTTP ${response.status}`);
-  const raw = await response.text();
-  if (raw.length > 10_000_000) throw new Error("Source response exceeds size limit");
-  return raw;
+  return fetchBoundedUSGSJSON(url);
 }
 async function save(folder: string, name: string, data: unknown) {
   await mkdir(folder, { recursive: true });
