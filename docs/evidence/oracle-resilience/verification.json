@@ -1,0 +1,50 @@
+{
+  "version": "oracle-resilience-verification-v1",
+  "recordedAtUTC": "2026-10-18T12:27:01.246420+00:00",
+  "baseCommit": "877f0100dcc32e10b54419a76746f72410973188",
+  "codeFiles": [
+    {
+      "file": "services/oracle/src/store.ts",
+      "rawSha256": "c46e65edcf24d214cd0ea2db6a3c2227779065dcc0d72f33adb5e7f6ed9c02d7"
+    },
+    {
+      "file": "services/oracle/src/postgres-store.ts",
+      "rawSha256": "ff14ed6d0ef2449c03c0e5adbd07853d20887875cda97af5c769dc51e2b01830"
+    },
+    {
+      "file": "services/oracle/src/app.ts",
+      "rawSha256": "b7ad165e10138035687bf1c96facea76ea53b587d48b04341e28c9e49a8ccea2"
+    },
+    {
+      "file": "services/oracle/src/store.test.ts",
+      "rawSha256": "e96e286b480ace5d42a35bff41581ee428f074159fa8dfefe3bfeda4476035fe"
+    },
+    {
+      "file": "services/oracle/src/app-input.test.ts",
+      "rawSha256": "e8ac436da0f7558079dcf680f41dab2c7648dc0af1f6f892ab7282079ef266fb"
+    },
+    {
+      "file": "scripts/benchmark-oracle-store.ts",
+      "rawSha256": "991953d54e5b2b4fffdd77dd448447d789ee650d2ba945b83ba676c9e707df17"
+    }
+  ],
+  "benchmarkRawSha256": "ce202c8a6f2d684494316470d1803fbc8d8db4eb4899a11cf94bf0702d73742d",
+  "localChecks": {
+    "build": "PASS",
+    "typecheck": "PASS",
+    "oracleTests": 33,
+    "protocolTests": 1,
+    "terralexTests": 3,
+    "contractTests": 10,
+    "syntheticOracleDemo": "PASS",
+    "localBlockchainEndToEnd": "PASS",
+    "smallSyntheticBenchmarkEquivalence": "PASS"
+  },
+  "testAccounting": "47 distinct final tests: 33 Oracle tests in final focused run; other14 passed in the preceding full workspace run on unchanged code. CI reruns the complete suite.",
+  "postgresVerification": "Mocked pool query contracts only; no live database",
+  "forecastMathChanged": false,
+  "signatureOrCanonicalEncodingChanged": false,
+  "newEnvironmentalDataAcquired": false,
+  "fundingOrGovernanceContractsChanged": false,
+  "reviewProvenance": "Separate code reviews within same Codex family, not independent field or security audit."
+}

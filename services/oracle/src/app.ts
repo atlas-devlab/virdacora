@@ -9,7 +9,7 @@ import {
   verifyObservation
 } from "@terravoce/protocol";
 import { compileTerraLex, evaluatePolicy } from "@terravoce/terralex";
-import Fastify from "fastify";
+import Fastify, { errorCodes } from "fastify";
 import { z } from "zod";
 
 import { analyzeObservations } from "./analysis.js";
@@ -40,6 +40,15 @@ const tokenMatches = (provided: unknown, expected: string): boolean => {
   return left.length === right.length && timingSafeEqual(left, right);
 };
 
+// Only framework parser failures belong here: arbitrary store errors must stay private.
+const inputErrors = [
+  ["FST_ERR_CTP_INVALID_JSON_BODY", 400],
+  ["FST_ERR_CTP_EMPTY_JSON_BODY", 400],
+  ["FST_ERR_CTP_INVALID_CONTENT_LENGTH", 400],
+  ["FST_ERR_CTP_BODY_TOO_LARGE", 413],
+  ["FST_ERR_CTP_INVALID_MEDIA_TYPE", 415]
+] as const;
+
 export const buildApp = (options: AppOptions) => {
   const app = Fastify({ logger: false, bodyLimit: 64 * 1024 });
   const policy = compileTerraLex(options.policySource);
@@ -53,6 +62,12 @@ export const buildApp = (options: AppOptions) => {
     if (error instanceof z.ZodError) {
       void reply.status(400).send({ error: "INVALID_INPUT", issues: error.issues });
       return;
+    }
+    for (const [code, status] of inputErrors) {
+      if (error instanceof errorCodes[code]) {
+        void reply.status(status).send({ error: code });
+        return;
+      }
     }
     app.log.error(error);
     void reply.status(500).send({ error: "INTERNAL_ERROR" });

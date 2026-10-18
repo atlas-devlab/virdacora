@@ -52,6 +52,10 @@ jobs:
       - name: Run tests
         run: pnpm test
 
+      - name: Verify indexed-store benchmark payloads with synthetic smoke fixture
+        # Timing is diagnostic only; no hardware-dependent speed threshold.
+        run: pnpm exec tsx scripts/benchmark-oracle-store.ts --rows 2000 --regions 20 --read-samples 20 --write-samples 5 > "$RUNNER_TEMP/oracle-store-smoke.json"
+
       - name: Run synthetic sensor demonstration
         run: pnpm demo
 
