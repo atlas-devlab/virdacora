@@ -14,6 +14,7 @@ import { z } from "zod";
 
 import { OXYGEN_ANALYSIS_MODEL_VERSION, analyzeObservations } from "./analysis.js";
 import { DomainError } from "./errors.js";
+import { verifyArchivedObservations } from "./evidence-integrity.js";
 import { OXYGEN_METRIC, valueForAnalysis } from "./observation-units.js";
 import type { ObservationStore } from "./store.js";
 
@@ -160,8 +161,9 @@ export const buildApp = (options: AppOptions) => {
       throw new DomainError("not enough observations", 422, "INSUFFICIENT_OBSERVATIONS");
     }
 
+    const verifiedObservations = await verifyArchivedObservations(observations, input, options.store);
     const assessment = assessmentSchema.parse(
-      analyzeObservations(observations, input.forecastHorizonHours * 3_600)
+      analyzeObservations(verifiedObservations, input.forecastHorizonHours * 3_600)
     );
     await options.store.saveAssessment(assessment);
     const decision = evaluatePolicy(policy, {

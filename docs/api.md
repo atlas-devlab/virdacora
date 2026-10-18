@@ -15,6 +15,17 @@ The assessment response contains the reproducible `evidenceHash`, the TerraLex
 decision, and an optional reversible `actionDraft`. The service intentionally
 does not hold a treasury key or vote credential.
 
+Before a new assessment, selected archived rows must pass strict schema,
+original observation ID, signature, unique ID/sequence and request/sensor routing
+checks against the current sensor registry. All rows are snapshotted before
+asynchronous key lookups. Invalid evidence returns static HTTP 422
+`{"error":"INVALID_ARCHIVED_EVIDENCE","message":"archived observation evidence is invalid"}`
+before analysis, assessment persistence or policy evaluation. Registry access
+failures follow the generic 500 path. Historical signatures are not rejected
+solely because their sensor is now inactive or their timestamps are outside the
+live ingestion window. No old records are rewritten or silently skipped. See
+[archive integrity and its limits (IT/EN)](ARCHIVE_INTEGRITY_IT_EN.md).
+
 For `water.oxygen.mg_l`, accepted exact unit strings are `mg/L`, `ug/L`,
 `µg/L` (U+00B5 micro sign) and `μg/L` (U+03BC Greek mu). Microgram values are
 divided by 1000 only in the analytical number vector. Stored signed values,
