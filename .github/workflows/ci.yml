@@ -110,6 +110,7 @@ jobs:
             python3 scripts/audit_owasco_direction.py
             python3 scripts/owasco_attenuation_diagnostic.py --protocol docs/datasets/owasco-attenuation-diagnostic/protocol.json --verify-report docs/evidence/owasco-attenuation-diagnostic/diagnostic.json
             python3 scripts/audit_owasco_attenuation.py
+            python3 scripts/owasco_local_median_preflight.py --protocol docs/datasets/owasco-local-median/protocol.json --verify-report docs/evidence/owasco-local-median/preflight.json
           else
             python3 scripts/stability_protocol.py
           fi
