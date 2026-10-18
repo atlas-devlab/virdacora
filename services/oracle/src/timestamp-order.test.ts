@@ -53,7 +53,7 @@ describe("analysis ordering without changing the numerical recipe", () => {
   it("keeps original timestamp text and the same evidence for every arrival order", () => {
     const before = structuredClone(rows);
     const expectedCore = {
-      modelVersion: "terravoce-linear-risk-v1", regionId: "region-01", metric: "water.oxygen.mg_l",
+      modelVersion: "terravoce-linear-risk-v2-oxygen-units", regionId: "region-01", metric: "water.oxygen.mg_l",
       generatedAt: "2026-10-01T03:00:00.1231Z", observationIds: ids.map(id),
       forecastHorizonSeconds: 3600, currentValue: 5, forecastValue: 5, slopePerHour: 0,
       anomalyScore: 0, confidence: 0.416667, risk: 0

@@ -204,6 +204,83 @@ describe("memory observation storage", () => {
     expect(await store.latestAssessment("other-region", "water.oxygen.mg_l")).toBeUndefined();
   });
 
+  it("selects the latest assessment within an exact model version without changing the default", async () => {
+    const store = new MemoryObservationStore();
+    const generatedAt = "2026-10-01T12:00:00.000Z";
+    const legacy = assessment(90, { generatedAt, modelVersion: "legacy-v1" });
+    const current = assessment(10, { generatedAt, modelVersion: "unit-aware-v2" });
+    await store.saveAssessment(legacy);
+    await store.saveAssessment(current);
+
+    // Recomputing the same observations preserves their origin timestamp. The
+    // old model's larger hash must not hide a requested version of the result.
+    expect(await store.latestAssessment("region-01", "water.oxygen.mg_l")).toEqual(legacy);
+    expect(await store.latestAssessment("region-01", "water.oxygen.mg_l", "unit-aware-v2"))
+      .toEqual(current);
+
+    const newerOtherVersion = assessment(91, {
+      generatedAt: "2026-10-01T13:00:00.000Z", modelVersion: "another-model"
+    });
+    await store.saveAssessment(newerOtherVersion);
+    expect(await store.latestAssessment("region-01", "water.oxygen.mg_l"))
+      .toEqual(newerOtherVersion);
+    expect(await store.latestAssessment("region-01", "water.oxygen.mg_l", "unit-aware-v2"))
+      .toEqual(current);
+    expect(await store.latestAssessment("region-01", "water.oxygen.mg_l", "unknown-model"))
+      .toBeUndefined();
+    expect(await store.latestAssessment("region-01", "water.oxygen.mg_l", ""))
+      .toBeUndefined();
+
+    const newerCurrent = assessment(11, {
+      generatedAt: "2026-10-01T12:30:00.000Z", modelVersion: "unit-aware-v2"
+    });
+    const tiedHigherId = assessment(12, {
+      generatedAt: newerCurrent.generatedAt, modelVersion: "unit-aware-v2"
+    });
+    await store.saveAssessment(tiedHigherId);
+    await store.saveAssessment(newerCurrent);
+    expect(await store.latestAssessment("region-01", "water.oxygen.mg_l", "unit-aware-v2"))
+      .toEqual(tiedHigherId);
+    expect(await store.latestAssessment("region-01", "water.oxygen.mg_l"))
+      .toEqual(newerOtherVersion);
+  });
+
+  it("isolates versioned snapshots and never indexes a conflicting duplicate ID under a new version", async () => {
+    const store = new MemoryObservationStore();
+    const input = assessment(30, { modelVersion: "unit-aware-v2" });
+    const original = { ...input };
+    await store.saveAssessment(input);
+    input.modelVersion = "changed-version";
+    input.forecastValue = 99;
+    input.generatedAt = "2026-10-02T00:00:00.000Z";
+    await store.saveAssessment(input);
+    await store.saveAssessment({ ...input, regionId: "other-region" });
+
+    const retrieved = await store.latestAssessment("region-01", "water.oxygen.mg_l", "unit-aware-v2");
+    expect(retrieved).toEqual(original);
+    retrieved!.modelVersion = "returned-mutation";
+    retrieved!.forecastValue = 100;
+    expect(await store.latestAssessment("region-01", "water.oxygen.mg_l", "unit-aware-v2"))
+      .toEqual(original);
+    expect(await store.latestAssessment("region-01", "water.oxygen.mg_l"))
+      .toEqual(original);
+    expect(await store.latestAssessment("region-01", "water.oxygen.mg_l", "changed-version"))
+      .toBeUndefined();
+    expect(await store.latestAssessment("other-region", "water.oxygen.mg_l", "changed-version"))
+      .toBeUndefined();
+  });
+
+  it("keeps versioned assessment keys distinct when delimiter concatenation would collide", async () => {
+    const store = new MemoryObservationStore();
+    const first = assessment(1, { metric: "water:oxygen", modelVersion: "v2" });
+    const second = assessment(2, { metric: "water", modelVersion: "oxygen:v2" });
+    await store.saveAssessment(first);
+    await store.saveAssessment(second);
+    expect(await store.latestAssessment("region-01", "water:oxygen", "v2")).toEqual(first);
+    expect(await store.latestAssessment("region-01", "water", "oxygen:v2")).toEqual(second);
+    expect(await store.latestAssessment("region-01", "water", "v2")).toBeUndefined();
+  });
+
   it("keeps assessment series distinct for ambiguous colon pairs", async () => {
     const store = new MemoryObservationStore();
     const first = assessment(1, { regionId: "region:water", metric: "oxygen" });
@@ -232,6 +309,30 @@ describe("observation query limits", () => {
 });
 
 describe("PostgreSQL query contracts without a database", () => {
+  it("filters an exact assessment model with a bound parameter and keeps the default query unchanged", async () => {
+    const expected = assessment(1, { modelVersion: "unit-aware-v2" });
+    const query = vi.spyOn(Pool.prototype, "query")
+      .mockResolvedValue({ rows: [{ body: expected }] } as never);
+    const store = new PostgresObservationStore("postgres://unused.invalid/test");
+    await expect(store.latestAssessment("region-01", "water.oxygen.mg_l")).resolves.toEqual(expected);
+    expect(query.mock.calls[0]![1]).toEqual(["region-01", "water.oxygen.mg_l"]);
+    expect(query.mock.calls[0]![0]).not.toContain("body->>'modelVersion'");
+
+    const modelVersion = "unit-aware-v2' OR true --";
+    await expect(store.latestAssessment("region-01", "water.oxygen.mg_l", modelVersion))
+      .resolves.toEqual(expected);
+    expect(query.mock.calls[1]![0]).toContain("body->>'modelVersion' = $3");
+    expect(query.mock.calls[1]![0]).not.toContain(modelVersion);
+    expect(query.mock.calls[1]![0])
+      .toContain('ORDER BY generated_at_ms DESC, assessment_id COLLATE "C" DESC');
+    expect(query.mock.calls[1]![1]).toEqual(["region-01", "water.oxygen.mg_l", modelVersion]);
+
+    query.mockResolvedValueOnce({ rows: [] } as never);
+    await expect(store.latestAssessment("region-01", "water.oxygen.mg_l", "unknown-model"))
+      .resolves.toBeUndefined();
+    await store.close();
+  });
+
   it("snapshots observation and assessment bodies before the pool can queue writes", async () => {
     const query = vi.spyOn(Pool.prototype, "query").mockResolvedValue({ rows: [] } as never);
     const store = new PostgresObservationStore("postgres://unused.invalid/test");

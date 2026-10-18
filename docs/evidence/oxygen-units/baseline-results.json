@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "evidenceSource": "Previously captured focused Vitest output; not rerun to create this receipt",
+  "recordedAtUTC": "2026-10-18T15:42:50.8540435+00:00",
+  "baselineHead": "22424933d40e2a362b2c3ff3c0b7bdcc74af8819",
+  "command": "pnpm exec vitest run services/oracle/src/oxygen-units.test.ts --reporter=verbose",
+  "sourceFile": "services/oracle/src/oxygen-units.test.ts",
+  "sourceFileSha256": "e7b45a361374ab634b45cde4187d9b1ebaa3ed4178070139d6b9d3200628dc6c",
+  "result": "expected-red",
+  "exitCode": 1,
+  "testsTotal": 19,
+  "testsFailed": 13,
+  "testsPassed": 6,
+  "startTimeReportedByVitest": "17:42:02",
+  "durationSecondsReportedByVitest": 1.04,
+  "failedGroups": [
+    {
+      "name": "all-micro nonlinear series aliases",
+      "cases": 3
+    },
+    {
+      "name": "mixed nonlinear series aliases, latest micro",
+      "cases": 3
+    },
+    {
+      "name": "direct unsupported legacy unit",
+      "cases": 1
+    },
+    {
+      "name": "signed Memory API canonical assessment aliases",
+      "cases": 3
+    },
+    {
+      "name": "unsupported valid signed intake",
+      "cases": 2
+    },
+    {
+      "name": "legacy assessment fail closed",
+      "cases": 1
+    }
+  ],
+  "passedGroups": [
+    {
+      "name": "same-payload permutations",
+      "cases": 1
+    },
+    {
+      "name": "other metric unchanged",
+      "cases": 1
+    },
+    {
+      "name": "raw unit/value tamper requires signature before unit validation",
+      "cases": 4
+    }
+  ],
+  "canonicalControl": {
+    "currentValue": 6,
+    "forecastValue": 5.325,
+    "slopePerHour": -0.475,
+    "anomalyScore": 0.454297,
+    "confidence": 0.403815,
+    "risk": 0.295293
+  },
+  "actualAllMicroBeforeFix": {
+    "currentValue": 6000,
+    "forecastValue": 5325,
+    "slopePerHour": -475,
+    "anomalyScore": 0.454297,
+    "confidence": 0.403815,
+    "risk": 0.295293
+  },
+  "actualMixedBeforeFix": {
+    "currentValue": 6000,
+    "forecastValue": 7223.1,
+    "slopePerHour": 1123.4,
+    "anomalyScore": 0.295383,
+    "confidence": 0.228594,
+    "risk": 0.191999
+  },
+  "invalidSignedIntakeBeforeFix": {
+    "expectedStatus": 422,
+    "actualStatus": 202,
+    "units": [
+      "%",
+      "mL/L"
+    ]
+  },
+  "legacyAssessmentBeforeFix": {
+    "expectedStatus": 422,
+    "actualStatus": 201
+  },
+  "limitations": [
+    "Synthetic signed observations only; no field data, training or forecast-skill validation.",
+    "This compact receipt summarizes the already captured console output and does not contain a second test execution."
+  ]
+}

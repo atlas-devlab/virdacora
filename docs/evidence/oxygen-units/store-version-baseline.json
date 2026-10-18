@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "scope": "Focused assessment-store model-version selection regression tests",
+  "evidenceSource": "Previously captured execution outputs; neither command was rerun to create this receipt",
+  "dateContext": "2026-10-18",
+  "workingDirectory": "C:/Users/elia3/Documents/Codex/2026-10-11/rendiamo-terravoce-pi-forte-al-livello/work/virdacora-oracle-resilience",
+  "command": "pnpm exec vitest run services/oracle/src/store.test.ts",
+  "runner": "Vitest 4.1.10",
+  "timestampPrecision": "Start times below are copied exactly from Vitest output. The output did not include a timezone or full absolute timestamp; no UTC conversion or completion time is inferred.",
+  "baseline": {
+    "status": "fail",
+    "exitCode": 1,
+    "implementationState": "Four new regression cases present; optional model-version filtering not implemented yet",
+    "vitestPrintedStartTime": "17:43:21",
+    "testFiles": 1,
+    "testsTotal": 28,
+    "testsPassed": 24,
+    "testsFailed": 4,
+    "vitestReportedDurationMs": 398,
+    "failedCases": [
+      {
+        "name": "memory observation storage > selects the latest assessment within an exact model version without changing the default",
+        "observedFailure": "A query requesting unit-aware-v2 returned legacy-v1 with the larger ID at the same generatedAt timestamp",
+        "requestedAssessmentIdSuffix": "000a",
+        "returnedAssessmentIdSuffix": "005a"
+      },
+      {
+        "name": "memory observation storage > isolates versioned snapshots and never indexes a conflicting duplicate ID under a new version",
+        "observedFailure": "An unknown changed version returned the existing assessment instead of undefined because the filter argument was ignored"
+      },
+      {
+        "name": "memory observation storage > keeps versioned assessment keys distinct when delimiter concatenation would collide",
+        "observedFailure": "A query for an absent version returned a different version instead of undefined"
+      },
+      {
+        "name": "PostgreSQL query contracts without a database > filters an exact assessment model with a bound parameter and keeps the default query unchanged",
+        "observedFailure": "The generated SQL lacked the bound body->>'modelVersion' = $3 predicate"
+      }
+    ]
+  },
+  "afterImplementation": {
+    "status": "pass",
+    "exitCode": 0,
+    "implementationState": "Optional exact model-version selection added to both stores; existing default timestamp-and-ID selection retained",
+    "vitestPrintedStartTime": "17:43:45",
+    "testFiles": 1,
+    "testFilesPassed": 1,
+    "testsTotal": 28,
+    "testsPassed": 28,
+    "testsFailed": 0,
+    "vitestReportedDurationMs": 414,
+    "newRegressionCasesPassed": 4
+  },
+  "coverage": [
+    "Legacy larger ID at equal timestamp does not hide the requested model version",
+    "A newer assessment from another model does not replace the requested version",
+    "Default unfiltered ordering remains timestamp then ID",
+    "Filtered ordering uses the same timestamp-and-ID rule within the requested version",
+    "Unknown and empty explicit versions return undefined instead of falling back",
+    "Input and returned snapshots remain isolated",
+    "A conflicting duplicate ID cannot be inserted into another version or region index",
+    "Versioned tuple keys avoid delimiter collisions",
+    "PostgreSQL filtering uses a bound parameter rather than interpolating the version"
+  ],
+  "limitations": [
+    "The PostgreSQL query-contract case mocks Pool.query; this receipt is not a real PostgreSQL execution receipt",
+    "These runs test storage version selection, not environmental forecast accuracy or sensor validity",
+    "Durations are test-run diagnostics, not production performance benchmarks",
+    "Raw outputs were captured in the tool transcript; this file is a compact transcription, not an original machine-generated Vitest JSON report"
+  ]
+}

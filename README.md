@@ -53,6 +53,11 @@ drains active HTTP requests and closes storage on SIGTERM/SIGINT, with a
 Run `pnpm test:oracle:shutdown` with Docker to test actual Linux signals and a
 blocked signed-observation write against an isolated PostgreSQL instance.
 
+The [oxygen unit contract (IT/EN)](docs/OXYGEN_UNITS_IT_EN.md) interprets
+`6 mg/L` and `6000 µg/L` consistently in analysis while retaining the original
+signed evidence. Unsupported oxygen units fail explicitly; current-version
+latest results are separated from historical interpretations.
+
 ## Research branches and original mission
 
 The mission is to combine verifiable environmental analysis, distributed
