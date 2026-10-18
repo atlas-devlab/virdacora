@@ -1,0 +1,86 @@
+{
+  "version": "owasco-local-lad-execution-receipt-v1",
+  "recordedAtUTC": "2026-10-18T12:12:22.048238+00:00",
+  "protocolRawSha256": "e92fa18d16ed82b72e45089e8a0c86d9f49c924ce8cd449aec090a9cd34e6b51",
+  "implementationCommit": "c2c1e4e1ca94150fc77482a57d5e7e04f04d88f4",
+  "implementationReceiptCommit": "0b3a1abc8b22ae4f69beba7a57ae1d168823b7a8",
+  "modelPublishedBeforeScoreCommit": "3f1d8c41d8364a7552d2a486b57d74c02f46f311",
+  "implementationCIBeforeFit": {
+    "runId": 39126095374,
+    "jobId": 117671426254,
+    "conclusion": "success",
+    "fourReplicaOutageDemo": "skipped on ordinary pull request"
+  },
+  "stageCompletionRecords": {
+    "train": {
+      "stage": "train",
+      "startedAtUTC": "2026-10-18T12:11:25.287286+00:00",
+      "state": "COMPLETE",
+      "protocolRawSha256": "e92fa18d16ed82b72e45089e8a0c86d9f49c924ce8cd449aec090a9cd34e6b51",
+      "implementationFreezeRawSha256": "a1df869f8c8594b64c7cf827af3b357796fbac6e6e9c1681fdf48ffabba16688",
+      "completedAtUTC": "2026-10-18T12:11:25.497482+00:00"
+    },
+    "score": {
+      "stage": "score",
+      "startedAtUTC": "2026-10-18T12:11:50.445152+00:00",
+      "state": "COMPLETE",
+      "protocolRawSha256": "e92fa18d16ed82b72e45089e8a0c86d9f49c924ce8cd449aec090a9cd34e6b51",
+      "modelRawSha256": "5f8a8f485d58962ab2e9f7250a2226e01071147ccc70a0d7cf264e6134099b4f",
+      "modelFreezeCommit": "3f1d8c41d8364a7552d2a486b57d74c02f46f311",
+      "completedAtUTC": "2026-10-18T12:11:50.861392+00:00"
+    }
+  },
+  "artifacts": [
+    {
+      "file": "docs/datasets/owasco-local-median/protocol.json",
+      "rawSha256": "e92fa18d16ed82b72e45089e8a0c86d9f49c924ce8cd449aec090a9cd34e6b51"
+    },
+    {
+      "file": "docs/evidence/owasco-local-median/implementation-freeze.json",
+      "rawSha256": "a1df869f8c8594b64c7cf827af3b357796fbac6e6e9c1681fdf48ffabba16688"
+    },
+    {
+      "file": "docs/evidence/owasco-local-median/frozen-model.json",
+      "rawSha256": "5f8a8f485d58962ab2e9f7250a2226e01071147ccc70a0d7cf264e6134099b4f"
+    },
+    {
+      "file": "docs/evidence/owasco-local-median/training-audit.json",
+      "rawSha256": "7dad9f3eb3b0a408062c2709937f12963e11421a4cedfe9d546d1d77d9839b77"
+    },
+    {
+      "file": "docs/evidence/owasco-local-median/development.json.gz",
+      "rawSha256": "160aaf74d208e726168ff97dd362beba4e40ae262a30eb8d0565f43bdc79df6b"
+    },
+    {
+      "file": "docs/evidence/owasco-local-median/development-summary.json",
+      "rawSha256": "470abfb61f80a769db31470288af98aa078a2775f3af5162edde7840836e55bb"
+    },
+    {
+      "file": "docs/evidence/owasco-local-median/development-audit.json",
+      "rawSha256": "dec272d3673b22162b83ca4e22468738617c5ca342834fe3eb11009db465becd"
+    },
+    {
+      "file": "docs/evidence/owasco-local-median/pre-fit-review.json",
+      "rawSha256": "6998a412bc21fd49b15815619e3a692035789971bb3204e1560b304da106379f"
+    }
+  ],
+  "localTestsPassedBeforeFit": 288,
+  "newSyntheticTests": 95,
+  "historicalPinnedFilesUnchanged": 53,
+  "canonicalFitAttempts": 1,
+  "canonicalDevelopmentScoreAttempts": 1,
+  "readOnlyChecks": {
+    "modelReplayWithoutSitePackages": "PASS",
+    "reportReplayWithoutSitePackages": "PASS",
+    "separateStdlibAuditIncludingReport": "PASS"
+  },
+  "decision": "STOP_CANDIDATE",
+  "candidateEqualsPersistenceOnEveryAugustRow": true,
+  "septemberOpened": false,
+  "operationalPromotion": false,
+  "limits": [
+    "Stage records document this workspace workflow, not a global tamper-proof execution history.",
+    "Same Codex family arithmetic/review is not independent environmental validation.",
+    "August was previously examined: development only."
+  ]
+}

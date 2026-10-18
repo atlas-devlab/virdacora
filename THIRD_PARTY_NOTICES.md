@@ -100,3 +100,15 @@ FAO does not endorse the forecast or a claim about irrigation withdrawals.
 Rasterio 1.5.2 is an optional capture dependency (BSD-3-Clause), with separately
 licensed GDAL and other wheel components. It is not vendored and is not needed
 for the offline replay. Its dependency notices remain applicable.
+
+## Optional Owasco numerical training dependencies
+
+The local LAD training and synthetic numerical tests use NumPy 2.3.5 and
+SciPy 1.17.1, distributed under BSD-3-Clause terms. They are not vendored;
+their installed distributions retain their own copyright, license and bundled
+component notices, including the solver components shipped with SciPy.
+Read-only replay and the separate arithmetic auditor use the Python standard
+library and do not require these numerical dependencies.
+
+Upstream notices: [NumPy 2.3.5](https://github.com/numpy/numpy/blob/v2.3.5/LICENSE.txt)
+and [SciPy 1.17.1](https://github.com/scipy/scipy/blob/v1.17.1/LICENSE.txt).

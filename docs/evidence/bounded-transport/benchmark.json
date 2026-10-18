@@ -1,0 +1,113 @@
+{
+  "version": "bounded-usgs-transport-fixture-benchmark-v1",
+  "recordedAtUTC": "2026-10-18T12:24:51.501Z",
+  "nodeVersion": "v24.18.0",
+  "platform": "win32",
+  "architecture": "x64",
+  "usesNetwork": false,
+  "environmentalDataOpened": false,
+  "byteBoundary": 10000000,
+  "syntheticBodyBytes": 67108864,
+  "chunkBytes": 65536,
+  "warmupRunsPerImplementation": 1,
+  "validFixture": {
+    "bytes": 1830,
+    "rawSha256": "4557af01f96499b409664790d70038072002d7dc9ab9221a8625b5e66fdb0875",
+    "previousSha256": "4557af01f96499b409664790d70038072002d7dc9ab9221a8625b5e66fdb0875",
+    "boundedSha256": "4557af01f96499b409664790d70038072002d7dc9ab9221a8625b5e66fdb0875",
+    "exactMatch": true
+  },
+  "runs": [
+    {
+      "implementation": "previous-response-text",
+      "round": 1,
+      "durationMs": 73.16329999999999,
+      "rejected": true,
+      "error": "Source response exceeds size limit",
+      "producedBytes": 67108864,
+      "producedChunks": 1024,
+      "cancelled": 0,
+      "ended": true
+    },
+    {
+      "implementation": "bounded-fetch",
+      "round": 1,
+      "durationMs": 10.451399999999978,
+      "rejected": true,
+      "error": "Source response exceeds byte limit",
+      "producedBytes": 10027008,
+      "producedChunks": 153,
+      "cancelled": 1,
+      "ended": false
+    },
+    {
+      "implementation": "bounded-fetch",
+      "round": 2,
+      "durationMs": 21.856300000000033,
+      "rejected": true,
+      "error": "Source response exceeds byte limit",
+      "producedBytes": 10027008,
+      "producedChunks": 153,
+      "cancelled": 1,
+      "ended": false
+    },
+    {
+      "implementation": "previous-response-text",
+      "round": 2,
+      "durationMs": 65.2706,
+      "rejected": true,
+      "error": "Source response exceeds size limit",
+      "producedBytes": 67108864,
+      "producedChunks": 1024,
+      "cancelled": 0,
+      "ended": true
+    },
+    {
+      "implementation": "previous-response-text",
+      "round": 3,
+      "durationMs": 68.0718,
+      "rejected": true,
+      "error": "Source response exceeds size limit",
+      "producedBytes": 67108864,
+      "producedChunks": 1024,
+      "cancelled": 0,
+      "ended": true
+    },
+    {
+      "implementation": "bounded-fetch",
+      "round": 3,
+      "durationMs": 16.0003999999999,
+      "rejected": true,
+      "error": "Source response exceeds byte limit",
+      "producedBytes": 10027008,
+      "producedChunks": 153,
+      "cancelled": 1,
+      "ended": false
+    }
+  ],
+  "summary": {
+    "previous-response-text": {
+      "measuredRuns": 3,
+      "medianDurationMs": 68.0718,
+      "producedBytesEveryRun": [
+        67108864
+      ],
+      "producedChunksEveryRun": [
+        1024
+      ]
+    },
+    "bounded-fetch": {
+      "measuredRuns": 3,
+      "medianDurationMs": 16.0003999999999,
+      "producedBytesEveryRun": [
+        10027008
+      ],
+      "producedChunksEveryRun": [
+        153
+      ]
+    }
+  },
+  "syntheticWorkAvoidedBytes": 57081856,
+  "syntheticWorkAvoidedPercent": 85.05859375,
+  "limitation": "Synthetic local stream with highWaterMark zero; elapsed times depend on machine and allocation history. This is not a remote-service speed, peak-memory or forecast-quality benchmark. One upstream chunk can exceed the remaining byte budget; it is rejected before being retained."
+}

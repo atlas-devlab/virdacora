@@ -31,6 +31,10 @@ refers here to the experimental policy language in this repository.
 > Per una spiegazione completa in italiano, leggi la
 > [guida operativa](GUIDA_OPERATIVA.md).
 
+Future Willamette acquisitions use a bounded UTF-8 transport: see the
+[Italian/English implementation and synthetic benchmark](docs/BOUNDED_TRANSPORT_IT_EN.md).
+This does not recapture or change the archived experiments.
+
 ## First real-data case: review USGS oxygen measurements
 
 The [real-data module](services/environmental-case/README.md) replays 673 approved
@@ -308,12 +312,21 @@ regressione attuale non supera la baseline su quella finestra. Il collegamento
 dell'advisory al consenso resta da implementare, come descritto nel
 [progetto tecnico](docs/AI_DESIGN.md).
 
-## Prossimo esperimento Owasco: protocollo, senza addestramento
+## Esperimento Owasco: protocollo ed esito della regressione locale
 
 Il [protocollo IT/EN della regressione locale LAD](docs/OWASCO_LOCAL_MEDIAN_PROTOCOL_IT_EN.md)
 fissa luglio 2020 per l'addestramento e agosto per un solo controllo di sviluppo
 dell'ossigeno a un'ora, con MAE contro l'ultima misura come criterio principale.
-Questa modifica verifica soltanto integrità e separazione degli archivi: nessun
-nuovo fit o punteggio, settembre chiuso. Agosto è già stato studiato e non è
-una validazione cieca. English explanation and reproducible metadata-only
-checks are included in the linked protocol.
+La PR #20 conservava soltanto il protocollo e i controlli di integrità, senza
+addestramento. La successiva PR #21 implementa ed esegue quella ricetta:
+il singolo fit su luglio sceglie coefficienti tutti nulli. Su agosto la nuova
+candidata coincide con l'ultima misura in tutte le 1.306 righe: MAE identica,
+0,055513 mg/L, e guadagno zero. Esito **STOP_CANDIDATE**, senza promozione.
+Settembre resta chiuso. Agosto era già stato studiato e non è una validazione
+cieca. English explanation and reproducible checks accompany both stages.
+
+L'[implementazione ed esecuzione IT/EN](docs/OWASCO_LOCAL_MEDIAN_EXECUTION_IT_EN.md)
+separa il fit di luglio dal successivo controllo su agosto, con provenienza
+degli ingressi e audit matematico distinto. Lo stato effettivo e i limiti sono
+riportati nelle ricevute e nel documento; il solo passaggio dei test software
+non dimostra capacità predittiva sul lago.

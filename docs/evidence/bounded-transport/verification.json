@@ -1,0 +1,58 @@
+{
+  "version": "bounded-transport-verification-v1",
+  "recordedAtUTC": "2026-10-18T12:27:36.463519+00:00",
+  "baseCommit": "1455fbfd552d49216e87231c1129a6a80169a146",
+  "codeFiles": [
+    {
+      "file": "services/environmental-case/src/cli.ts",
+      "rawSha256": "478c474117c22b3569709ca7b6cafcb029ac77fe3fa321cff633fa0b2b99f9e4"
+    },
+    {
+      "file": "services/environmental-case/src/bounded-fetch.ts",
+      "rawSha256": "e0c4b0d8590bd5365889fdc72f1cf2edfbf19cfb176816dacfa7fab93220bec3"
+    },
+    {
+      "file": "services/environmental-case/src/bounded-fetch.test.ts",
+      "rawSha256": "bf5988dd5d15d66a19dad66ae249c4ed61060406265e2d9bde6d74255bcfb426"
+    },
+    {
+      "file": "scripts/benchmark-bounded-fetch.ts",
+      "rawSha256": "08984aaff5fcb7495a85e4d94fdf85af8b8c559f909b5157e68c8f9a5b269cbe"
+    }
+  ],
+  "benchmarkRawSha256": "8aa314a3c0bde9e032c130276825622b1d2863baa8a8198ce227d120b697b543",
+  "localChecks": {
+    "build": "PASS",
+    "typecheck": "PASS",
+    "focusedBoundedTransportTests": 43,
+    "environmentalCaseTests": 107,
+    "fullWorkspaceTests": 179,
+    "autonomousSourceArchiveVerification": "PASS",
+    "originalUSGSCaseReplayThenVerification": "PASS",
+    "pinnedUSGSCaseVerification": "PASS",
+    "frozenLADModelAndReportNoFitReplay": "PASS"
+  },
+  "localSetupIssues": [
+    {
+      "command": "case:verify before case:replay",
+      "cause": "Missing generated output case.json; corrected by offline replay then verify"
+    },
+    {
+      "command": "case:verify with guessed docs/evidence/willamette path",
+      "cause": "Wrong nonexistent directory; pinned case is docs/evidence/usgs-case and verified successfully"
+    }
+  ],
+  "legacyDiscoveryArtifactFilesUnchanged": true,
+  "frozenOwascoModelRawSha256": "5f8a8f485d58962ab2e9f7250a2226e01071147ccc70a0d7cf264e6134099b4f",
+  "frozenAugustReportRawSha256": "160aaf74d208e726168ff97dd362beba4e40ae262a30eb8d0565f43bdc79df6b",
+  "newEnvironmentalDataAcquired": false,
+  "newFitOrForecastExperimentExecuted": false,
+  "networkCallsDuringTransportTestsOrBenchmark": false,
+  "operationalDeployment": false,
+  "outageDemonstrationRerun": false,
+  "limits": [
+    "Future Willamette CLI transport only; legacy autonomous discovery transport unchanged",
+    "Local synthetic stream work/timing, not network speed or whole-process heap bound",
+    "Same Codex family code review, not independent field/security audit"
+  ]
+}
