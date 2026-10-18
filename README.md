@@ -47,6 +47,12 @@ The [database readiness check (IT/EN)](docs/DATABASE_READINESS_IT_EN.md)
 adds `/readyz`: 200 when the configured store passes a read-only probe, 503 when
 unavailable. Compose uses this endpoint for Oracle health; liveness stays separate.
 
+The [controlled Oracle shutdown (IT/EN)](docs/ORACLE_SHUTDOWN_IT_EN.md)
+drains active HTTP requests and closes storage on SIGTERM/SIGINT, with a
+20-second application deadline and 25-second Compose grace period.
+Run `pnpm test:oracle:shutdown` with Docker to test actual Linux signals and a
+blocked signed-observation write against an isolated PostgreSQL instance.
+
 ## Research branches and original mission
 
 The mission is to combine verifiable environmental analysis, distributed

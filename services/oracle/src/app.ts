@@ -50,7 +50,9 @@ const inputErrors = [
 ] as const;
 
 export const buildApp = (options: AppOptions) => {
-  const app = Fastify({ logger: false, bodyLimit: 64 * 1024 });
+  // Keep active HTTP requests alive while close() drains them. Be explicit:
+  // Fastify 5.10's default "idle" branch can close every active connection.
+  const app = Fastify({ logger: false, bodyLimit: 64 * 1024, forceCloseConnections: false });
   const policy = compileTerraLex(options.policySource);
   const now = options.now ?? (() => new Date());
 

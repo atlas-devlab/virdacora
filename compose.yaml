@@ -16,6 +16,8 @@ services:
       - ./services/oracle/db/002_timestamp_order.sql:/docker-entrypoint-initdb.d/002_timestamp_order.sql:ro
 
   oracle:
+    # Longer than the application's 20-second graceful shutdown budget.
+    stop_grace_period: 25s
     build:
       context: .
       dockerfile: services/oracle/Dockerfile

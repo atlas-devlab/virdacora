@@ -30,6 +30,20 @@ seconds and applies its configured retries. `unhealthy` is a status, not an
 automatic restart or failover policy. See the
 [IT/EN contract, recovery evidence and limitations](DATABASE_READINESS_IT_EN.md).
 
+## Controlled Oracle shutdown
+
+SIGTERM and SIGINT now call Fastify `app.close()`: stop accepting new work, drain
+requests already in progress, then run the existing store-close hook. Repeated
+signals share the same shutdown. Successful close exits 0; a rejected close or
+the 20-second application deadline exits 1 with a static diagnostic. Compose
+allows 25 seconds before it can force termination. Do not shorten that outer
+grace below the application budget without reviewing the consequences.
+
+Neither timeout nor forced exit proves that an interrupted write did not commit.
+There are no automatic write retries or exactly-once guarantees. A client that
+loses its response still has an uncertain outcome. See the
+[Linux signal test and IT/EN explanation](ORACLE_SHUTDOWN_IT_EN.md).
+
 Initialization scripts run only on a new PostgreSQL volume. Existing databases
 need `services/oracle/db/002_timestamp_order.sql` before deploying the current
 writer. Stop writers, verify a backup, run the migration with `ON_ERROR_STOP`,
