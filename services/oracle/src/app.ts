@@ -12,9 +12,10 @@ import { compileTerraLex, evaluatePolicy } from "@terravoce/terralex";
 import Fastify, { errorCodes } from "fastify";
 import { z } from "zod";
 
-import { OXYGEN_ANALYSIS_MODEL_VERSION, analyzeObservations } from "./analysis.js";
+import { OXYGEN_ANALYSIS_MODEL_VERSION, analyzeEvidence } from "./analysis.js";
 import { DomainError } from "./errors.js";
-import { verifyArchivedObservations } from "./evidence-integrity.js";
+import { verifyArchivedEvidence } from "./evidence-integrity.js";
+import { createEvidenceReceipt } from "./evidence-receipt.js";
 import { OXYGEN_METRIC, valueForAnalysis } from "./observation-units.js";
 import type { ObservationStore } from "./store.js";
 
@@ -161,10 +162,10 @@ export const buildApp = (options: AppOptions) => {
       throw new DomainError("not enough observations", 422, "INSUFFICIENT_OBSERVATIONS");
     }
 
-    const verifiedObservations = await verifyArchivedObservations(observations, input, options.store);
-    const assessment = assessmentSchema.parse(
-      analyzeObservations(verifiedObservations, input.forecastHorizonHours * 3_600)
-    );
+    const archive = await verifyArchivedEvidence(observations, input, options.store);
+    const analysis = analyzeEvidence(archive.observations, input.forecastHorizonHours * 3_600);
+    const assessment = assessmentSchema.parse(analysis.assessment);
+    const evidenceReceipt = createEvidenceReceipt(analysis, archive);
     await options.store.saveAssessment(assessment);
     const decision = evaluatePolicy(policy, {
       regionId: assessment.regionId,
@@ -190,7 +191,7 @@ export const buildApp = (options: AppOptions) => {
         })
       : undefined;
 
-    return reply.status(201).send({ assessment, decision, actionDraft });
+    return reply.status(201).send({ assessment, decision, actionDraft, evidenceReceipt });
   });
 
   app.get("/v1/regions/:regionId/metrics/:metric/latest", async (request) => {

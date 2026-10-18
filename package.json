@@ -19,7 +19,8 @@
     "benchmark:oracle": "tsx scripts/benchmark-oracle-store.ts",
     "test:postgres": "tsx scripts/run-postgres-tests.ts",
     "test:postgres:recovery": "tsx scripts/run-postgres-recovery.ts",
-    "test:oracle:shutdown": "tsx scripts/run-oracle-shutdown.ts"
+    "test:oracle:shutdown": "tsx scripts/run-oracle-shutdown.ts",
+    "verify:evidence": "tsx scripts/verify-evidence-receipt.ts"
   },
   "devDependencies": {
     "@types/node": "24.13.3",

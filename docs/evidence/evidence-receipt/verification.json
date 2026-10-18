@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "kind": "exportable-evidence-receipt",
+  "baseCommit": "cc57f6e7c419d9b96ac6edf604225b88eae77744",
+  "recordedAtUTC": "2026-10-18T16:18:53.0247549Z",
+  "scope": "Local synthetic signed fixtures and an isolated actual PostgreSQL server; remote CI reported separately",
+  "checks": {
+    "explicitStrictTypeScriptIncludingTestsAndCLI": "passed",
+    "workspaceCheck": "passed",
+    "ordinary": {
+      "terralexPassed": 3,
+      "dedicatedPostgresCasesSkippedInOrdinary": 42,
+      "totalPassed": 227,
+      "contractsPassed": 10,
+      "protocolPassed": 1,
+      "oraclePassed": 213
+    },
+    "diffCheck": "passed",
+    "newReceiptCases": {
+      "cli": 16,
+      "postgres": 2,
+      "api": 3,
+      "offlineVerifier": 19
+    },
+    "workspaceBuild": "passed",
+    "realPostgres": {
+      "ownedTmpfsContainerRemoved": true,
+      "skipped": 0,
+      "serverVersion": "18.6",
+      "failed": 0,
+      "productionDatabaseUsed": false,
+      "passed": 42
+    }
+  },
+  "correctedTestHarnessIssue": "Empty argument-list fixture was initially unpacked by Vitest it.each; object rows ensure the real no-arguments CLI case runs. Focused CLI16/16 and subsequent full suite passed.",
+  "trustBoundary": "Mandatory caller-supplied public-key registry, never receipt bundled keys as default trust. Altered external trust authority changes what can be authenticated.",
+  "notEstablished": [
+    "physical environmental truth",
+    "sensor calibration",
+    "complete observation selection",
+    "Oracle issuer signature",
+    "historical key authorization",
+    "operational forecast quality",
+    "independent environmental validation"
+  ],
+  "sameFamilyCodeReview": true,
+  "sourceFiles": [
+    {
+      "path": "services/oracle/src/analysis.ts",
+      "sha256": "b0ec7b3ef07a131f19be2fd39f0802723e920dfdca515301aa6b0e509694a4e2"
+    },
+    {
+      "path": "services/oracle/src/app.ts",
+      "sha256": "56dc4b85479e9cfb55cc60342a927c0dfc0cf8e3a60a590f207e1a6cd1da3416"
+    },
+    {
+      "path": "services/oracle/src/evidence-integrity.ts",
+      "sha256": "cc83174ba3cba5b378025421d1dd5e5c928e4cc8083402dd283bb70bdbe5eb45"
+    },
+    {
+      "path": "services/oracle/src/evidence-receipt.ts",
+      "sha256": "94fddcdaf65727098ddcd476551e123d90fd31259828fdf8610e386f10e037a1"
+    },
+    {
+      "path": "services/oracle/src/evidence-receipt.test.ts",
+      "sha256": "2d545977bc22fbfa0dcca89147812560147da3940c4645ecbf9369fb9afbfa5d"
+    },
+    {
+      "path": "services/oracle/src/receipt-api.test.ts",
+      "sha256": "b6530a64f4d66c22a0685a6556124ff8bfd07f615b02aee323fcb10576b58320"
+    },
+    {
+      "path": "services/oracle/src/receipt-cli.test.ts",
+      "sha256": "d4aa55a282785e372dfd5c9db55ee82728d15958e110206576acb195b86d98a1"
+    },
+    {
+      "path": "services/oracle/src/postgres.integration.test.ts",
+      "sha256": "061c17aa5323f164ffb2eadc2f8b86adca35c61f6530999a38077a9cd8ca2dc6"
+    },
+    {
+      "path": "scripts/verify-evidence-receipt.ts",
+      "sha256": "580ee4fcaad915b2e3da51f27874697a8f958c611b33b5d1c693062d9340e28a"
+    },
+    {
+      "path": "package.json",
+      "sha256": "a3ff9fb4191c44218810b169df40271a20d29f28d371614820af22ab581ad8c6"
+    }
+  ]
+}
