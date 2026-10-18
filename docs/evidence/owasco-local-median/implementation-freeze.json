@@ -1,0 +1,41 @@
+{
+  "version": "owasco-local-lad-implementation-freeze-v1",
+  "createdAtUTC": "2026-10-18T12:11:10.440118+00:00",
+  "protocolFile": "docs/datasets/owasco-local-median/protocol.json",
+  "protocolRawSha256": "e92fa18d16ed82b72e45089e8a0c86d9f49c924ce8cd449aec090a9cd34e6b51",
+  "metadataPreflightRawSha256": "425c37572d71352f1c7f9706065eba599e2736900ad52673a9b97618a7bd34f8",
+  "implementationCommit": "c2c1e4e1ca94150fc77482a57d5e7e04f04d88f4",
+  "codeFiles": [
+    {
+      "file": "scripts/owasco_local_median.py",
+      "rawSha256": "2043367360b81ac25dcb98fe63701feb328f071cdd009d0edec527c7053b8a01"
+    },
+    {
+      "file": "scripts/owasco_lad_core.py",
+      "rawSha256": "b7246cf75c816049955fe02416b4bd05c21c4b809b350543185abf5c70df3104"
+    },
+    {
+      "file": "scripts/owasco_lad_data.py",
+      "rawSha256": "d711ceff57b00ccb132224fe9e22b889a3d0311e7ee6f7496a8356a00c1a48bd"
+    },
+    {
+      "file": "scripts/owasco_lad_environment.py",
+      "rawSha256": "4da9aa500191941be1bcc211b262cd60256810673efbfc59b28e6db9183b84c2"
+    },
+    {
+      "file": "scripts/owasco_local_median_preflight.py",
+      "rawSha256": "b30ca744c22aafe1baae18322fa53c9750df8b356b0f1499cd42da6fe74d32fb"
+    },
+    {
+      "file": "scripts/audit_owasco_local_median.py",
+      "rawSha256": "35da5a02bec654a7a690862333207c1436c59a4d15ef4312189cba8451c2fa8a"
+    },
+    {
+      "file": "scripts/requirements-owasco-lad.txt",
+      "rawSha256": "8cd5574611fea29fa53a02f2a996c8fb3454f2ab50d9ca08b8110b4dded6c810"
+    }
+  ],
+  "environmentalFitExecuted": false,
+  "candidatePredictionsOrScoresComputed": false,
+  "meaning": "Code/protocol freeze before July fit; commit and push this receipt next."
+}
