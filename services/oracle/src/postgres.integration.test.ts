@@ -85,6 +85,45 @@ describe.skipIf(databaseUrl === undefined)("real PostgreSQL observation storage"
     console.info(`PostgreSQL integration server version: ${scope.rows[0]?.version}`);
   });
 
+  it("rejects legacy schema readiness until the actual timestamp migration is applied", async () => {
+    await fixture.close();
+    fixture = await createPostgresFixture(databaseUrl!, { legacySchema: true });
+    store = fixture.createStore();
+    await expect(store.checkReadiness()).rejects.toBeDefined();
+    await fixture.inspector.query(fixture.timestampMigration);
+    await expect(store.checkReadiness()).resolves.toBeUndefined();
+    for (const table of ["sensors", "observations", "assessments"]) {
+      expect((await fixture.inspector.query(`SELECT count(*)::integer AS count FROM ${table}`)).rows)
+        .toEqual([{ count: 0 }]);
+    }
+  });
+
+  it("fails readiness when a required column disappears and recovers after it is restored", async () => {
+    await expect(store.checkReadiness()).resolves.toBeUndefined();
+    // Only the generated fixture schema is in search_path. Rename rather than
+    // rebuild the column so its type, data, defaults and constraints survive.
+    await fixture.inspector.query("ALTER TABLE sensors RENAME COLUMN active TO readiness_test_hidden_active");
+    try {
+      await expect(store.checkReadiness()).rejects.toBeDefined();
+    } finally {
+      await fixture.inspector.query("ALTER TABLE sensors RENAME COLUMN readiness_test_hidden_active TO active");
+    }
+    await expect(store.checkReadiness()).resolves.toBeUndefined();
+  });
+
+  it("rejects a read-only session without using writes as readiness probes", async () => {
+    const readOnly = fixture.createStore({ readOnly: true });
+    // A read-only client can read schema metadata but must not be declared
+    // ready for an Oracle that accepts signed observation writes.
+    await expect(readOnly.getSensor("missing")).resolves.toBeUndefined();
+    await expect(readOnly.checkReadiness()).rejects.toBeDefined();
+    await expect(store.checkReadiness()).resolves.toBeUndefined();
+    for (const table of ["sensors", "observations", "assessments"]) {
+      expect((await fixture.inspector.query(`SELECT count(*)::integer AS count FROM ${table}`)).rows)
+        .toEqual([{ count: 0 }]);
+    }
+  });
+
   it("roundtrips sensor Unicode and keeps input and read snapshots isolated", async () => {
     const input = { ...registration, label: "Sensore qualità dell’acqua 🌍" };
     const original = { ...input, active: true };

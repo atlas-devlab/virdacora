@@ -245,6 +245,7 @@ try {
   controls.seed = await ask("seed");
   for (const scenario of ["clean-stop", "sigkill"] as const) {
     ensureActive();
+    const readyBeforeFault = await ask("before-fault");
     const before = await inspectContainer();
     assert.equal(before.State.Running, true);
     await inspectVolume();
@@ -257,9 +258,12 @@ try {
     assert.equal(stopped.State.OOMKilled, false);
     assert.equal(stopped.State.ExitCode, scenario === "sigkill" ? 137 : 0);
     const down = await ask("while-down");
+    assert.equal(readyBeforeFault.readinessBefore, 200);
+    assert.equal(down.readinessDuring, 503);
     await startOwnedContainer();
     await waitForPostgres();
     const recovered = await ask("after-recovery");
+    assert.equal(recovered.readinessAfter, 200);
     const log = await docker(["logs", "--since", scenarioStartedAt, containerId!], false, true);
     const recoveryMarkers = {
       cleanShutdown: /database system is shut down/.test(log.stdout),
@@ -274,7 +278,8 @@ try {
       assert.equal(recoveryMarkers.automaticRecovery, true);
     }
     cases.push({ name: scenario, status: "pass", signal: scenario === "clean-stop" ? "SIGINT" : "SIGKILL",
-      observedStoppedExitCode: stopped.State.ExitCode, down, recovered, recoveryMarkers,
+      observedStoppedExitCode: stopped.State.ExitCode, before: readyBeforeFault, down, recovered, recoveryMarkers,
+      readinessBefore: 200, readinessDuring: 503, readinessAfter: 200,
       durationMsDiagnosticOnly: Math.round(performance.now() - scenarioStarted) });
     console.log(`PostgreSQL recovery ${scenario}: passed`);
   }
@@ -283,6 +288,7 @@ try {
   // rather than a process crash, to reject the Oracle's pending INSERT.
   ensureActive();
   await inspectContainer();
+  const readyBeforeBlockedWrite = await ask("before-fault");
   const blockedStarted = performance.now();
   const blockedStartedAt = new Date().toISOString();
   const blockerPool = new Pool({ connectionString: databaseUrl, max: 1, connectionTimeoutMillis: 5_000,
@@ -305,8 +311,23 @@ try {
   const blockedLog = await docker(["logs", "--since", blockedStartedAt, containerId!], false, true);
   const statementTimeoutObserved = /canceling statement due to statement timeout/i.test(blockedLog.stdout);
   assert.equal(statementTimeoutObserved, true);
+  // The later readiness probe also waits on the held relation lock. Require
+  // a timeout and INSERT statement on the same PostgreSQL backend PID so its
+  // SELECT failure alone cannot establish the observation-write timeout.
+  const blockedWriteStatementTimeoutObserved = [...blockedLog.stdout.matchAll(
+    /\[(\d+)\]\s+ERROR:\s+canceling statement due to statement timeout/gi)].some(match => {
+      const afterError = blockedLog.stdout.slice((match.index ?? 0) + match[0].length);
+      return new RegExp(`\\[${match[1]}\\]\\s+STATEMENT:\\s+INSERT\\s+INTO\\s+observations\\b`, "i")
+        .test(afterError);
+    });
+  assert.equal(blockedWriteStatementTimeoutObserved, true);
+  assert.equal(readyBeforeBlockedWrite.readinessBefore, 200);
+  assert.equal(blockedResponse?.readinessDuring, 503);
+  assert.equal(recoveredAfterBlockedWrite.readinessAfter, 200);
   cases.push({ name: "blocked-write", status: "pass", fault: "test-only exclusive observations table lock",
-    down: blockedResponse, recovered: recoveredAfterBlockedWrite, statementTimeoutObserved,
+    before: readyBeforeBlockedWrite, down: blockedResponse, recovered: recoveredAfterBlockedWrite,
+    statementTimeoutObserved, blockedWriteStatementTimeoutObserved,
+    readinessBefore: 200, readinessDuring: 503, readinessAfter: 200,
     blockerTransactionRolledBack: true, blockerPoolClosed: true,
     durationMsDiagnosticOnly: Math.round(performance.now() - blockedStarted) });
   console.log("PostgreSQL recovery blocked-write: passed");

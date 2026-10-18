@@ -15,11 +15,20 @@ pnpm --filter @terravoce/oracle dev
 ```bash
 docker compose up --build
 curl http://localhost:8877/healthz
+curl -i http://localhost:8877/readyz
 ```
 
 PostgreSQL is considered ready only after `pg_isready` succeeds. Its startup
 script creates replay-resistant observation tables and deterministic assessment
 storage.
+
+Oracle's Compose healthcheck uses `/readyz`, not `/healthz`. The former returns
+503 if its configured store is unavailable, has an incompatible schema or has a
+read-only session; the latter checks process liveness only. The probe never
+inserts data. Health status may lag the fault because Compose checks every ten
+seconds and applies its configured retries. `unhealthy` is a status, not an
+automatic restart or failover policy. See the
+[IT/EN contract, recovery evidence and limitations](DATABASE_READINESS_IT_EN.md).
 
 Initialization scripts run only on a new PostgreSQL volume. Existing databases
 need `services/oracle/db/002_timestamp_order.sql` before deploying the current
