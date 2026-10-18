@@ -1,0 +1,31 @@
+{
+  "version": "owasco-local-lad-independent-audit-v1",
+  "status": "PASS",
+  "protocolRawSha256": "e92fa18d16ed82b72e45089e8a0c86d9f49c924ce8cd449aec090a9cd34e6b51",
+  "implementationFreezeRawSha256": "a1df869f8c8594b64c7cf827af3b357796fbac6e6e9c1681fdf48ffabba16688",
+  "modelRawSha256": "5f8a8f485d58962ab2e9f7250a2226e01071147ccc70a0d7cf264e6134099b4f",
+  "training": {
+    "reconstructedTrainingRows": 1275,
+    "scalerVerified": true,
+    "constantMaskVerified": true,
+    "rows": 1275,
+    "primalObjective": 0.03866666666666664,
+    "dualObjective": 0.03866666666666664,
+    "absoluteDualityGap": 0.0,
+    "maximumConstraintViolation": 2.9698465908722937e-15,
+    "maximumFreeCoefficientStationarity": 1.0550811797589016e-16,
+    "maximumComplementarityResidual": 2.7213474529386602e-18,
+    "maePersistenceMgL": 0.03866666666666664,
+    "maeCandidateMgL": 0.03866666666666664,
+    "negativeTrainingPredictions": 0,
+    "certificatePassed": true
+  },
+  "developmentOpened": false,
+  "optimizerInvoked": false,
+  "filesWritten": false,
+  "productionModulesImported": false,
+  "numericalLibraryImported": false,
+  "codeManifestBytesVerified": true,
+  "gitPublicationVerified": false,
+  "limitation": "Independent stdlib algebra, same Codex model family; not independent environmental validation. No Git ancestry/publication or execution-history proof; runner checks these separately. Raw archive lineage is checked separately by the production loader."
+}
