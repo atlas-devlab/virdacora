@@ -48,8 +48,9 @@ export interface PostgresFixture {
   inspector: Pool;
   initialMigration: string;
   timestampMigration: string;
+  evidenceMigration: string;
   migration: string;
-  createStore(options?: { readOnly?: boolean }): PostgresObservationStore;
+  createStore(options?: { readOnly?: boolean; serializableDefault?: boolean }): PostgresObservationStore;
   closeStore(store: PostgresObservationStore): Promise<void>;
   // buildApp owns its store through onClose; replace that store's cleanup here.
   useStoreOwner(store: PostgresObservationStore, closeOwner: () => Promise<unknown>): void;
@@ -63,11 +64,12 @@ export async function createPostgresFixture(
   const validated = validateTestDatabaseUrl(baseUrl);
   const schema = `virdacora_test_${randomBytes(16).toString("hex")}`;
   if (!schemaPattern.test(schema)) throw new Error("Invalid generated test schema");
-  const [initialMigration, timestampMigration] = await Promise.all([
+  const [initialMigration, timestampMigration, evidenceMigration] = await Promise.all([
     readFile(new URL("../db/001_init.sql", import.meta.url), "utf8"),
-    readFile(new URL("../db/002_timestamp_order.sql", import.meta.url), "utf8")
+    readFile(new URL("../db/002_timestamp_order.sql", import.meta.url), "utf8"),
+    readFile(new URL("../db/003_evidence_receipts.sql", import.meta.url), "utf8")
   ]);
-  const migration = `${initialMigration}\n${timestampMigration}`;
+  const migration = `${initialMigration}\n${timestampMigration}\n${evidenceMigration}`;
   const admin = new Pool({ connectionString: validated, max: 1, connectionTimeoutMillis: 5_000,
     options: "-csearch_path=pg_catalog -cstatement_timeout=10000 -clock_timeout=5000" });
   let created = false;
@@ -108,12 +110,18 @@ export async function createPostgresFixture(
       throw new Error("PostgreSQL fixture schema isolation was not established");
     }
     await inspector.query(initialMigration);
-    if (options.legacySchema !== true) await inspector.query(timestampMigration);
+    if (options.legacySchema !== true) {
+      await inspector.query(timestampMigration);
+      await inspector.query(evidenceMigration);
+    }
     return {
-      schema, inspector, initialMigration, timestampMigration, migration,
+      schema, inspector, initialMigration, timestampMigration, evidenceMigration, migration,
       createStore(storeOptions = {}) {
         if (closed) throw new Error("PostgreSQL test fixture is closed");
         const storeUrl = new URL(connectionString);
+        if (storeOptions.serializableDefault === true) {
+          storeUrl.searchParams.set("options", `${storeUrl.searchParams.get("options")} -cdefault_transaction_isolation=serializable`);
+        }
         if (storeOptions.readOnly === true) {
           // This changes only the new test client's session default. It never
           // alters a database, role, inspector or another fixture's connection.

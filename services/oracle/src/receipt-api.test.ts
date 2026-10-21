@@ -86,8 +86,8 @@ async function fixture() {
     const registered = await getSensor(sensorId);
     return registered === undefined ? undefined : { ...registered, publicKeyDerBase64: registeredKeys.get(sensorId)! };
   });
-  const saveOriginal = store.saveAssessment.bind(store);
-  const save = vi.spyOn(store, "saveAssessment");
+  const saveOriginal = store.saveAssessmentWithReceipt.bind(store);
+  const save = vi.spyOn(store, "saveAssessmentWithReceipt");
   const app = buildApp({ store, policySource, adminToken, oracleToken, now: () => now });
   const run = () => app.inject({ method: "POST", url: "/v1/assessments/run",
     headers: { "x-oracle-token": oracleToken }, payload: { regionId, metric,
@@ -137,7 +137,7 @@ describe("assessment API returns a portable receipt without changing persisted a
         ...[...f.credentials.values()].map(pair => pair.privateKey)]) expect(encoded).not.toContain(privateValue);
       expect(f.lookup).toHaveBeenCalledTimes(sensorIds.length);
       for (const sensorId of sensorIds) expect(f.lookup.mock.calls.filter(([id]) => id === sensorId)).toHaveLength(1);
-      expect(f.save).toHaveBeenCalledExactlyOnceWith(expected);
+      expect(f.save).toHaveBeenCalledExactlyOnceWith(receipt);
       const persisted = await f.store.latestAssessment(regionId, metric);
       expect(persisted).toEqual(expected);
       expect(persisted).not.toHaveProperty("evidenceReceipt");
@@ -157,9 +157,10 @@ describe("assessment API returns a portable receipt without changing persisted a
     try {
       const captured = new Map(f.registeredKeys);
       const replacement = keys();
-      f.save.mockImplementation(async assessment => {
-        await f.saveOriginal(assessment);
+      f.save.mockImplementation(async packet => {
+        const receiptId = await f.saveOriginal(packet);
         for (const sensorId of sensorIds) f.registeredKeys.set(sensorId, replacement.publicKey);
+        return receiptId;
       });
       const result = await f.run();
       expect(result.statusCode).toBe(201);

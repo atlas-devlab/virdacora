@@ -71,7 +71,7 @@ async function fixture(options: { historicInactive?: boolean } = {}) {
     return sensor === undefined ? undefined : { ...sensor,
       active: options.historicInactive === true ? false : sensor.active };
   });
-  const save = vi.spyOn(store, "saveAssessment");
+  const save = vi.spyOn(store, "saveAssessmentWithReceipt");
   const app = buildApp({ store, policySource, adminToken: "synthetic-archive-admin",
     oracleToken: "synthetic-archive-oracle", now: () => now });
   const run = () => app.inject({ method: "POST", url: "/v1/assessments/run",
@@ -115,7 +115,7 @@ describe("assessment admission verifies archived signed evidence before analysis
         expect(observationId(unsigned)).toBe(row.observationId);
         expect(verifyObservation(row.observation, f.credentials.get(row.observation.sensorId)!.publicKey)).toBe(true);
       }
-      expect(f.save).toHaveBeenCalledExactlyOnceWith(expected);
+      expect(f.save).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ assessment: expected }));
       expect(vi.mocked(evaluatePolicy)).toHaveBeenCalledTimes(1);
     } finally { await f.app.close(); }
   });

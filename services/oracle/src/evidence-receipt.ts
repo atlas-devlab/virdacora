@@ -1,4 +1,4 @@
-import { assessmentSchema, canonicalJson, type Assessment } from "@terravoce/protocol";
+import { assessmentSchema, canonicalJson, sha256Hex, type Assessment } from "@terravoce/protocol";
 import { z } from "zod";
 
 import { analyzeEvidence, type EvidenceAnalysis } from "./analysis.js";
@@ -24,6 +24,12 @@ export const evidenceReceiptSchema = z.object({
   sensors: z.array(sensorVerificationKeySchema).min(1).max(512)
 }).strict();
 export type EvidenceReceipt = z.infer<typeof evidenceReceiptSchema>;
+
+// Unlike the assessment/evidence IDs, this commits signatures and key bindings
+// as well. It identifies one exact packet without changing the v1 wire format.
+export const evidenceReceiptId = (receipt: EvidenceReceipt): `0x${string}` =>
+  sha256Hex(`receipt:${canonicalJson(receipt)}`);
+
 const trustedRegistrySchema = z.array(sensorVerificationKeySchema).min(1).max(512);
 
 export const createEvidenceReceipt = (

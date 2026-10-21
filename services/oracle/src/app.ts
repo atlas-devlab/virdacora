@@ -166,7 +166,7 @@ export const buildApp = (options: AppOptions) => {
     const analysis = analyzeEvidence(archive.observations, input.forecastHorizonHours * 3_600);
     const assessment = assessmentSchema.parse(analysis.assessment);
     const evidenceReceipt = createEvidenceReceipt(analysis, archive);
-    await options.store.saveAssessment(assessment);
+    const evidenceReceiptId = await options.store.saveAssessmentWithReceipt(evidenceReceipt);
     const decision = evaluatePolicy(policy, {
       regionId: assessment.regionId,
       metric: assessment.metric,
@@ -191,7 +191,20 @@ export const buildApp = (options: AppOptions) => {
         })
       : undefined;
 
-    return reply.status(201).send({ assessment, decision, actionDraft, evidenceReceipt });
+    return reply.status(201).send({ assessment, decision, actionDraft, evidenceReceipt, evidenceReceiptId });
+  });
+
+  app.get("/v1/evidence-receipts/:receiptId", async (request, reply) => {
+    reply.header("Cache-Control", "no-store");
+    if (!tokenMatches(request.headers["x-oracle-token"], options.oracleToken)) {
+      throw new DomainError("invalid oracle token", 401, "UNAUTHORIZED");
+    }
+    const { receiptId } = z.object({ receiptId: z.string().regex(/^0x[0-9a-f]{64}$/) }).parse(request.params);
+    const receipt = await options.store.getEvidenceReceipt(receiptId);
+    if (receipt === undefined) {
+      throw new DomainError("evidence receipt not found", 404, "EVIDENCE_RECEIPT_NOT_FOUND");
+    }
+    return receipt;
   });
 
   app.get("/v1/regions/:regionId/metrics/:metric/latest", async (request) => {

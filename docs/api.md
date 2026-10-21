@@ -9,21 +9,30 @@ The service listens on port `8787` by default.
 | POST | `/v1/sensors` | register an Ed25519 sensor | `x-admin-token` |
 | POST | `/v1/observations` | submit a signed observation | sensor signature |
 | POST | `/v1/assessments/run` | run model and TerraLex policy | `x-oracle-token` |
+| GET | `/v1/evidence-receipts/:receiptId` | retrieve one retained exact evidence packet | `x-oracle-token` |
 | GET | `/v1/regions/:regionId/metrics/:metric/latest` | latest assessment | none in MVP |
 
 The assessment response contains `assessment`, the TerraLex `decision`, an optional
-reversible `actionDraft`, and an exportable `evidenceReceipt`. The service intentionally
+reversible `actionDraft`, an exportable `evidenceReceipt`, and its `evidenceReceiptId`. The service intentionally
 does not hold a treasury key or vote credential.
 
 `evidenceReceipt` carries the exact analytical core (including ordered observation
 IDs), original signed observations, assessment and the three-field public-key
-bindings captured by the archive check. It is returned only by a successful run;
-it is not stored in the assessment table or returned by `GET .../latest`.
-Save it at acquisition time. `pnpm verify:evidence <receipt.json> <trusted-registry.json>`
+bindings captured by the archive check. Successful runs save it together with
+the assessment. PostgreSQL uses one transaction and an additional table; memory
+mode retains it only for that process lifetime. The assessment table and latest
+endpoint remain flat. Retrieve the retained packet by its content-derived
+`evidenceReceiptId` at the authenticated endpoint above (`Cache-Control: no-store`).
+Unknown receipts return `404 EVIDENCE_RECEIPT_NOT_FOUND`; an incompatible body
+already stored under the assessment ID returns `409 ASSESSMENT_CONFLICT` on save.
+Retrieval checks packet ID and assessment consistency, not key authority.
+`pnpm verify:evidence <receipt.json> <trusted-registry.json>`
 verifies it offline against a mandatory, separately supplied public-key registry.
 Bundled keys are not a trust source. See [receipt format, usage and trust limits
 (IT/EN)](EVIDENCE_RECEIPT_IT_EN.md). The persisted assessment, numerical recipe,
-model versions and existing hash construction are unchanged.
+model versions and existing hash construction are unchanged. Existing databases
+require migration `003_evidence_receipts.sql`. See [atomic persistence and recovery
+(IT/EN)](EVIDENCE_PERSISTENCE_IT_EN.md) for variants, migration and outcome limits.
 
 Before a new assessment, selected archived rows must pass strict schema,
 original observation ID, signature, unique ID/sequence and request/sensor routing

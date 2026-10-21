@@ -1,0 +1,19 @@
+{
+  "reportedTimeZone": "not asserted",
+  "limitation": "Baseline source fingerprint not captured before expanding the file; no later run presented as that baseline",
+  "testsPassed": 0,
+  "testsFailed": 2,
+  "startTimeReportedByVitest": "16:10:30",
+  "command": "pnpm exec vitest run services/oracle/src/receipt-persistence.test.ts --reporter=verbose",
+  "schemaVersion": 1,
+  "baseCommit": "0f93cdd57213820c86bac13031516b84527b4ae5",
+  "kind": "receipt-persistence-api-baseline",
+  "exitCode": 1,
+  "testsTotal": 2,
+  "scope": "First two API cases before production edits; captured actual output",
+  "durationMsReportedByVitest": 7610,
+  "expectedFailures": [
+    "POST run 201 has evidenceReceiptId undefined",
+    "GET receipt returns404 because route absent; expected401 authentication"
+  ]
+}

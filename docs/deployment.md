@@ -45,10 +45,20 @@ loses its response still has an uncertain outcome. See the
 [Linux signal test and IT/EN explanation](ORACLE_SHUTDOWN_IT_EN.md).
 
 Initialization scripts run only on a new PostgreSQL volume. Existing databases
-need `services/oracle/db/002_timestamp_order.sql` before deploying the current
+need `services/oracle/db/002_timestamp_order.sql` and then
+`services/oracle/db/003_evidence_receipts.sql` before deploying the current
 writer. Stop writers, verify a backup, run the migration with `ON_ERROR_STOP`,
 then start the new code. It adds NOT NULL ordering keys; the previous writer
 cannot populate them. See the [IT/EN migration and rollback notes](TIMESTAMP_ORDER_IT_EN.md#installazione-e-archivi-preesistenti).
+
+Migration 003 adds `assessment_evidence` without rewriting old records or inventing
+legacy receipts. Oracle readiness now requires its columns and SELECT/INSERT
+access. Run it with `ON_ERROR_STOP` after a verified backup and apply it only to
+the explicitly intended database. New-volume Compose initialization and isolated
+test runners include it. A code rollback may leave this additive table intact;
+the older writer will not retain receipts for its later assessments. Do not drop
+the table as a casual rollback: it contains retained evidence. See the
+[IT/EN persistence contract](EVIDENCE_PERSISTENCE_IT_EN.md).
 
 ## Production gates
 

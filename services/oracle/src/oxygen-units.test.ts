@@ -227,7 +227,7 @@ describe("oxygen unit validation through the signed Memory API", () => {
       const legacy = series(keys, ["mg/L", "ug/L", "%", "mg/L", "\u03bcg/L"]);
       for (const row of legacy) await store.addObservation(row);
       const before = snapshot(await store.listObservations(regionId, metric, 512));
-      const save = vi.spyOn(store, "saveAssessment");
+      const save = vi.spyOn(store, "saveAssessmentWithReceipt");
       const response = await app.inject({ method: "POST", url: "/v1/assessments/run",
         headers: { "x-oracle-token": "synthetic-unit-oracle" }, payload: assessmentRequest });
       expect(response.statusCode).toBe(422);

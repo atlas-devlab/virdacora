@@ -70,6 +70,13 @@ to recheck signatures and reproduce the result offline against separately truste
 public keys, even after the database changes. This verifies a calculation from
 signed inputs; it does not establish physical truth or certify an Oracle issuer.
 
+The [receipt persistence contract (IT/EN)](docs/EVIDENCE_PERSISTENCE_IT_EN.md)
+stores each exact packet together with its assessment and returns a separate
+`evidenceReceiptId`. Authenticated retrieval survives PostgreSQL client/app
+restarts; memory mode is ephemeral. Migration 003 is required for existing
+databases. Packet variants receive separate IDs and never silently replace one
+another; numerical results and the v1 receipt format are unchanged.
+
 ## Research branches and original mission
 
 The mission is to combine verifiable environmental analysis, distributed
