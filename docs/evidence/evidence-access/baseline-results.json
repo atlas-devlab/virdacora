@@ -1,0 +1,20 @@
+{
+  "kind": "evidence-read-access-baseline",
+  "baseCommit": "b1ce9600b10e296001db0b1d7edfefee6825ef7c",
+  "sourceFile": "services/oracle/src/evidence-access.test.ts",
+  "sourceFileSha256": "c49a7124f85719ba5b2c06b7387562310f4533f5ab6d255fb9e52b8dbe6c1e8f",
+  "command": "pnpm exec vitest run services/oracle/src/evidence-access.test.ts --reporter=verbose",
+  "startTimeReportedByVitest": "20:03:26",
+  "reportedTimeZone": "not asserted",
+  "durationMsReportedByVitest": 850,
+  "testsTotal": 2,
+  "testsFailed": 2,
+  "testsPassed": 0,
+  "exitCode": 1,
+  "expectedFailures": [
+    "Configured reader catalog GET returned 401 instead of 200",
+    "Configured reader exact receipt GET returned 401 instead of 200"
+  ],
+  "syntheticDataOnly": true,
+  "note": "Fingerprint refers to the initial two-case baseline file, before the final expanded suite."
+}
