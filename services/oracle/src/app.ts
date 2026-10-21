@@ -1,5 +1,3 @@
-import { timingSafeEqual } from "node:crypto";
-
 import {
   actionDraftSchema,
   assessmentSchema,
@@ -13,6 +11,7 @@ import Fastify, { errorCodes } from "fastify";
 import { z } from "zod";
 
 import { OXYGEN_ANALYSIS_MODEL_VERSION, analyzeEvidence } from "./analysis.js";
+import { tokenMatches, validateEvidenceReadToken, type OracleCredentials } from "./auth.js";
 import { DomainError } from "./errors.js";
 import { verifyArchivedEvidence } from "./evidence-integrity.js";
 import { createEvidenceReceipt } from "./evidence-receipt.js";
@@ -28,20 +27,11 @@ const assessmentRequestSchema = z.object({
   asset: z.string().regex(/^[A-Z][A-Z0-9]{1,11}$/)
 });
 
-export interface AppOptions {
+export interface AppOptions extends OracleCredentials {
   store: ObservationStore;
   policySource: string;
-  adminToken: string;
-  oracleToken: string;
   now?: () => Date;
 }
-
-const tokenMatches = (provided: unknown, expected: string): boolean => {
-  if (typeof provided !== "string") return false;
-  const left = Buffer.from(provided);
-  const right = Buffer.from(expected);
-  return left.length === right.length && timingSafeEqual(left, right);
-};
 
 // Only framework parser failures belong here: arbitrary store errors must stay private.
 const inputErrors = [
@@ -53,6 +43,10 @@ const inputErrors = [
 ] as const;
 
 export const buildApp = (options: AppOptions) => {
+  validateEvidenceReadToken(options);
+  const canReadEvidence = (oracleToken: unknown, evidenceToken: unknown): boolean =>
+    tokenMatches(oracleToken, options.oracleToken) ||
+    (options.evidenceReadToken !== undefined && tokenMatches(evidenceToken, options.evidenceReadToken));
   // Keep active HTTP requests alive while close() drains them. Be explicit:
   // Fastify 5.10's default "idle" branch can close every active connection.
   const app = Fastify({ logger: false, bodyLimit: 64 * 1024, forceCloseConnections: false });
@@ -196,7 +190,7 @@ export const buildApp = (options: AppOptions) => {
 
   app.get("/v1/evidence-receipts/:receiptId", async (request, reply) => {
     reply.header("Cache-Control", "no-store");
-    if (!tokenMatches(request.headers["x-oracle-token"], options.oracleToken)) {
+    if (!canReadEvidence(request.headers["x-oracle-token"], request.headers["x-evidence-token"])) {
       throw new DomainError("invalid oracle token", 401, "UNAUTHORIZED");
     }
     const { receiptId } = z.object({ receiptId: z.string().regex(/^0x[0-9a-f]{64}$/) }).parse(request.params);
@@ -209,7 +203,7 @@ export const buildApp = (options: AppOptions) => {
 
   app.get("/v1/assessments/:assessmentId/evidence-receipts", async (request, reply) => {
     reply.header("Cache-Control", "no-store");
-    if (!tokenMatches(request.headers["x-oracle-token"], options.oracleToken)) {
+    if (!canReadEvidence(request.headers["x-oracle-token"], request.headers["x-evidence-token"])) {
       throw new DomainError("invalid oracle token", 401, "UNAUTHORIZED");
     }
     const { assessmentId } = z.object({ assessmentId: z.string().regex(/^0x[0-9a-f]{64}$/) }).parse(request.params);

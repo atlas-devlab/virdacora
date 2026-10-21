@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "kind": "evidence-read-access-local-verification",
+  "recordedAtUTC": "2026-10-21T18:07:20Z",
+  "baseCommit": "b1ce9600b10e296001db0b1d7edfefee6825ef7c",
+  "ordinaryTestsPassed": 344,
+  "oracleTestsPassed": 330,
+  "postgresCasesSkippedLocally": 62,
+  "newApiCasesPassed": 33,
+  "newConfigurationCasesPassed": 18,
+  "buildPassed": true,
+  "workspaceCheckPassed": true,
+  "strictTypesIncludingOracleTestsAndShutdownRunnerPassed": true,
+  "composeConfigPassed": true,
+  "diffCheckPassed": true,
+  "databaseExecutedLocally": false,
+  "linuxSignalRunnerExecutedLocally": false,
+  "dockerCleanupRetried": false,
+  "limitations": [
+    "Local Docker remains unavailable; PostgreSQL and actual Linux container execution require remote CI.",
+    "A prior blocked Docker cleanup was not retried.",
+    "Two shutdown-runner TypeScript issues were corrected: explicit undefined for an optional property and unchecked access to an unknown response body.",
+    "Same-family Codex review and synthetic software checks are not independent environmental validation."
+  ]
+}

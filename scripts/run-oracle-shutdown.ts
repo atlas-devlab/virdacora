@@ -124,8 +124,10 @@ function http(path: string, payload?: unknown, headers: Record<string, string> =
       response.on("error", () => finish({ kind: "transport-error", code: "RESPONSE_STREAM_ERROR" }));
       response.on("end", () => {
         try {
+          const cacheControl = response.headers["cache-control"];
           finish({ kind: "http", statusCode: response.statusCode ?? -1,
-            body: JSON.parse(Buffer.concat(chunks).toString("utf8")), cacheControl: response.headers["cache-control"] });
+            body: JSON.parse(Buffer.concat(chunks).toString("utf8")),
+            ...(cacheControl === undefined ? {} : { cacheControl }) });
         } catch { finish({ kind: "transport-error", code: "INVALID_TEST_RESPONSE" }); }
       });
     });
@@ -177,7 +179,7 @@ async function restartOracle(): Promise<void> {
   await waitUntilReady();
   await assertPidOne();
 }
-async function runCase(signal: "SIGTERM" | "SIGINT", adminToken: string): Promise<void> {
+async function runCase(signal: "SIGTERM" | "SIGINT", adminToken: string, evidenceReadToken: string): Promise<void> {
   const record: Record<string, unknown> = { signal, status: "fail", syntheticDataOnly: true };
   let stage = "START";
   let blocker: DatabaseClient | undefined;
@@ -189,6 +191,25 @@ async function runCase(signal: "SIGTERM" | "SIGINT", adminToken: string): Promis
     const beforeState = await inspectOwnedContainer(oracleId!, oracleName);
     record.hostProcessIdBefore = beforeState.State.Pid;
     record.pidOneEntrypointVerified = true;
+    stage = "CHECK_COMPILED_SERVER_READER_ROLE";
+    const unknownId = `0x${"f".repeat(64)}`;
+    const catalog = await http(`/v1/assessments/${unknownId}/evidence-receipts`, undefined,
+      { "x-evidence-token": evidenceReadToken });
+    expectHttp(catalog, 200, "COMPILED_SERVER_READER_CATALOG_FAILED");
+    assert.deepEqual(catalog.body, { assessmentId: unknownId, receiptIds: [] });
+    assert.equal(catalog.cacheControl, "no-store");
+    const receipt = await http(`/v1/evidence-receipts/${unknownId}`, undefined,
+      { "x-evidence-token": evidenceReadToken });
+    expectHttp(receipt, 404, "COMPILED_SERVER_READER_RECEIPT_AUTH_FAILED");
+    assert.deepEqual(receipt.body, { error: "EVIDENCE_RECEIPT_NOT_FOUND", message: "evidence receipt not found" });
+    assert.equal(receipt.cacheControl, "no-store");
+    expectHttp(await http("/v1/assessments/run", {}, { "x-oracle-token": evidenceReadToken }),
+      401, "COMPILED_SERVER_READER_WAS_ACCEPTED_AS_WRITER");
+    expectHttp(await http("/v1/sensors", {}, { "x-admin-token": evidenceReadToken }),
+      401, "COMPILED_SERVER_READER_WAS_ACCEPTED_AS_ADMIN");
+    record.evidenceReaderRole = { catalogStatus: 200, absentReceiptStatus: 404,
+      writerDeniedStatus: 401, adminDeniedStatus: 401, noStore: true,
+      environmentCredentialReachedCompiledServer: true };
     stage = "REGISTER_SENSOR";
     const sensorId = `synthetic-shutdown-${signal.toLowerCase()}`;
     const pair = generateKeyPairSync("ed25519");
@@ -381,10 +402,11 @@ try {
   temporaryDirectory = await mkdtemp(join(tmpdir(), "virdacora-shutdown-"));
   const password = randomBytes(24).toString("hex");
   const adminToken = randomBytes(24).toString("hex");
+  const evidenceReadToken = randomBytes(24).toString("hex");
   const postgresEnv = join(temporaryDirectory, "postgres.env");
   const oracleEnv = join(temporaryDirectory, "oracle.env");
   await writeFile(postgresEnv, `POSTGRES_USER=virdacora_test\nPOSTGRES_DB=virdacora_test\nPOSTGRES_PASSWORD=${password}\n`, { mode: 0o600 });
-  await writeFile(oracleEnv, `DATABASE_URL=postgresql://virdacora_test:${password}@${postgresName}:5432/virdacora_test?application_name=${applicationName}\nADMIN_API_TOKEN=${adminToken}\nORACLE_API_TOKEN=${randomBytes(24).toString("hex")}\nPOLICY_PATH=/app/policies/po-water-v1.terra\nPORT=8787\nHOST=0.0.0.0\n`, { mode: 0o600 });
+  await writeFile(oracleEnv, `DATABASE_URL=postgresql://virdacora_test:${password}@${postgresName}:5432/virdacora_test?application_name=${applicationName}\nADMIN_API_TOKEN=${adminToken}\nORACLE_API_TOKEN=${randomBytes(24).toString("hex")}\nEVIDENCE_READ_API_TOKEN=${evidenceReadToken}\nPOLICY_PATH=/app/policies/po-water-v1.terra\nPORT=8787\nHOST=0.0.0.0\n`, { mode: 0o600 });
   setupStage = "CREATE_AND_START_POSTGRES";
   postgresId = (await docker(["create", "--name", postgresName, "--label", `${ownerLabel}=${owner}`,
     "--network", networkName, "--env-file", postgresEnv, "--publish", "127.0.0.1::5432",
@@ -433,7 +455,7 @@ try {
     "--memory", "256m", "--cpus", "2", oracleImage])).stdout;
   assert.match(oracleId, /^[a-f0-9]{64}$/);
   setupStage = "RUN_SIGNAL_CASES";
-  for (const signal of ["SIGTERM", "SIGINT"] as const) await runCase(signal, adminToken);
+  for (const signal of ["SIGTERM", "SIGINT"] as const) await runCase(signal, adminToken, evidenceReadToken);
   requireCondition(!poolErrorObserved, "INSPECTOR_POOL_ERROR_OBSERVED");
 } catch (error) {
   if (typeof error === "object" && error !== null && "code" in error &&

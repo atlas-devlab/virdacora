@@ -9,9 +9,17 @@ The service listens on port `8787` by default.
 | POST | `/v1/sensors` | register an Ed25519 sensor | `x-admin-token` |
 | POST | `/v1/observations` | submit a signed observation | sensor signature |
 | POST | `/v1/assessments/run` | run model and TerraLex policy | `x-oracle-token` |
-| GET | `/v1/evidence-receipts/:receiptId` | retrieve one retained exact evidence packet | `x-oracle-token` |
-| GET | `/v1/assessments/:assessmentId/evidence-receipts` | bounded receipt-ID catalog for a known assessment | `x-oracle-token` |
+| GET | `/v1/evidence-receipts/:receiptId` | retrieve one retained exact evidence packet | `x-oracle-token` OR configured `x-evidence-token` |
+| GET | `/v1/assessments/:assessmentId/evidence-receipts` | bounded receipt-ID catalog for a known assessment | `x-oracle-token` OR configured `x-evidence-token` |
 | GET | `/v1/regions/:regionId/metrics/:metric/latest` | latest assessment | none in MVP |
+
+The optional `EVIDENCE_READ_API_TOKEN` enables `x-evidence-token` on the two
+receipt GET routes only. Unset/empty environment configuration disables it;
+active values must be 32–256 visible ASCII characters, distinct from the admin
+and Oracle credentials. Either correctly named valid header permits receipt
+reads when both are present. Reader bytes in writer/admin headers authorize no
+writes. Both GET routes retain authentication before validation/storage and
+`Cache-Control: no-store`. See [IT/EN access contract and limits](EVIDENCE_ACCESS_IT_EN.md).
 
 The assessment response contains `assessment`, the TerraLex `decision`, an optional
 reversible `actionDraft`, an exportable `evidenceReceipt`, and its `evidenceReceiptId`. The service intentionally
