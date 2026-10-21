@@ -7,6 +7,7 @@ import type {
 import { DomainError } from "./errors.js";
 import { evidenceReceiptId, evidenceReceiptSchema, type EvidenceReceipt } from "./evidence-receipt.js";
 import { assertAssessmentMatches, readStoredEvidenceReceipt } from "./receipt-storage.js";
+import { makeEvidenceReceiptPage, receiptPageStart, validateReceiptPage, type EvidenceReceiptPage } from "./receipt-catalog.js";
 import { compareTimestampKeys, timestampMilliseconds } from "./timestamp-order.js";
 
 export interface StoredSensor extends SensorRegistration {
@@ -31,6 +32,7 @@ export interface ObservationStore {
   saveAssessment(assessment: Assessment): Promise<void>;
   saveAssessmentWithReceipt(receipt: EvidenceReceipt): Promise<`0x${string}`>;
   getEvidenceReceipt(receiptId: string): Promise<EvidenceReceipt | undefined>;
+  listEvidenceReceipts(assessmentId: string, limit: number, after?: string): Promise<EvidenceReceiptPage>;
   latestAssessment(regionId: string, metric: string, modelVersion?: string): Promise<Assessment | undefined>;
   close(): Promise<void>;
 }
@@ -71,6 +73,7 @@ export class MemoryObservationStore implements ObservationStore {
   private readonly observationSeries = new Map<string, IndexedObservation[]>();
   private readonly assessmentRecords = new Map<string, Assessment>();
   private readonly evidenceReceipts = new Map<string, EvidenceReceipt>();
+  private readonly receiptIdsByAssessment = new Map<string, string[]>();
   private readonly assessments = new Map<string, IndexedAssessment>();
   private readonly assessmentsByVersion = new Map<string, IndexedAssessment>();
 
@@ -170,8 +173,11 @@ export class MemoryObservationStore implements ObservationStore {
       readStoredEvidenceReceipt(previous, id, stored);
       return id;
     }
+    const receiptIds = [...(this.receiptIdsByAssessment.get(receipt.assessment.assessmentId) ?? [])];
+    receiptIds.splice(receiptPageStart(receiptIds, id), 0, id);
     if (stored === undefined) this.commitAssessment({ ...receipt.assessment }, generatedAt);
     this.evidenceReceipts.set(id, receipt);
+    this.receiptIdsByAssessment.set(receipt.assessment.assessmentId, receiptIds);
     return id;
   }
 
@@ -179,6 +185,13 @@ export class MemoryObservationStore implements ObservationStore {
     const receipt = this.evidenceReceipts.get(id);
     return receipt === undefined ? undefined : readStoredEvidenceReceipt(receipt, id,
       this.assessmentRecords.get(receipt.assessment.assessmentId));
+  }
+
+  public async listEvidenceReceipts(assessmentId: string, limit: number, after?: string): Promise<EvidenceReceiptPage> {
+    validateReceiptPage(assessmentId, limit, after);
+    const ids = this.receiptIdsByAssessment.get(assessmentId) ?? [];
+    const start = receiptPageStart(ids, after);
+    return makeEvidenceReceiptPage(assessmentId, ids.slice(start, start + limit + 1), limit, after);
   }
 
   public async latestAssessment(

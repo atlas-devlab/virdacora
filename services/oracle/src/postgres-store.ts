@@ -9,6 +9,7 @@ import { Pool } from "pg";
 import { DomainError } from "./errors.js";
 import { evidenceReceiptId, evidenceReceiptSchema, type EvidenceReceipt } from "./evidence-receipt.js";
 import { assertAssessmentMatches, readStoredEvidenceReceipt } from "./receipt-storage.js";
+import { makeEvidenceReceiptPage, validateReceiptPage, type EvidenceReceiptPage } from "./receipt-catalog.js";
 import { timestampMilliseconds } from "./timestamp-order.js";
 import {
   validateObservationLimit,
@@ -239,6 +240,18 @@ export class PostgresObservationStore implements ObservationStore {
       throw new Error("stored evidence receipt is inconsistent");
     }
     return receipt;
+  }
+
+  public async listEvidenceReceipts(assessmentId: string, limit: number, after?: string): Promise<EvidenceReceiptPage> {
+    validateReceiptPage(assessmentId, limit, after);
+    // Empty string is below every valid fixed-length hex ID, including zero.
+    // Both the predicate and ordering match the composite C-collation index.
+    const result = await this.pool.query<{ receiptId: string }>(
+      `SELECT receipt_id AS "receiptId" FROM assessment_evidence
+       WHERE assessment_id = $1 AND receipt_id COLLATE "C" > $2
+       ORDER BY receipt_id COLLATE "C" ASC LIMIT $3`,
+      [assessmentId, after ?? "", limit + 1]);
+    return makeEvidenceReceiptPage(assessmentId, result.rows.map(row => row.receiptId), limit, after);
   }
 
   public async close(): Promise<void> {

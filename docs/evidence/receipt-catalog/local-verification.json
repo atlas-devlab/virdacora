@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "kind": "bounded-receipt-catalog-local-verification",
+  "recordedAtUTC": "2026-10-21T17:54:55.0619003Z",
+  "baseCommit": "0ae5479f38796275ecaf6768723917c3f6dcdfda",
+  "ordinaryTests": {
+    "oracle": 279,
+    "postgresCasesSkipped": 60,
+    "terralex": 3,
+    "passed": 293,
+    "contracts": 10,
+    "protocol": 1
+  },
+  "newCases": {
+    "memory": 20,
+    "api": 27,
+    "postgresPendingCI": 7
+  },
+  "build": "passed",
+  "workspaceCheck": "passed",
+  "explicitStrictTypeScriptIncludingTests": "passed",
+  "composeConfig": "passed",
+  "diffCheck": "passed",
+  "localPostgres": {
+    "status": "not-run",
+    "reason": "Previously unavailable Docker engine; no repeat of blocked cleanup action",
+    "skippedCasesDoNotValidateDatabase": true
+  },
+  "scope": "Synthetic software and metadata-pagination validation; actual PostgreSQL CI reported separately",
+  "sourceFiles": [
+    {
+      "path": "services/oracle/src/app.ts",
+      "sha256": "42dc6a8d1525081a29cdb8a7aa59de680cb02c641585e0e180122292aec72a72"
+    },
+    {
+      "path": "services/oracle/src/store.ts",
+      "sha256": "042f8c6257dc756d6721cf652b63c4b46889be0430092ffb24d35f855e9c6963"
+    },
+    {
+      "path": "services/oracle/src/postgres-store.ts",
+      "sha256": "b003139abe2b6a03aaffcfc20ffdbfb2b4db8fd8f44da6c43827e3ab4238cc8d"
+    },
+    {
+      "path": "services/oracle/src/receipt-catalog.ts",
+      "sha256": "9a22a8d03c1c5796dd494a393574daced78f3a37d37e06977abae98a94a465b6"
+    },
+    {
+      "path": "services/oracle/src/receipt-catalog.test.ts",
+      "sha256": "ccbdc44222f337215b143016ae3c8e50c865be214b2fffd312f29f92c92f10a0"
+    },
+    {
+      "path": "services/oracle/src/postgres.integration.test.ts",
+      "sha256": "c011390140a97289e9d3bd8679283f6fa462cfbd6a5f6bdf7b8cb8ec877c6b64"
+    },
+    {
+      "path": "services/oracle/test/postgres-fixture.ts",
+      "sha256": "3b66b92e70674f028ffe8a4e86a1b3583be4ca67caa563de7704aa2ec83cdea2"
+    },
+    {
+      "path": "services/oracle/db/004_receipt_catalog.sql",
+      "sha256": "b2665aa4634749e76960f13faeb99b9af252265e7caef5ed7d06140837fdeda9"
+    },
+    {
+      "path": "scripts/run-oracle-shutdown.ts",
+      "sha256": "427551a8d851b27263916628f3e83817d329256b22141ba3e7881c6a2c9818ae"
+    },
+    {
+      "path": "scripts/run-postgres-recovery.ts",
+      "sha256": "d12dd5e7b400ba99d1ed6acca75e80760da6fb4890af9a829f858cb091de9696"
+    }
+  ]
+}

@@ -215,7 +215,7 @@ try {
     on(event: "error", listener: () => void): void;
     end(): Promise<void>;
   } };
-  const migration = (await Promise.all(["001_init.sql", "002_timestamp_order.sql", "003_evidence_receipts.sql"].map(file =>
+  const migration = (await Promise.all(["001_init.sql", "002_timestamp_order.sql", "003_evidence_receipts.sql", "004_receipt_catalog.sql"].map(file =>
     readFile(new URL(`../services/oracle/db/${file}`, import.meta.url), "utf8")))).join("\n");
   // No administrative/inspection pool remains connected during the interruptions.
   const deadline = performance.now() + 60_000;
