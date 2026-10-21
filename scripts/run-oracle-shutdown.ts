@@ -423,7 +423,7 @@ try {
   assert.match(String(version.rows[0]?.version), /^18\./);
   controls.postgresVersion = version.rows[0]?.version;
   setupStage = "APPLY_MIGRATIONS";
-  const migrations = await Promise.all(["001_init.sql", "002_timestamp_order.sql"].map(file =>
+  const migrations = await Promise.all(["001_init.sql", "002_timestamp_order.sql", "003_evidence_receipts.sql"].map(file =>
     readFile(new URL(`../services/oracle/db/${file}`, import.meta.url), "utf8")));
   await pool.query(migrations.join("\n"));
   oraclePort = await chooseOraclePort();

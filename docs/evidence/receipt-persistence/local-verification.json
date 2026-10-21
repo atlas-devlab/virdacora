@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "kind": "receipt-persistence-local-verification",
+  "baseCommit": "0f93cdd57213820c86bac13031516b84527b4ae5",
+  "recordedAtUTC": "2026-10-21T14:21:50.7435043Z",
+  "ordinaryTests": {
+    "oracle": 232,
+    "protocol": 1,
+    "postgresCasesSkipped": 53,
+    "terralex": 3,
+    "contracts": 10,
+    "passed": 246
+  },
+  "newCases": {
+    "postgresPending": 11,
+    "memoryAndAPI": 19
+  },
+  "build": "passed",
+  "workspaceCheck": "passed",
+  "explicitStrictTypeScriptIncludingTests": "passed",
+  "localPostgres": {
+    "status": "not-run",
+    "ordinarySkippedCasesDoNotValidateDatabase": true,
+    "reason": "Docker engine unavailable: stale analytics socket could not be accessed"
+  },
+  "reviewAdjustments": [
+    "Removed unnecessary FOR UPDATE to preserve SELECT/INSERT-only privilege contract",
+    "Explicit READ COMMITTED transaction isolation; added concurrency test with SERIALIZABLE external default",
+    "Updated legacy test spies to observe new atomic save method"
+  ],
+  "validationScope": "Synthetic software checks only; remote actual PostgreSQL and recovery evidence must be reported separately",
+  "sourceFiles": [
+    {
+      "path": "services/oracle/src/app.ts",
+      "sha256": "fe1babf0c95a29c5e7ef848a756471fc2699d05e429633aa8362f9644a9cedff"
+    },
+    {
+      "path": "services/oracle/src/store.ts",
+      "sha256": "59427bb4d77933a633e4c619b83a88c4c6738ea6374770f6d639699390ffe4fe"
+    },
+    {
+      "path": "services/oracle/src/postgres-store.ts",
+      "sha256": "2d92372d33a84fd9423b1724515da87d002bcee98060dd8e376e9df830452cc5"
+    },
+    {
+      "path": "services/oracle/src/evidence-receipt.ts",
+      "sha256": "01fe77cce36be6c0327edec76cbf1bcf3480e6e08dfdab702ab049614c5f2b38"
+    },
+    {
+      "path": "services/oracle/src/receipt-storage.ts",
+      "sha256": "040401c48e805492cdc09f1f7f61e597ee7ecd562b73e56f39826481a6496b47"
+    },
+    {
+      "path": "services/oracle/src/receipt-persistence.test.ts",
+      "sha256": "854a43cb8b5dd56740f78f4d165f97344f52c44db7f5083b7ec66d616c6b49e8"
+    },
+    {
+      "path": "services/oracle/src/postgres.integration.test.ts",
+      "sha256": "9215f97122083e0255ddaa43c28647a67b1880f231c5273fdef21e69f509b2aa"
+    },
+    {
+      "path": "services/oracle/test/postgres-fixture.ts",
+      "sha256": "854303216e9b4274882eb3ff0f9d7d2d8114ff2c3fdf6bb9b85549d11fb8e42c"
+    },
+    {
+      "path": "services/oracle/db/003_evidence_receipts.sql",
+      "sha256": "12386bf5649f81df8065b1c8b8b44914a047df618bef144a9e61eb7344ebbd7b"
+    },
+    {
+      "path": "scripts/run-oracle-shutdown.ts",
+      "sha256": "c805060be9cf43abfb25e90b1b02ac97df7cbfcf9075be3521ed56e5ee4d2e7b"
+    },
+    {
+      "path": "scripts/run-postgres-recovery.ts",
+      "sha256": "c38cf92bfe8894128a5b72c23a1e47fa4b42440568e3c6eb32993dff5a4affc7"
+    }
+  ]
+}

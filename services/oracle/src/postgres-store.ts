@@ -1,3 +1,4 @@
+import { canonicalJson } from "@terravoce/protocol";
 import type {
   Assessment,
   SensorRegistration,
@@ -6,6 +7,8 @@ import type {
 import { Pool } from "pg";
 
 import { DomainError } from "./errors.js";
+import { evidenceReceiptId, evidenceReceiptSchema, type EvidenceReceipt } from "./evidence-receipt.js";
+import { assertAssessmentMatches, readStoredEvidenceReceipt } from "./receipt-storage.js";
 import { timestampMilliseconds } from "./timestamp-order.js";
 import {
   validateObservationLimit,
@@ -42,6 +45,7 @@ export class PostgresObservationStore implements ObservationStore {
           AND has_table_privilege('sensors', 'INSERT')
           AND has_table_privilege('observations', 'INSERT')
           AND has_table_privilege('assessments', 'INSERT')
+          AND has_table_privilege('assessment_evidence', 'INSERT')
           AND (SELECT ROW(sensor_id, region_id, public_key_der_base64, label, active)
                  FROM sensors LIMIT 0) IS NULL
           AND (SELECT ROW(observation_id, sensor_id, region_id, metric, observed_at,
@@ -49,7 +53,9 @@ export class PostgresObservationStore implements ObservationStore {
                  FROM observations LIMIT 0) IS NULL
           AND (SELECT ROW(assessment_id, region_id, metric, generated_at, body,
                           generated_at_ms)
-                 FROM assessments LIMIT 0) IS NULL AS ready`,
+                 FROM assessments LIMIT 0) IS NULL
+          AND (SELECT ROW(receipt_id, assessment_id, body)
+                 FROM assessment_evidence LIMIT 0) IS NULL AS ready`,
       query_timeout: 2_000
     };
     const result = await this.pool.query<{ ready: boolean }>(probe);
@@ -167,6 +173,72 @@ export class PostgresObservationStore implements ObservationStore {
       modelVersion === undefined ? [regionId, metric] : [regionId, metric, modelVersion]
     );
     return result.rows[0]?.body;
+  }
+
+  public async saveAssessmentWithReceipt(input: EvidenceReceipt): Promise<`0x${string}`> {
+    // Snapshot before the first pool wait; never retain a caller-owned packet.
+    const receipt = evidenceReceiptSchema.parse(input);
+    const assessment = receipt.assessment;
+    const generatedAt = timestampMilliseconds(assessment.generatedAt);
+    const id = evidenceReceiptId(receipt);
+    const expectedPacket = canonicalJson(receipt);
+    const client = await this.pool.connect();
+    let discard: Error | undefined;
+    try {
+      await client.query("BEGIN ISOLATION LEVEL READ COMMITTED");
+      await client.query(
+        `INSERT INTO assessments
+           (assessment_id, region_id, metric, generated_at, body, generated_at_ms)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         ON CONFLICT (assessment_id) DO NOTHING`,
+        [assessment.assessmentId, assessment.regionId, assessment.metric,
+          assessment.generatedAt, assessment, generatedAt]
+      );
+      // The app never updates an existing assessment. ON CONFLICT waits for a
+      // competing first insert; this next READ COMMITTED statement sees it.
+      // No FOR UPDATE: reading immutable results must not require UPDATE rights.
+      const existing = await client.query<{ body: Assessment }>(
+        "SELECT body FROM assessments WHERE assessment_id = $1", [assessment.assessmentId]);
+      if (existing.rows[0] === undefined) throw new Error("assessment insert returned no row");
+      assertAssessmentMatches(existing.rows[0].body, assessment);
+      await client.query(
+        `INSERT INTO assessment_evidence (receipt_id, assessment_id, body)
+         VALUES ($1, $2, $3) ON CONFLICT (receipt_id) DO NOTHING`,
+        [id, assessment.assessmentId, receipt]
+      );
+      const saved = await client.query<{ assessmentId: string; body: unknown }>(
+        `SELECT assessment_id AS "assessmentId", body FROM assessment_evidence
+         WHERE receipt_id = $1`, [id]);
+      if (saved.rows[0]?.assessmentId !== assessment.assessmentId ||
+          canonicalJson(saved.rows[0]?.body) !== expectedPacket) {
+        throw new Error("stored evidence receipt is inconsistent");
+      }
+      await client.query("COMMIT");
+      return id;
+    } catch (error) {
+      try { await client.query("ROLLBACK"); } catch { discard = new Error("transaction cleanup failed"); }
+      // A lost COMMIT response can still mean the server committed. Do not retry
+      // automatically or claim rollback is proven for an uncertain outcome.
+      throw error;
+    } finally {
+      client.release(discard);
+    }
+  }
+
+  public async getEvidenceReceipt(id: string): Promise<EvidenceReceipt | undefined> {
+    // One statement observes a consistent receipt/assessment pair. No live key
+    // registry lookup, reanalysis, repair or reconstruction occurs on retrieval.
+    const result = await this.pool.query<{ assessmentId: string; body: unknown; assessment: Assessment | null }>(
+      `SELECT e.assessment_id AS "assessmentId", e.body, a.body AS assessment
+       FROM assessment_evidence e LEFT JOIN assessments a ON a.assessment_id = e.assessment_id
+       WHERE e.receipt_id = $1`, [id]);
+    const row = result.rows[0];
+    if (row === undefined) return undefined;
+    const receipt = readStoredEvidenceReceipt(row.body, id, row.assessment ?? undefined);
+    if (receipt.assessment.assessmentId !== row.assessmentId) {
+      throw new Error("stored evidence receipt is inconsistent");
+    }
+    return receipt;
   }
 
   public async close(): Promise<void> {

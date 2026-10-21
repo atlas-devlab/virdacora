@@ -1,7 +1,7 @@
 import { generateKeyPairSync } from "node:crypto";
 
 import type { Assessment, SensorRegistration } from "@terravoce/protocol";
-import { observationId, signObservation, verifyObservation } from "@terravoce/protocol";
+import { canonicalJson, observationId, sha256Hex, signObservation, verifyObservation } from "@terravoce/protocol";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -9,8 +9,8 @@ import {
   validateTestDatabaseUrl, type PostgresFixture
 } from "../test/postgres-fixture.js";
 import { buildApp } from "./app.js";
-import { analyzeObservations } from "./analysis.js";
-import { verifyEvidenceReceipt } from "./evidence-receipt.js";
+import { analyzeEvidence, analyzeObservations } from "./analysis.js";
+import { createEvidenceReceipt, verifyEvidenceReceipt, type EvidenceReceipt } from "./evidence-receipt.js";
 import { MemoryObservationStore, type StoredObservation } from "./store.js";
 
 const configuredUrl = process.env[TEST_DATABASE_ENV];
@@ -107,6 +107,14 @@ describe.skipIf(databaseUrl === undefined)("real PostgreSQL observation storage"
     return { app, publicKey, privateKey, now, sensor, rows, run, snapshot };
   };
 
+  const packetFor = (archive: Awaited<ReturnType<typeof createSignedArchive>>): EvidenceReceipt =>
+    createEvidenceReceipt(analyzeEvidence(archive.rows, 3_600), {
+      observations: archive.rows,
+      sensors: [{ sensorId: archive.sensor.sensorId, regionId: archive.sensor.regionId,
+        publicKeyDerBase64: archive.publicKey }]
+    });
+  const packetId = (receipt: EvidenceReceipt) => sha256Hex(`receipt:${canonicalJson(receipt)}`);
+
   const expectNoStoredAssessment = async () => {
     expect((await fixture.inspector.query("SELECT count(*)::integer AS count FROM assessments")).rows)
       .toEqual([{ count: 0 }]);
@@ -117,7 +125,8 @@ describe.skipIf(databaseUrl === undefined)("real PostgreSQL observation storage"
     const tables = await fixture.inspector.query<{ tablename: string }>(
       "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = $1 ORDER BY tablename",
       [fixture.schema]);
-    expect(tables.rows.map(({ tablename }) => tablename)).toEqual(["assessments", "observations", "sensors"]);
+    expect(tables.rows.map(({ tablename }) => tablename))
+      .toEqual(["assessment_evidence", "assessments", "observations", "sensors"]);
     const scope = await fixture.inspector.query<{ database: string; schema: string; path: string; version: string }>(
       `SELECT current_database() AS database, current_schema() AS schema,
               current_setting('search_path') AS path, current_setting('server_version') AS version`);
@@ -128,14 +137,16 @@ describe.skipIf(databaseUrl === undefined)("real PostgreSQL observation storage"
     console.info(`PostgreSQL integration server version: ${scope.rows[0]?.version}`);
   });
 
-  it("rejects legacy schema readiness until the actual timestamp migration is applied", async () => {
+  it("rejects legacy schema readiness until the actual timestamp and evidence migrations are applied", async () => {
     await fixture.close();
     fixture = await createPostgresFixture(databaseUrl!, { legacySchema: true });
     store = fixture.createStore();
     await expect(store.checkReadiness()).rejects.toBeDefined();
     await fixture.inspector.query(fixture.timestampMigration);
+    await expect(store.checkReadiness()).rejects.toBeDefined();
+    await fixture.inspector.query(fixture.evidenceMigration);
     await expect(store.checkReadiness()).resolves.toBeUndefined();
-    for (const table of ["sensors", "observations", "assessments"]) {
+    for (const table of ["sensors", "observations", "assessments", "assessment_evidence"]) {
       expect((await fixture.inspector.query(`SELECT count(*)::integer AS count FROM ${table}`)).rows)
         .toEqual([{ count: 0 }]);
     }
@@ -489,7 +500,7 @@ describe.skipIf(databaseUrl === undefined)("real PostgreSQL observation storage"
       Date.parse(left.generatedAt) - Date.parse(right.generatedAt) ||
       (left.assessmentId < right.assessmentId ? -1 : left.assessmentId > right.assessmentId ? 1 : 0));
     expect(await store.latestAssessment("region-01", "water.oxygen.mg_l")).toEqual(sortedAssessments.at(-1));
-    // Reapply both actual files, including the already completed backfill.
+    // Reapply all actual migration files, including the already completed backfill.
     await fixture.inspector.query(fixture.migration);
     expect(await snapshot()).toEqual(before);
     expect((await fixture.inspector.query(
@@ -999,13 +1010,13 @@ describe.skipIf(databaseUrl === undefined)("real PostgreSQL observation storage"
     const trustedSensors = [{ sensorId: archive.sensor.sensorId, regionId: archive.sensor.regionId,
       publicKeyDerBase64: archive.publicKey }];
     const replacementKey = generateKeyPairSync("ed25519").publicKey.export({ format: "der", type: "spki" }).toString("base64");
-    const saveOriginal = store.saveAssessment.bind(store);
+    const saveOriginal = store.saveAssessmentWithReceipt.bind(store);
     const lookup = vi.spyOn(store, "getSensor");
-    const saving = vi.spyOn(store, "saveAssessment").mockImplementationOnce(async (generated) => {
+    const saving = vi.spyOn(store, "saveAssessmentWithReceipt").mockImplementationOnce(async (generated) => {
       // The gate already validated the original key when this hook is reached.
       await fixture.inspector.query("UPDATE sensors SET public_key_der_base64 = $1 WHERE sensor_id = $2",
         [replacementKey, archive.sensor.sensorId]);
-      await saveOriginal(generated);
+      return saveOriginal(generated);
     });
     try {
       const run = await archive.run();
@@ -1030,6 +1041,228 @@ describe.skipIf(databaseUrl === undefined)("real PostgreSQL observation storage"
       saving.mockRestore();
       lookup.mockRestore();
     }
+  });
+
+  it.each(["table", "body column"] as const)("fails readiness when the receipt %s is unavailable and recovers after restoration", async kind => {
+    await expect(store.checkReadiness()).resolves.toBeUndefined();
+    const hide = kind === "table"
+      ? "ALTER TABLE assessment_evidence RENAME TO receipt_readiness_hidden"
+      : "ALTER TABLE assessment_evidence RENAME COLUMN body TO receipt_readiness_hidden";
+    const restore = kind === "table"
+      ? "ALTER TABLE receipt_readiness_hidden RENAME TO assessment_evidence"
+      : "ALTER TABLE assessment_evidence RENAME COLUMN receipt_readiness_hidden TO body";
+    await fixture.inspector.query(hide);
+    try { await expect(store.checkReadiness()).rejects.toBeDefined(); }
+    finally { await fixture.inspector.query(restore); }
+    await expect(store.checkReadiness()).resolves.toBeUndefined();
+  });
+
+  it("rolls back a new assessment when the receipt insert fails and accepts the same run after repair", async () => {
+    const archive = await createSignedArchive(false, true);
+    const candidate = packetFor(archive);
+    const previous = { ...candidate.assessment, assessmentId: id(33_001),
+      generatedAt: "2026-10-17T12:00:00.000Z" };
+    await store.saveAssessment(previous);
+    const originals = structuredClone(await archive.snapshot());
+    await fixture.inspector.query(`CREATE FUNCTION reject_test_receipt() RETURNS trigger LANGUAGE plpgsql AS $$
+      BEGIN RAISE EXCEPTION 'private synthetic receipt insert failure'; END; $$`);
+    await fixture.inspector.query(`CREATE TRIGGER reject_test_receipt BEFORE INSERT ON assessment_evidence
+      FOR EACH ROW EXECUTE FUNCTION reject_test_receipt()`);
+    try {
+      const rejected = await archive.run();
+      expect(rejected.statusCode).toBe(500);
+      expect(rejected.json()).toEqual({ error: "INTERNAL_ERROR" });
+      expect((await fixture.inspector.query("SELECT assessment_id, body FROM assessments")).rows)
+        .toEqual([{ assessment_id: previous.assessmentId, body: previous }]);
+      expect((await fixture.inspector.query("SELECT count(*)::integer AS count FROM assessment_evidence")).rows)
+        .toEqual([{ count: 0 }]);
+      expect(await store.latestAssessment(previous.regionId, previous.metric)).toEqual(previous);
+      expect(await store.getEvidenceReceipt(packetId(candidate))).toBeUndefined();
+      expect(await archive.snapshot()).toEqual(originals);
+    } finally {
+      await fixture.inspector.query("DROP TRIGGER reject_test_receipt ON assessment_evidence");
+      await fixture.inspector.query("DROP FUNCTION reject_test_receipt()");
+    }
+    const recovered = await archive.run();
+    expect(recovered.statusCode).toBe(201);
+    expect(recovered.json().evidenceReceiptId).toBe(packetId(candidate));
+    expect(recovered.json().assessment).toEqual(candidate.assessment);
+    expect(await store.getEvidenceReceipt(packetId(candidate))).toEqual(candidate);
+    expect(await store.latestAssessment(previous.regionId, previous.metric)).toEqual(candidate.assessment);
+    expect(await archive.snapshot()).toEqual(originals);
+  });
+
+  it("stores one immutable receipt for sixteen identical concurrent writes through two pools", async () => {
+    const archive = await createSignedArchive(false, true);
+    const receipt = packetFor(archive);
+    const expected = structuredClone(receipt);
+    const otherStore = fixture.createStore();
+    const ids = await Promise.all(Array.from({ length: 16 }, (_, index) =>
+      (index % 2 === 0 ? store : otherStore).saveAssessmentWithReceipt(structuredClone(receipt))));
+    expect(new Set(ids)).toEqual(new Set([packetId(expected)]));
+    expect((await fixture.inspector.query("SELECT count(*)::integer AS count FROM assessments")).rows)
+      .toEqual([{ count: 1 }]);
+    expect((await fixture.inspector.query("SELECT count(*)::integer AS count FROM assessment_evidence")).rows)
+      .toEqual([{ count: 1 }]);
+    const retrieved = await otherStore.getEvidenceReceipt(packetId(expected));
+    expect(retrieved).toEqual(expected);
+    retrieved!.observations[0]!.observation.value = 999;
+    retrieved!.sensors[0]!.publicKeyDerBase64 = "YQ==";
+    expect(await store.getEvidenceReceipt(packetId(expected))).toEqual(expected);
+    expect(await archive.snapshot()).toEqual(archive.rows);
+  });
+
+  it("preserves concurrent receipt idempotence when both clients inherit a serializable transaction default", async () => {
+    const archive = await createSignedArchive(false, true);
+    const receipt = packetFor(archive);
+    const first = fixture.createStore({ serializableDefault: true });
+    const second = fixture.createStore({ serializableDefault: true });
+    // An externally configured isolation default must not turn identical
+    // concurrent saves into serialization errors or require automatic retries.
+    const ids = await Promise.all(Array.from({ length: 16 }, (_, index) =>
+      (index % 2 === 0 ? first : second).saveAssessmentWithReceipt(structuredClone(receipt))));
+    expect(ids).toEqual(Array.from({ length: 16 }, () => packetId(receipt)));
+    expect((await fixture.inspector.query("SELECT count(*)::integer AS count FROM assessments")).rows)
+      .toEqual([{ count: 1 }]);
+    expect((await fixture.inspector.query("SELECT count(*)::integer AS count FROM assessment_evidence")).rows)
+      .toEqual([{ count: 1 }]);
+    expect(await first.getEvidenceReceipt(packetId(receipt))).toEqual(receipt);
+    expect(await second.getEvidenceReceipt(packetId(receipt))).toEqual(receipt);
+    expect(await archive.snapshot()).toEqual(archive.rows);
+  });
+
+  it("keeps distinct signed receipt variants for the same assessment without overwriting either", async () => {
+    const archive = await createSignedArchive(false, true);
+    const original = packetFor(archive);
+    const replacement = generateKeyPairSync("ed25519");
+    const variant = structuredClone(original);
+    const replacementPrivate = replacement.privateKey.export({ format: "der", type: "pkcs8" }).toString("base64");
+    variant.sensors[0]!.publicKeyDerBase64 = replacement.publicKey.export({ format: "der", type: "spki" }).toString("base64");
+    for (const row of variant.observations) {
+      const { signature: _signature, ...unsigned } = row.observation;
+      row.observation = signObservation(unsigned, replacementPrivate);
+      expect(observationId(unsigned)).toBe(row.observationId);
+    }
+    expect(variant.assessment).toEqual(original.assessment);
+    expect(packetId(variant)).not.toBe(packetId(original));
+    // These synthetic packets deliberately differ in trust authority. Storage
+    // must retain their identities; it does not select which authority to trust.
+    const otherStore = fixture.createStore();
+    const inputs = Array.from({ length: 12 }, (_, index) => index % 2 === 0 ? original : variant);
+    const ids = await Promise.all(inputs.map((receipt, index) =>
+      (index % 3 === 0 ? otherStore : store).saveAssessmentWithReceipt(receipt)));
+    expect(ids).toEqual(inputs.map(packetId));
+    expect((await fixture.inspector.query("SELECT count(*)::integer AS count FROM assessments")).rows)
+      .toEqual([{ count: 1 }]);
+    const stored = await fixture.inspector.query<{ receipt_id: string; assessment_id: string; body: EvidenceReceipt }>(
+      "SELECT receipt_id, assessment_id, body FROM assessment_evidence ORDER BY receipt_id");
+    expect(stored.rows).toEqual([original, variant]
+      .map(body => ({ receipt_id: packetId(body), assessment_id: body.assessment.assessmentId, body }))
+      .sort((left, right) => left.receipt_id.localeCompare(right.receipt_id)));
+    expect(await otherStore.getEvidenceReceipt(packetId(original))).toEqual(original);
+    expect(await store.getEvidenceReceipt(packetId(variant))).toEqual(variant);
+    expect(await archive.snapshot()).toEqual(archive.rows);
+    await expect(verifyEvidenceReceipt(variant, original.sensors)).rejects.toMatchObject({ code: "INVALID_EVIDENCE_RECEIPT" });
+    await expect(verifyEvidenceReceipt(variant, variant.sensors)).resolves.toEqual(original.assessment);
+  });
+
+  it("snapshots receipt inputs before the first database await and attaches an exact legacy assessment idempotently", async () => {
+    const archive = await createSignedArchive(false, true);
+    const receipt = packetFor(archive);
+    const expected = structuredClone(receipt);
+    await store.saveAssessment(receipt.assessment);
+    const saving = store.saveAssessmentWithReceipt(receipt);
+    receipt.observations[0]!.observation.value = 999;
+    receipt.evidenceCore.observationIds.reverse();
+    receipt.sensors[0]!.publicKeyDerBase64 = "YQ==";
+    receipt.assessment.forecastValue = 999;
+    await expect(saving).resolves.toBe(packetId(expected));
+    expect(await store.getEvidenceReceipt(packetId(expected))).toEqual(expected);
+    expect(await store.latestAssessment(expected.assessment.regionId, expected.assessment.metric)).toEqual(expected.assessment);
+    await expect(store.saveAssessmentWithReceipt(expected)).resolves.toBe(packetId(expected));
+    expect((await fixture.inspector.query("SELECT count(*)::integer AS count FROM assessments")).rows)
+      .toEqual([{ count: 1 }]);
+    expect((await fixture.inspector.query("SELECT count(*)::integer AS count FROM assessment_evidence")).rows)
+      .toEqual([{ count: 1 }]);
+  });
+
+  it("rejects an assessment identity conflict before associating any receipt or changing historical content", async () => {
+    const archive = await createSignedArchive(false, true);
+    const receipt = packetFor(archive);
+    const incompatible = { ...receipt.assessment, forecastValue: receipt.assessment.forecastValue + 1 };
+    await store.saveAssessment(incompatible);
+    await expect(store.saveAssessmentWithReceipt(receipt)).rejects.toMatchObject({ statusCode: 409,
+      code: "ASSESSMENT_CONFLICT", message: "assessment identity conflict" });
+    expect(await store.getEvidenceReceipt(packetId(receipt))).toBeUndefined();
+    expect((await fixture.inspector.query("SELECT assessment_id, body FROM assessments")).rows)
+      .toEqual([{ assessment_id: incompatible.assessmentId, body: incompatible }]);
+    expect((await fixture.inspector.query("SELECT count(*)::integer AS count FROM assessment_evidence")).rows)
+      .toEqual([{ count: 0 }]);
+    expect(await archive.snapshot()).toEqual(archive.rows);
+  });
+
+  it("retrieves the original receipt after reopening application and pool despite archive and live key changes", async () => {
+    const archive = await createSignedArchive(false, true);
+    const trusted = [{ sensorId: archive.sensor.sensorId, regionId: archive.sensor.regionId,
+      publicKeyDerBase64: archive.publicKey }];
+    const run = await archive.run();
+    expect(run.statusCode).toBe(201);
+    const result = run.json<{ evidenceReceiptId: string; assessment: Assessment; evidenceReceipt: EvidenceReceipt }>();
+    expect(result.evidenceReceiptId).toBe(packetId(result.evidenceReceipt));
+    const differentKey = generateKeyPairSync("ed25519").publicKey.export({ format: "der", type: "spki" }).toString("base64");
+    await fixture.inspector.query("UPDATE sensors SET public_key_der_base64 = $1, active = false WHERE sensor_id = $2",
+      [differentKey, archive.sensor.sensorId]);
+    await fixture.inspector.query("UPDATE observations SET body = jsonb_set(body, '{value}', '999'::jsonb)");
+    await fixture.closeStore(store); // Closes the first app and its pool, but preserves this fixture's schema.
+    store = fixture.createStore();
+    const reopened = buildApp({ store, policySource, adminToken: "synthetic-admin", oracleToken: "synthetic-oracle" });
+    fixture.useStoreOwner(store, () => reopened.close());
+    const lookup = vi.spyOn(store, "getSensor").mockRejectedValue(new Error("live-key lookup must not replace historical proof"));
+    try {
+      const retrieved = await reopened.inject({ method: "GET", url: `/v1/evidence-receipts/${result.evidenceReceiptId}`,
+        headers: { "x-oracle-token": "synthetic-oracle" } });
+      expect(retrieved.statusCode).toBe(200);
+      expect(retrieved.headers["cache-control"]).toBe("no-store");
+      expect(retrieved.json()).toEqual(result.evidenceReceipt);
+      expect(retrieved.json().observations).toEqual(archive.rows);
+      expect(lookup).not.toHaveBeenCalled();
+      await expect(verifyEvidenceReceipt(retrieved.json(), trusted)).resolves.toEqual(result.assessment);
+      expect((await fixture.inspector.query<{ body: StoredObservation["observation"] }>(
+        "SELECT body FROM observations LIMIT 1")).rows[0]?.body.value).toBe(999);
+    } finally { lookup.mockRestore(); }
+  });
+
+  it("returns missing receipt for legacy assessments without inventing an export from the current window", async () => {
+    const archive = await createSignedArchive(false, true);
+    const receipt = packetFor(archive);
+    await store.saveAssessment(receipt.assessment);
+    const response = await archive.app.inject({ method: "GET", url: `/v1/evidence-receipts/${packetId(receipt)}`,
+      headers: { "x-oracle-token": "synthetic-oracle" } });
+    expect(response.statusCode).toBe(404);
+    expect(response.json()).toEqual({ error: "EVIDENCE_RECEIPT_NOT_FOUND", message: "evidence receipt not found" });
+    expect(await store.latestAssessment(receipt.assessment.regionId, receipt.assessment.metric)).toEqual(receipt.assessment);
+    expect((await fixture.inspector.query("SELECT count(*)::integer AS count FROM assessment_evidence")).rows)
+      .toEqual([{ count: 0 }]);
+  });
+
+  it("rejects a changed stored receipt body instead of returning it under its original content ID", async () => {
+    const archive = await createSignedArchive(false, true);
+    const run = await archive.run();
+    expect(run.statusCode).toBe(201);
+    const result = run.json<{ evidenceReceiptId: string; assessment: Assessment; evidenceReceipt: EvidenceReceipt }>();
+    const changed = structuredClone(result.evidenceReceipt);
+    changed.observations[0]!.observation.value += 1;
+    await fixture.inspector.query("UPDATE assessment_evidence SET body = $1 WHERE receipt_id = $2",
+      [changed, result.evidenceReceiptId]);
+    const retrieved = await archive.app.inject({ method: "GET", url: `/v1/evidence-receipts/${result.evidenceReceiptId}`,
+      headers: { "x-oracle-token": "synthetic-oracle" } });
+    expect(retrieved.statusCode).toBe(500);
+    expect(retrieved.json()).toEqual({ error: "INTERNAL_ERROR" });
+    expect(await store.latestAssessment(result.assessment.regionId, result.assessment.metric)).toEqual(result.assessment);
+    expect(await archive.snapshot()).toEqual(archive.rows);
+    expect((await fixture.inspector.query<{ body: EvidenceReceipt }>(
+      "SELECT body FROM assessment_evidence WHERE receipt_id = $1", [result.evidenceReceiptId])).rows[0]?.body)
+      .toEqual(changed); // A rejected read does not silently repair the test alteration.
   });
 
   it("uses actual Ed25519 API verification with PostgreSQL and preserves rejected sequence availability", async () => {

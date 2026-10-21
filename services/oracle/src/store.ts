@@ -5,6 +5,8 @@ import type {
 } from "@terravoce/protocol";
 
 import { DomainError } from "./errors.js";
+import { evidenceReceiptId, evidenceReceiptSchema, type EvidenceReceipt } from "./evidence-receipt.js";
+import { assertAssessmentMatches, readStoredEvidenceReceipt } from "./receipt-storage.js";
 import { compareTimestampKeys, timestampMilliseconds } from "./timestamp-order.js";
 
 export interface StoredSensor extends SensorRegistration {
@@ -27,6 +29,8 @@ export interface ObservationStore {
     limit: number
   ): Promise<StoredObservation[]>;
   saveAssessment(assessment: Assessment): Promise<void>;
+  saveAssessmentWithReceipt(receipt: EvidenceReceipt): Promise<`0x${string}`>;
+  getEvidenceReceipt(receiptId: string): Promise<EvidenceReceipt | undefined>;
   latestAssessment(regionId: string, metric: string, modelVersion?: string): Promise<Assessment | undefined>;
   close(): Promise<void>;
 }
@@ -65,7 +69,8 @@ export class MemoryObservationStore implements ObservationStore {
   private readonly observationIds = new Set<`0x${string}`>();
   private readonly sequenceKeys = new Set<string>();
   private readonly observationSeries = new Map<string, IndexedObservation[]>();
-  private readonly assessmentIds = new Set<string>();
+  private readonly assessmentRecords = new Map<string, Assessment>();
+  private readonly evidenceReceipts = new Map<string, EvidenceReceipt>();
   private readonly assessments = new Map<string, IndexedAssessment>();
   private readonly assessmentsByVersion = new Map<string, IndexedAssessment>();
 
@@ -130,7 +135,11 @@ export class MemoryObservationStore implements ObservationStore {
 
   public async saveAssessment(assessment: Assessment): Promise<void> {
     const generatedAt = timestampMilliseconds(assessment.generatedAt);
-    if (this.assessmentIds.has(assessment.assessmentId)) return;
+    if (this.assessmentRecords.has(assessment.assessmentId)) return;
+    this.commitAssessment({ ...assessment }, generatedAt);
+  }
+
+  private commitAssessment(assessment: Assessment, generatedAt: number): void {
     const key = seriesKey(assessment.regionId, assessment.metric);
     const versionKey = assessmentVersionKey(assessment.regionId, assessment.metric, assessment.modelVersion);
     const indexed = { assessment: { ...assessment }, generatedAt };
@@ -145,7 +154,31 @@ export class MemoryObservationStore implements ObservationStore {
         index.set(indexKey, indexed);
       }
     }
-    this.assessmentIds.add(assessment.assessmentId);
+    this.assessmentRecords.set(assessment.assessmentId, indexed.assessment);
+  }
+
+  public async saveAssessmentWithReceipt(input: EvidenceReceipt): Promise<`0x${string}`> {
+    // Complete validation and independent copies before publishing either map.
+    // No await/callback can observe a half-written pair in memory mode.
+    const receipt = evidenceReceiptSchema.parse(input);
+    const generatedAt = timestampMilliseconds(receipt.assessment.generatedAt);
+    const id = evidenceReceiptId(receipt);
+    const stored = this.assessmentRecords.get(receipt.assessment.assessmentId);
+    if (stored !== undefined) assertAssessmentMatches(stored, receipt.assessment);
+    const previous = this.evidenceReceipts.get(id);
+    if (previous !== undefined) {
+      readStoredEvidenceReceipt(previous, id, stored);
+      return id;
+    }
+    if (stored === undefined) this.commitAssessment({ ...receipt.assessment }, generatedAt);
+    this.evidenceReceipts.set(id, receipt);
+    return id;
+  }
+
+  public async getEvidenceReceipt(id: string): Promise<EvidenceReceipt | undefined> {
+    const receipt = this.evidenceReceipts.get(id);
+    return receipt === undefined ? undefined : readStoredEvidenceReceipt(receipt, id,
+      this.assessmentRecords.get(receipt.assessment.assessmentId));
   }
 
   public async latestAssessment(

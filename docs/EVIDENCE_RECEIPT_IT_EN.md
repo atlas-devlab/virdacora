@@ -36,11 +36,13 @@ risultato. Non vengono rilette per costruire la ricevuta: un cambiamento success
 del registro non può sostituire le chiavi effettivamente usate da quella verifica.
 Non sono inclusi etichette dei sensori, chiavi private, token o credenziali DB.
 
-La ricevuta viene restituita al chiamante: **va salvata**. Questa modifica non
-aggiunge persistenza, distribuzione o registrazione della ricevuta sulla blockchain.
-La tabella dei risultati e `GET .../latest` conservano il formato piatto precedente;
-non è necessaria una migrazione SQL. Un vecchio hash senza la finestra esportata
-non basta a ricostruire una ricevuta storica.
+La ricevuta viene restituita al chiamante e ora conservata dal successivo
+[percorso di persistenza (IT/EN)](EVIDENCE_PERSISTENCE_IT_EN.md), con un proprio
+`evidenceReceiptId` e recupero autenticato. PostgreSQL richiede la migrazione
+aggiuntiva 003; la modalità memoria resta effimera. È utile conservare anche una
+copia esterna e l'ID. La tabella dei risultati e `GET .../latest` restano piatti.
+Non è una distribuzione o pubblicazione sulla blockchain. Un vecchio hash senza
+la finestra esportata non basta a ricostruire una ricevuta storica.
 
 Per estrarre soltanto la ricevuta da una risposta API salvata in UTF-8:
 
@@ -164,11 +166,14 @@ signed `observations`, and `sensors` with only `sensorId`, `regionId` and
 persistence, with one lookup per used sensor and no second lookup for export.
 Labels, private keys, tokens and DB credentials are not included.
 
-**Save the returned receipt.** It is not persisted, distributed or recorded on
-chain by this change. The assessment table and latest endpoint remain flat;
-no SQL migration is required. Old unexported windows cannot be reconstructed
-from their hash alone. The extraction command above saves only `evidenceReceipt`
-from an API response stored as UTF-8 JSON.
+The subsequent [persistence path (IT/EN)](EVIDENCE_PERSISTENCE_IT_EN.md) now retains
+the returned packet and adds an `evidenceReceiptId` for authenticated retrieval.
+PostgreSQL requires additive migration 003; memory mode remains ephemeral.
+Keeping an external copy and the ID is still useful. The assessment table and
+latest endpoint remain flat; this is not distributed archival or on-chain
+publication. Old unexported windows cannot be reconstructed from their hash alone.
+The extraction command above saves only `evidenceReceipt` from an API response
+stored as UTF-8 JSON.
 
 ### Offline verification
 
