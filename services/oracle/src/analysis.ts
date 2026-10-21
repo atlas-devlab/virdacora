@@ -55,11 +55,11 @@ const riskFor = (profile: MetricProfile, forecast: number): number => {
   return clamp((forecast - profile.caution) / (profile.critical - profile.caution));
 };
 
-export const analyzeObservations = (
+export const analyzeEvidence = (
   entries: StoredObservation[],
   forecastHorizonSeconds: number,
   profile?: MetricProfile
-): Assessment => {
+) => {
   if (entries.length < 5) throw new Error("at least five observations are required");
   if (!Number.isInteger(forecastHorizonSeconds) || forecastHorizonSeconds <= 0) {
     throw new Error("forecast horizon must be a positive integer");
@@ -132,7 +132,7 @@ export const analyzeObservations = (
   const evidenceHash = sha256Hex(`evidence:${canonicalJson(evidenceCore)}`);
   const assessmentId = sha256Hex(`assessment:${canonicalJson(evidenceCore)}`);
 
-  return assessmentSchema.parse({
+  const assessment = assessmentSchema.parse({
     assessmentId,
     regionId,
     metric,
@@ -148,4 +148,14 @@ export const analyzeObservations = (
     risk: evidenceCore.risk,
     evidenceHash
   });
+  return { assessment, evidenceCore };
 };
+
+export type EvidenceAnalysis = ReturnType<typeof analyzeEvidence>;
+
+// Keep the established numerical API and persisted assessment shape intact.
+export const analyzeObservations = (
+  entries: StoredObservation[],
+  forecastHorizonSeconds: number,
+  profile?: MetricProfile
+): Assessment => analyzeEvidence(entries, forecastHorizonSeconds, profile).assessment;

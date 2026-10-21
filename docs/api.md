@@ -11,9 +11,19 @@ The service listens on port `8787` by default.
 | POST | `/v1/assessments/run` | run model and TerraLex policy | `x-oracle-token` |
 | GET | `/v1/regions/:regionId/metrics/:metric/latest` | latest assessment | none in MVP |
 
-The assessment response contains the reproducible `evidenceHash`, the TerraLex
-decision, and an optional reversible `actionDraft`. The service intentionally
+The assessment response contains `assessment`, the TerraLex `decision`, an optional
+reversible `actionDraft`, and an exportable `evidenceReceipt`. The service intentionally
 does not hold a treasury key or vote credential.
+
+`evidenceReceipt` carries the exact analytical core (including ordered observation
+IDs), original signed observations, assessment and the three-field public-key
+bindings captured by the archive check. It is returned only by a successful run;
+it is not stored in the assessment table or returned by `GET .../latest`.
+Save it at acquisition time. `pnpm verify:evidence <receipt.json> <trusted-registry.json>`
+verifies it offline against a mandatory, separately supplied public-key registry.
+Bundled keys are not a trust source. See [receipt format, usage and trust limits
+(IT/EN)](EVIDENCE_RECEIPT_IT_EN.md). The persisted assessment, numerical recipe,
+model versions and existing hash construction are unchanged.
 
 Before a new assessment, selected archived rows must pass strict schema,
 original observation ID, signature, unique ID/sequence and request/sensor routing

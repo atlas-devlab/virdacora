@@ -1,0 +1,14 @@
+{
+  "kind": "evidence-receipt-postgres-validation",
+  "completedAtUTC": "2026-10-18T16:16:52.1857734Z",
+  "serverVersion": "postgres (PostgreSQL) 18.6",
+  "imageDigest": "sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873",
+  "imageId": "sha256:c293117fcecda7344b5480222e813b9f673d7abd69b1dd95eff239b768b04f59",
+  "ephemeralTmpfs": true,
+  "passed": 42,
+  "failed": 0,
+  "skipped": 0,
+  "exitCode": 0,
+  "ownedContainerRemoved": true,
+  "productionDatabaseUsed": false
+}

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "evidenceSource": "Captured first focused API run before receipt integration; no new module imported and no rerun for receipt",
+  "recordedAtUTC": "2026-10-18T16:12:52.5973020Z",
+  "baselineHead": "cc57f6e7c419d9b96ac6edf604225b88eae77744",
+  "command": "pnpm exec vitest run services/oracle/src/receipt-api.test.ts --reporter=verbose",
+  "sourceFile": "services/oracle/src/receipt-api.test.ts",
+  "sourceFileSha256": "b6530a64f4d66c22a0685a6556124ff8bfd07f615b02aee323fcb10576b58320",
+  "result": "expected-red",
+  "exitCode": 1,
+  "testsTotal": 3,
+  "testsFailed": 2,
+  "testsPassed": 1,
+  "startTimeReportedByVitest": "18:12:42",
+  "durationMsReportedByVitest": 882,
+  "failedCases": [
+    "Valid signed mixed-unit API201 lacks evidenceReceipt",
+    "Captured registry-key API201 lacks evidenceReceipt"
+  ],
+  "passedCases": [
+    "Invalid archived evidence422 has no receipt, assessment, policy evaluation or save"
+  ],
+  "limitations": [
+    "Synthetic signed evidence only; not environmental field validation",
+    "Captured baseline failures are receipt absence, not verification results of unimplemented receipt code"
+  ]
+}

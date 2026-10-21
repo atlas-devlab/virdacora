@@ -2,7 +2,7 @@ import { generateKeyPairSync } from "node:crypto";
 
 import type { Assessment, SensorRegistration } from "@terravoce/protocol";
 import { observationId, signObservation, verifyObservation } from "@terravoce/protocol";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   createPostgresFixture, REQUIRE_DATABASE_ENV, TEST_DATABASE_ENV,
@@ -10,6 +10,7 @@ import {
 } from "../test/postgres-fixture.js";
 import { buildApp } from "./app.js";
 import { analyzeObservations } from "./analysis.js";
+import { verifyEvidenceReceipt } from "./evidence-receipt.js";
 import { MemoryObservationStore, type StoredObservation } from "./store.js";
 
 const configuredUrl = process.env[TEST_DATABASE_ENV];
@@ -69,7 +70,7 @@ describe.skipIf(databaseUrl === undefined)("real PostgreSQL observation storage"
   }, 20_000);
   afterEach(async () => { await fixture?.close(); }, 20_000);
 
-  const createSignedArchive = async (historical = false) => {
+  const createSignedArchive = async (historical = false, mixedUnits = false) => {
     const pair = generateKeyPairSync("ed25519");
     const publicKey = pair.publicKey.export({ format: "der", type: "spki" }).toString("base64");
     const privateKey = pair.privateKey.export({ format: "der", type: "pkcs8" }).toString("base64");
@@ -84,7 +85,9 @@ describe.skipIf(databaseUrl === undefined)("real PostgreSQL observation storage"
     const origin = historical ? Date.parse("2026-08-01T00:00:00.000Z") : now.getTime() - 5 * 3_600_000;
     const rows = Array.from({ length: 6 }, (_, index): StoredObservation => {
       const { signature: _signature, ...unsigned } = entry(index + 1, { regionId: sensor.regionId,
-        observedAt: new Date(origin + index * 3_600_000).toISOString(), value: 6 }).observation;
+        observedAt: new Date(origin + index * 3_600_000).toISOString(),
+        value: mixedUnits && index % 2 === 1 ? 6_000 : 6,
+        unit: mixedUnits && index % 2 === 1 ? "\u00b5g/L" : "mg/L" }).observation;
       return { observationId: observationId(unsigned), observation: signObservation(unsigned, privateKey) };
     });
     for (const row of rows) {
@@ -945,6 +948,88 @@ describe.skipIf(databaseUrl === undefined)("real PostgreSQL observation storage"
     expect(rejected.json().error).toBe("SENSOR_INACTIVE");
     expect(await archive.snapshot()).toEqual(originals);
     for (const row of await archive.snapshot()) expect(verifyObservation(row.observation, archive.publicKey)).toBe(true);
+  });
+
+  it("verifies a detached evidence receipt after the archive changes and all fixture database clients are closed", async () => {
+    const archive = await createSignedArchive(false, true);
+    // Trust comes from the test registration/key material before the response,
+    // never from the sensor descriptors inside the received packet.
+    const trustedSensors = [{ sensorId: archive.sensor.sensorId, regionId: archive.sensor.regionId,
+      publicKeyDerBase64: archive.publicKey }];
+    const run = await archive.run();
+    expect(run.statusCode).toBe(201);
+    const payload = run.json<{ assessment: Assessment; evidenceReceipt: Record<string, unknown> }>();
+    const receipt = payload.evidenceReceipt;
+    const preservedReceipt = structuredClone(receipt);
+    expect(Object.keys(receipt).sort()).toEqual(["assessment", "evidenceCore", "formatVersion", "observations", "sensors"]);
+    expect(receipt.formatVersion).toBe("virdacora-evidence-receipt-v1");
+    expect(receipt.assessment).toEqual(payload.assessment);
+    expect(receipt.observations).toEqual(archive.rows);
+    expect(receipt.sensors).toEqual(trustedSensors);
+    expect(payload.assessment).toMatchObject({ currentValue: 6, forecastValue: 6, slopePerHour: 0, anomalyScore: 0 });
+    await expect(verifyEvidenceReceipt(receipt, trustedSensors)).resolves.toEqual(payload.assessment);
+    const persisted = (await fixture.inspector.query<{ body: Assessment }>(
+      "SELECT body FROM assessments WHERE assessment_id = $1", [payload.assessment.assessmentId])).rows[0]?.body;
+    expect(persisted).toEqual(payload.assessment);
+    for (const field of ["evidenceReceipt", "evidenceCore", "observations", "sensors"]) {
+      expect(persisted).not.toHaveProperty(field);
+    }
+
+    const next = signObservation({ sensorId: archive.sensor.sensorId, regionId: archive.sensor.regionId,
+      metric: "water.oxygen.mg_l", value: 7, unit: "mg/L", sequence: 7,
+      observedAt: new Date(archive.now.getTime() + 60_000).toISOString() }, archive.privateKey);
+    expect((await archive.app.inject({ method: "POST", url: "/v1/observations", payload: next })).statusCode).toBe(202);
+    await fixture.inspector.query(
+      "UPDATE observations SET body = jsonb_set(body, '{value}', '999'::jsonb) WHERE observation_id = $1",
+      [archive.rows[0]!.observationId]);
+    expect((await fixture.inspector.query("SELECT count(*)::integer AS count FROM observations")).rows)
+      .toEqual([{ count: 7 }]);
+    expect((await fixture.inspector.query<{ body: StoredObservation["observation"] }>(
+      "SELECT body FROM observations WHERE observation_id = $1", [archive.rows[0]!.observationId])).rows[0]?.body.value)
+      .toBe(999);
+    // Closing the fixture also drops its private archive schema. Verification
+    // must therefore use the old signed packet and separately retained trust.
+    await fixture.close();
+    await expect(verifyEvidenceReceipt(receipt, trustedSensors)).resolves.toEqual(payload.assessment);
+    expect(receipt).toEqual(preservedReceipt);
+  });
+
+  it("builds the evidence receipt from the validated sensor snapshot instead of rereading a changed registry", async () => {
+    const archive = await createSignedArchive(false, true);
+    const trustedSensors = [{ sensorId: archive.sensor.sensorId, regionId: archive.sensor.regionId,
+      publicKeyDerBase64: archive.publicKey }];
+    const replacementKey = generateKeyPairSync("ed25519").publicKey.export({ format: "der", type: "spki" }).toString("base64");
+    const saveOriginal = store.saveAssessment.bind(store);
+    const lookup = vi.spyOn(store, "getSensor");
+    const saving = vi.spyOn(store, "saveAssessment").mockImplementationOnce(async (generated) => {
+      // The gate already validated the original key when this hook is reached.
+      await fixture.inspector.query("UPDATE sensors SET public_key_der_base64 = $1 WHERE sensor_id = $2",
+        [replacementKey, archive.sensor.sensorId]);
+      await saveOriginal(generated);
+    });
+    try {
+      const run = await archive.run();
+      expect(run.statusCode).toBe(201);
+      const payload = run.json<{ assessment: Assessment; evidenceReceipt: Record<string, unknown> }>();
+      expect(saving).toHaveBeenCalledTimes(1);
+      expect(lookup).toHaveBeenCalledTimes(1); // One lookup for the single sensor in this batch, none for repackaging.
+      expect(payload.evidenceReceipt.sensors).toEqual(trustedSensors);
+      expect(payload.evidenceReceipt.observations).toEqual(archive.rows);
+      await expect(verifyEvidenceReceipt(payload.evidenceReceipt, trustedSensors)).resolves.toEqual(payload.assessment);
+      const changedTrust = [{ ...trustedSensors[0]!, publicKeyDerBase64: replacementKey }];
+      await expect(verifyEvidenceReceipt(payload.evidenceReceipt, changedTrust))
+        .rejects.toMatchObject({ statusCode: 422, code: "INVALID_EVIDENCE_RECEIPT" });
+      expect((await fixture.inspector.query<{ publicKey: string }>(
+        'SELECT public_key_der_base64 AS "publicKey" FROM sensors WHERE sensor_id = $1',
+        [archive.sensor.sensorId])).rows[0]?.publicKey).toBe(replacementKey);
+      expect(await archive.snapshot()).toEqual(archive.rows);
+      expect((await fixture.inspector.query<{ body: Assessment }>(
+        "SELECT body FROM assessments WHERE assessment_id = $1", [payload.assessment.assessmentId])).rows[0]?.body)
+        .toEqual(payload.assessment);
+    } finally {
+      saving.mockRestore();
+      lookup.mockRestore();
+    }
   });
 
   it("uses actual Ed25519 API verification with PostgreSQL and preserves rejected sequence availability", async () => {

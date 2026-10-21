@@ -63,6 +63,13 @@ selected observation signatures, IDs and request/sensor associations before a
 new assessment. Invalid evidence blocks the whole run without rewriting history
 or producing an action draft; valid inputs retain their numerical results and hashes.
 
+The [exportable evidence receipt (IT/EN)](docs/EVIDENCE_RECEIPT_IT_EN.md) preserves
+the exact inputs and analytical core returned by a successful assessment run.
+Save that receipt and run `pnpm verify:evidence <receipt.json> <trusted-registry.json>`
+to recheck signatures and reproduce the result offline against separately trusted
+public keys, even after the database changes. This verifies a calculation from
+signed inputs; it does not establish physical truth or certify an Oracle issuer.
+
 ## Research branches and original mission
 
 The mission is to combine verifiable environmental analysis, distributed

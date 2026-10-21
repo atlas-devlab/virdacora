@@ -9,22 +9,30 @@ import { z } from "zod";
 import { DomainError } from "./errors.js";
 import type { ObservationStore, StoredObservation } from "./store.js";
 
-const archivedWindowSchema = z.array(z.object({
+export const archivedWindowSchema = z.array(z.object({
   observationId: z.custom<StoredObservation["observationId"]>(value =>
     typeof value === "string" && /^0x[0-9a-f]{64}$/.test(value)),
   observation: signedObservationSchema.strict()
 }).strict()).max(512);
 const registeredSensorSchema = sensorRegistrationSchema.extend({ active: z.boolean() }).strict();
+export const sensorVerificationKeySchema = sensorRegistrationSchema.pick({
+  sensorId: true, regionId: true, publicKeyDerBase64: true
+}).strict();
+export type SensorVerificationKey = z.infer<typeof sensorVerificationKeySchema>;
+export interface VerifiedArchive {
+  observations: StoredObservation[];
+  sensors: SensorVerificationKey[];
+}
 
 const invalidEvidence = () => new DomainError(
   "archived observation evidence is invalid", 422, "INVALID_ARCHIVED_EVIDENCE"
 );
 
-export const verifyArchivedObservations = async (
+export const verifyArchivedEvidence = async (
   entries: unknown,
   selection: { regionId: string; metric: string },
   store: Pick<ObservationStore, "getSensor">
-): Promise<StoredObservation[]> => {
+): Promise<VerifiedArchive> => {
   // Parse the entire window synchronously. These independent snapshots, rather
   // than mutable references returned by a store, are later passed to analysis.
   const parsed = archivedWindowSchema.safeParse(entries);
@@ -47,7 +55,7 @@ export const verifyArchivedObservations = async (
 
   // Cache only within this run. No positive key result survives into another
   // request. Registry I/O failures intentionally propagate as availability errors.
-  const publicKeys = new Map<string, string>();
+  const publicKeys = new Map<string, SensorVerificationKey>();
   for (const { observation } of snapshots) {
     let publicKey = publicKeys.get(observation.sensorId);
     if (publicKey === undefined) {
@@ -58,16 +66,24 @@ export const verifyArchivedObservations = async (
       }
       // Inactivity prevents new ingestion; it does not retroactively revoke an
       // archived signature. There is no historical key registry in this MVP.
-      publicKey = sensor.data.publicKeyDerBase64;
+      publicKey = { sensorId: sensor.data.sensorId, regionId: sensor.data.regionId,
+        publicKeyDerBase64: sensor.data.publicKeyDerBase64 };
       publicKeys.set(observation.sensorId, publicKey);
     }
     let verified = false;
     try {
-      verified = verifyObservation(observation, publicKey);
+      verified = verifyObservation(observation, publicKey.publicKeyDerBase64);
     } catch {
       // Invalid DER or signature/schema details must not enter client errors.
     }
     if (!verified) throw invalidEvidence();
   }
-  return snapshots;
+  return { observations: snapshots, sensors: [...publicKeys.values()].sort((left, right) =>
+    left.sensorId < right.sensorId ? -1 : left.sensorId > right.sensorId ? 1 : 0) };
 };
+
+export const verifyArchivedObservations = async (
+  entries: unknown,
+  selection: { regionId: string; metric: string },
+  store: Pick<ObservationStore, "getSensor">
+): Promise<StoredObservation[]> => (await verifyArchivedEvidence(entries, selection, store)).observations;
