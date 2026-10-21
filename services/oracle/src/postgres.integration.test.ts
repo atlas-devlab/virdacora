@@ -107,13 +107,34 @@ describe.skipIf(databaseUrl === undefined)("real PostgreSQL observation storage"
     return { app, publicKey, privateKey, now, sensor, rows, run, snapshot };
   };
 
-  const packetFor = (archive: Awaited<ReturnType<typeof createSignedArchive>>): EvidenceReceipt =>
-    createEvidenceReceipt(analyzeEvidence(archive.rows, 3_600), {
+  const packetFor = (archive: Awaited<ReturnType<typeof createSignedArchive>>, horizonSeconds = 3_600): EvidenceReceipt =>
+    createEvidenceReceipt(analyzeEvidence(archive.rows, horizonSeconds), {
       observations: archive.rows,
       sensors: [{ sensorId: archive.sensor.sensorId, regionId: archive.sensor.regionId,
         publicKeyDerBase64: archive.publicKey }]
     });
   const packetId = (receipt: EvidenceReceipt) => sha256Hex(`receipt:${canonicalJson(receipt)}`);
+
+  const permutedPackets = (receipt: EvidenceReceipt, count: number): EvidenceReceipt[] => {
+    const packets: EvidenceReceipt[] = [];
+    const visit = (remaining: number[], selected: number[]) => {
+      if (packets.length >= count) return;
+      if (remaining.length === 0) {
+        const packet = structuredClone(receipt);
+        packet.observations = selected.map(index => structuredClone(receipt.observations[index]!));
+        packets.push(packet);
+        return;
+      }
+      for (const index of remaining) {
+        visit(remaining.filter(candidate => candidate !== index), [...selected, index]);
+        if (packets.length >= count) break;
+      }
+    };
+    visit(receipt.observations.map((_row, index) => index), []);
+    expect(packets).toHaveLength(count);
+    expect(new Set(packets.map(packetId)).size).toBe(count);
+    return packets;
+  };
 
   const expectNoStoredAssessment = async () => {
     expect((await fixture.inspector.query("SELECT count(*)::integer AS count FROM assessments")).rows)
@@ -1263,6 +1284,210 @@ describe.skipIf(databaseUrl === undefined)("real PostgreSQL observation storage"
     expect((await fixture.inspector.query<{ body: EvidenceReceipt }>(
       "SELECT body FROM assessment_evidence WHERE receipt_id = $1", [result.evidenceReceiptId])).rows[0]?.body)
       .toEqual(changed); // A rejected read does not silently repair the test alteration.
+  });
+
+  it("applies the receipt catalogue index migration idempotently without changing signed data or claiming a timing benchmark", async () => {
+    const archive = await createSignedArchive(false, true);
+    const receipt = packetFor(archive);
+    await store.saveAssessmentWithReceipt(receipt);
+    const before = {
+      observations: await archive.snapshot(),
+      assessments: (await fixture.inspector.query("SELECT assessment_id, body FROM assessments")).rows,
+      evidence: (await fixture.inspector.query("SELECT receipt_id, assessment_id, body FROM assessment_evidence")).rows
+    };
+    await fixture.inspector.query(fixture.catalogMigration);
+    await fixture.inspector.query(fixture.catalogMigration);
+    const indexes = await fixture.inspector.query<{ indexdef: string }>(
+      `SELECT indexdef FROM pg_catalog.pg_indexes
+       WHERE schemaname = $1 AND tablename = 'assessment_evidence'`, [fixture.schema]);
+    expect(indexes.rows.filter(({ indexdef }) =>
+      indexdef.includes('USING btree (assessment_id, receipt_id COLLATE "C")'))).toHaveLength(1);
+    expect({
+      observations: await archive.snapshot(),
+      assessments: (await fixture.inspector.query("SELECT assessment_id, body FROM assessments")).rows,
+      evidence: (await fixture.inspector.query("SELECT receipt_id, assessment_id, body FROM assessment_evidence")).rows
+    }).toEqual(before);
+  });
+
+  it("matches memory receipt page traversal in C order with bounded pages, partitions and idempotent duplicates", async () => {
+    const archive = await createSignedArchive(false, true);
+    const receipt = packetFor(archive);
+    const packets = permutedPackets(receipt, 8);
+    const otherAssessment = packetFor(archive, 7_200);
+    const memory = new MemoryObservationStore();
+    try {
+      for (const packet of [otherAssessment, ...packets].reverse()) {
+        await store.saveAssessmentWithReceipt(packet);
+        await memory.saveAssessmentWithReceipt(packet);
+        await store.saveAssessmentWithReceipt(structuredClone(packet));
+      }
+      const expectedIds = packets.map(packetId).sort();
+      const collected: string[] = [];
+      let after: string | undefined;
+      for (let offset = 0; offset < expectedIds.length; offset += 3) {
+        const page = await store.listEvidenceReceipts(receipt.assessment.assessmentId, 3, after);
+        expect(page).toEqual(await memory.listEvidenceReceipts(receipt.assessment.assessmentId, 3, after));
+        const ids = expectedIds.slice(offset, offset + 3);
+        expect(page).toEqual({ assessmentId: receipt.assessment.assessmentId, receiptIds: ids,
+          ...(offset + 3 < expectedIds.length ? { nextAfter: ids.at(-1) } : {}) });
+        collected.push(...page.receiptIds);
+        after = page.nextAfter;
+      }
+      expect(collected).toEqual(expectedIds);
+      expect(new Set(collected).size).toBe(expectedIds.length);
+      expect(after).toBeUndefined();
+      expect(await store.listEvidenceReceipts(otherAssessment.assessment.assessmentId, 100))
+        .toEqual({ assessmentId: otherAssessment.assessment.assessmentId, receiptIds: [packetId(otherAssessment)] });
+      // A cursor is a strict ID bound, not a reference that must exist in storage.
+      expect(expectedIds).not.toContain(id(0));
+      expect(await store.listEvidenceReceipts(receipt.assessment.assessmentId, 3, id(0)))
+        .toEqual({ assessmentId: receipt.assessment.assessmentId, receiptIds: expectedIds.slice(0, 3),
+          nextAfter: expectedIds[2] });
+      expect(await store.listEvidenceReceipts(receipt.assessment.assessmentId, 3, `0x${"f".repeat(64)}`))
+        .toEqual({ assessmentId: receipt.assessment.assessmentId, receiptIds: [] });
+      expect(await archive.snapshot()).toEqual(archive.rows);
+      for (const packet of packets) {
+        await expect(verifyEvidenceReceipt(packet, receipt.sensors)).resolves.toEqual(receipt.assessment);
+      }
+    } finally { await memory.close(); }
+  });
+
+  it("rejects invalid direct receipt page requests with the explicit bounded-page domain error", async () => {
+    const invalid: [string, number, string | undefined][] = [
+      ["not-a-hash", 20, undefined], [id(1).toUpperCase(), 20, undefined],
+      [id(1), 0, undefined], [id(1), -1, undefined], [id(1), 101, undefined],
+      [id(1), 1.5, undefined], [id(1), Number.NaN, undefined], [id(1), Number.POSITIVE_INFINITY, undefined],
+      [id(1), "20" as unknown as number, undefined],
+      [id(1), 20, ""], [id(1), 20, "not-a-cursor"], [id(1), 20, id(2).toUpperCase()],
+      [id(1), 20, null as unknown as string]
+    ];
+    for (const [assessmentId, limit, after] of invalid) {
+      await expect(store.listEvidenceReceipts(assessmentId, limit, after)).rejects.toMatchObject({
+        statusCode: 400, code: "INVALID_RECEIPT_PAGE", message: "invalid receipt page request"
+      });
+    }
+    expect((await fixture.inspector.query("SELECT count(*)::integer AS count FROM assessment_evidence")).rows)
+      .toEqual([{ count: 0 }]);
+  });
+
+  it("uses a live strict cursor bound when receipts arrive before and after the previous page", async () => {
+    const archive = await createSignedArchive(false, true);
+    const receipt = packetFor(archive);
+    const ordered = permutedPackets(receipt, 12).sort((left, right) =>
+      packetId(left) < packetId(right) ? -1 : packetId(left) > packetId(right) ? 1 : 0);
+    const memory = new MemoryObservationStore();
+    try {
+      for (const index of [1, 5, 9]) {
+        await store.saveAssessmentWithReceipt(ordered[index]!);
+        await memory.saveAssessmentWithReceipt(ordered[index]!);
+      }
+      const first = await store.listEvidenceReceipts(receipt.assessment.assessmentId, 1);
+      expect(first).toEqual({ assessmentId: receipt.assessment.assessmentId,
+        receiptIds: [packetId(ordered[1]!)], nextAfter: packetId(ordered[1]!) });
+      for (const index of [0, 3]) {
+        await store.saveAssessmentWithReceipt(ordered[index]!);
+        await memory.saveAssessmentWithReceipt(ordered[index]!);
+      }
+      const second = await store.listEvidenceReceipts(receipt.assessment.assessmentId, 10, first.nextAfter);
+      expect(second).toEqual(await memory.listEvidenceReceipts(receipt.assessment.assessmentId, 10, first.nextAfter));
+      expect(second).toEqual({ assessmentId: receipt.assessment.assessmentId,
+        receiptIds: [3, 5, 9].map(index => packetId(ordered[index]!)) });
+      // Newly inserted IDs above the bound can appear; an insertion below it is
+      // omitted from this continuation. Pagination does not promise a snapshot.
+      expect(second.receiptIds).not.toContain(packetId(ordered[0]!));
+      expect(await store.listEvidenceReceipts(receipt.assessment.assessmentId, 100))
+        .toEqual({ assessmentId: receipt.assessment.assessmentId,
+          receiptIds: [0, 1, 3, 5, 9].map(index => packetId(ordered[index]!)) });
+      expect(new Set([...first.receiptIds, ...second.receiptIds]).size).toBe(4);
+    } finally { await memory.close(); }
+  });
+
+  it("discovers receipt IDs from a known assessment after reopening and then verifies the separately retrieved packet", async () => {
+    const archive = await createSignedArchive(false, true);
+    const receipt = packetFor(archive);
+    const trusted = structuredClone(receipt.sensors);
+    const packets = permutedPackets(receipt, 21);
+    for (const packet of packets) await store.saveAssessmentWithReceipt(packet);
+    const expectedIds = packets.map(packetId).sort();
+    await fixture.inspector.query("UPDATE sensors SET public_key_der_base64 = 'YQ==', active = false");
+    await fixture.inspector.query("UPDATE observations SET body = jsonb_set(body, '{value}', '999'::jsonb)");
+    await fixture.closeStore(store);
+    store = fixture.createStore();
+    const reopened = buildApp({ store, policySource, adminToken: "synthetic-admin", oracleToken: "synthetic-oracle" });
+    fixture.useStoreOwner(store, () => reopened.close());
+    const keyLookup = vi.spyOn(store, "getSensor").mockRejectedValue(new Error("catalogue must not read live keys"));
+    const windowLookup = vi.spyOn(store, "listObservations").mockRejectedValue(new Error("catalogue must not rebuild the window"));
+    const packetLookup = vi.spyOn(store, "getEvidenceReceipt");
+    try {
+      const url = `/v1/assessments/${receipt.assessment.assessmentId}/evidence-receipts`;
+      const unauthorized = await reopened.inject({ method: "GET", url });
+      expect(unauthorized.statusCode).toBe(401);
+      const first = await reopened.inject({ method: "GET", url,
+        headers: { "x-oracle-token": "synthetic-oracle" } });
+      expect(first.statusCode).toBe(200);
+      expect(first.headers["cache-control"]).toBe("no-store");
+      expect(first.json()).toEqual({ assessmentId: receipt.assessment.assessmentId,
+        receiptIds: expectedIds.slice(0, 20), nextAfter: expectedIds[19] });
+      const next = await reopened.inject({ method: "GET", url: `${url}?limit=20&after=${first.json().nextAfter}`,
+        headers: { "x-oracle-token": "synthetic-oracle" } });
+      expect(next.statusCode).toBe(200);
+      expect(next.json()).toEqual({ assessmentId: receipt.assessment.assessmentId, receiptIds: expectedIds.slice(20) });
+      const invalidLimit = await reopened.inject({ method: "GET", url: `${url}?limit=101`,
+        headers: { "x-oracle-token": "synthetic-oracle" } });
+      expect(invalidLimit.statusCode).toBe(400);
+      expect(packetLookup).not.toHaveBeenCalled();
+      const discoveredId = first.json<{ receiptIds: string[] }>().receiptIds[0]!;
+      const actual = await reopened.inject({ method: "GET", url: `/v1/evidence-receipts/${discoveredId}`,
+        headers: { "x-oracle-token": "synthetic-oracle" } });
+      expect(actual.statusCode).toBe(200);
+      expect(packetId(actual.json<EvidenceReceipt>())).toBe(discoveredId);
+      await expect(verifyEvidenceReceipt(actual.json(), trusted)).resolves.toEqual(receipt.assessment);
+      expect(packetLookup).toHaveBeenCalledExactlyOnceWith(discoveredId);
+      expect(keyLookup).not.toHaveBeenCalled();
+      expect(windowLookup).not.toHaveBeenCalled();
+    } finally {
+      keyLookup.mockRestore(); windowLookup.mockRestore(); packetLookup.mockRestore();
+    }
+  });
+
+  it("lists metadata IDs without reading a corrupted packet while exact packet retrieval still rejects it", async () => {
+    const archive = await createSignedArchive(false, true);
+    const receipt = packetFor(archive);
+    const receiptId = await store.saveAssessmentWithReceipt(receipt);
+    await fixture.inspector.query("UPDATE assessment_evidence SET body = '{}'::jsonb WHERE receipt_id = $1", [receiptId]);
+    const readOnly = fixture.createStore({ readOnly: true });
+    expect(await readOnly.listEvidenceReceipts(receipt.assessment.assessmentId, 20))
+      .toEqual({ assessmentId: receipt.assessment.assessmentId, receiptIds: [receiptId] });
+    const catalogue = await archive.app.inject({ method: "GET",
+      url: `/v1/assessments/${receipt.assessment.assessmentId}/evidence-receipts`,
+      headers: { "x-oracle-token": "synthetic-oracle" } });
+    expect(catalogue.statusCode).toBe(200);
+    expect(catalogue.json()).toEqual({ assessmentId: receipt.assessment.assessmentId, receiptIds: [receiptId] });
+    const packet = await archive.app.inject({ method: "GET", url: `/v1/evidence-receipts/${receiptId}`,
+      headers: { "x-oracle-token": "synthetic-oracle" } });
+    expect(packet.statusCode).toBe(500);
+    expect(packet.json()).toEqual({ error: "INTERNAL_ERROR" });
+    expect((await fixture.inspector.query("SELECT body FROM assessment_evidence WHERE receipt_id = $1", [receiptId])).rows)
+      .toEqual([{ body: {} }]);
+  });
+
+  it("returns empty catalogues for unknown and legacy assessments without manufacturing historical receipts", async () => {
+    const legacy = assessment(44_001);
+    await store.saveAssessment(legacy);
+    for (const assessmentId of [legacy.assessmentId, id(44_002)]) {
+      expect(await store.listEvidenceReceipts(assessmentId, 100))
+        .toEqual({ assessmentId, receiptIds: [] });
+    }
+    const app = buildApp({ store, policySource, adminToken: "synthetic-admin", oracleToken: "synthetic-oracle" });
+    fixture.useStoreOwner(store, () => app.close());
+    const response = await app.inject({ method: "GET", url: `/v1/assessments/${legacy.assessmentId}/evidence-receipts`,
+      headers: { "x-oracle-token": "synthetic-oracle" } });
+    expect(response.statusCode).toBe(200);
+    expect(response.headers["cache-control"]).toBe("no-store");
+    expect(response.json()).toEqual({ assessmentId: legacy.assessmentId, receiptIds: [] });
+    expect((await fixture.inspector.query("SELECT count(*)::integer AS count FROM assessment_evidence")).rows)
+      .toEqual([{ count: 0 }]);
+    expect(await store.latestAssessment(legacy.regionId, legacy.metric)).toEqual(legacy);
   });
 
   it("uses actual Ed25519 API verification with PostgreSQL and preserves rejected sequence availability", async () => {

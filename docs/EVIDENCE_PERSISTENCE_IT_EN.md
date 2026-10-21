@@ -93,8 +93,9 @@ Compose la usa soltanto nell'inizializzazione di volumi nuovi. Readiness richied
 nuova tabella, colonne e accessi SELECT/INSERT, senza scritture di prova.
 
 Le ricevute legacy mancanti restano mancanti: il solo hash non recupera la vecchia
-finestra. Servono conservazione e backup del database e degli ID; la nuova route
-non offre ricerca o elenco. Nessuna replica, distribuzione o pubblicazione
+finestra. Servono conservazione e backup del database e degli ID. Il successivo
+[catalogo limitato](RECEIPT_CATALOG_IT_EN.md) permette ora di trovare gli ID delle
+ricevute partendo da un risultato noto. Nessuna replica, distribuzione o pubblicazione
 on-chain viene introdotta. Un rollback del codice può mantenere la tabella;
 cancellarla distruggerebbe le ricevute conservate.
 
@@ -158,7 +159,8 @@ table; dropping it destroys evidence. PostgreSQL/client reopening is tested;
 in-memory shutdown still loses the store.
 
 Retain IDs, backups and preferably external copies. Legacy missing receipts stay
-missing, and this endpoint provides no listing or discovery. There is no replica
+missing. The subsequent [bounded catalog](RECEIPT_CATALOG_IT_EN.md) now discovers
+receipt IDs from a known assessment ID. There is no replica
 or automatic on-chain publication. Lost COMMIT replies/timeouts leave uncertain
 outcomes, with no automatic retries or exactly-once claim. A known ID can be
 looked up; otherwise the outcome needs investigation.

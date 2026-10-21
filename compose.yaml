@@ -15,6 +15,7 @@ services:
       - ./services/oracle/db/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
       - ./services/oracle/db/002_timestamp_order.sql:/docker-entrypoint-initdb.d/002_timestamp_order.sql:ro
       - ./services/oracle/db/003_evidence_receipts.sql:/docker-entrypoint-initdb.d/003_evidence_receipts.sql:ro
+      - ./services/oracle/db/004_receipt_catalog.sql:/docker-entrypoint-initdb.d/004_receipt_catalog.sql:ro
 
   oracle:
     # Longer than the application's 20-second graceful shutdown budget.

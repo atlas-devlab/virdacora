@@ -207,6 +207,19 @@ export const buildApp = (options: AppOptions) => {
     return receipt;
   });
 
+  app.get("/v1/assessments/:assessmentId/evidence-receipts", async (request, reply) => {
+    reply.header("Cache-Control", "no-store");
+    if (!tokenMatches(request.headers["x-oracle-token"], options.oracleToken)) {
+      throw new DomainError("invalid oracle token", 401, "UNAUTHORIZED");
+    }
+    const { assessmentId } = z.object({ assessmentId: z.string().regex(/^0x[0-9a-f]{64}$/) }).parse(request.params);
+    const query = z.object({
+      limit: z.string().regex(/^(?:[1-9][0-9]?|100)$/).transform(Number).optional(),
+      after: z.string().regex(/^0x[0-9a-f]{64}$/).optional()
+    }).strict().parse(request.query);
+    return options.store.listEvidenceReceipts(assessmentId, query.limit ?? 20, query.after);
+  });
+
   app.get("/v1/regions/:regionId/metrics/:metric/latest", async (request) => {
     const parameters = z
       .object({ regionId: z.string().min(2), metric: z.string().min(2) })

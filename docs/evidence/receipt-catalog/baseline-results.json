@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "kind": "receipt-catalog-api-baseline",
+  "baseCommit": "0ae5479f38796275ecaf6768723917c3f6dcdfda",
+  "sourceFile": "services/oracle/src/receipt-catalog.test.ts",
+  "sourceFileSha256": "188cd748e16a1943b5404c937849b5b82c82b6744bc459b86613238b95114d97",
+  "command": "pnpm exec vitest run services/oracle/src/receipt-catalog.test.ts --reporter=verbose",
+  "startTimeReportedByVitest": "19:48:58",
+  "reportedTimeZone": "not asserted",
+  "durationMsReportedByVitest": 6570,
+  "testsTotal": 2,
+  "testsFailed": 2,
+  "testsPassed": 0,
+  "exitCode": 1,
+  "observedFailures": [
+    "Authorized catalog404 because route absent; expected200empty",
+    "Catalog route absent404; assertionexpected401, but initial fixture wrongly supplied defaultvalidtoken"
+  ],
+  "limitations": [
+    "Only the first baseline case is a valid missing-route acceptance baseline",
+    "The second baseline case is not evidence about authentication; undefined triggered a default token. Corrected to null in the final 47-case suite.",
+    "Synthetic software fixtures; no field environmental validation"
+  ]
+}

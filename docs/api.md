@@ -10,6 +10,7 @@ The service listens on port `8787` by default.
 | POST | `/v1/observations` | submit a signed observation | sensor signature |
 | POST | `/v1/assessments/run` | run model and TerraLex policy | `x-oracle-token` |
 | GET | `/v1/evidence-receipts/:receiptId` | retrieve one retained exact evidence packet | `x-oracle-token` |
+| GET | `/v1/assessments/:assessmentId/evidence-receipts` | bounded receipt-ID catalog for a known assessment | `x-oracle-token` |
 | GET | `/v1/regions/:regionId/metrics/:metric/latest` | latest assessment | none in MVP |
 
 The assessment response contains `assessment`, the TerraLex `decision`, an optional
@@ -33,6 +34,15 @@ Bundled keys are not a trust source. See [receipt format, usage and trust limits
 model versions and existing hash construction are unchanged. Existing databases
 require migration `003_evidence_receipts.sql`. See [atomic persistence and recovery
 (IT/EN)](EVIDENCE_PERSISTENCE_IT_EN.md) for variants, migration and outcome limits.
+
+The catalog accepts `limit` (strict decimal integer, default 20, range 1–100) and
+optional `after` (lowercase 0x-prefixed 64-digit hex ID). It returns
+`{assessmentId, receiptIds, nextAfter?}`; `nextAfter` is the last returned ID only
+when a further row exists. IDs sort strictly ascending in ASCII order. A cursor
+is an exclusive ordering bound and need not exist. Unknown/legacy assessments
+return 200 with an empty array. Authentication precedes validation and lookup;
+all catalog responses use `Cache-Control: no-store`. Bodies, signatures, keys
+and totals are not returned. See [IT/EN catalog semantics and limits](RECEIPT_CATALOG_IT_EN.md).
 
 Before a new assessment, selected archived rows must pass strict schema,
 original observation ID, signature, unique ID/sequence and request/sensor routing

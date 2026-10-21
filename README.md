@@ -77,6 +77,12 @@ restarts; memory mode is ephemeral. Migration 003 is required for existing
 databases. Packet variants receive separate IDs and never silently replace one
 another; numerical results and the v1 receipt format are unchanged.
 
+The [bounded receipt catalog (IT/EN)](docs/RECEIPT_CATALOG_IT_EN.md) finds receipt
+IDs from a known assessment ID. Authenticated pages contain at most 100 IDs,
+using the same strict ASCII ordering in memory and PostgreSQL. Full packets and
+independent offline verification stay separate; the catalog is not a completeness
+or authenticity certificate.
+
 ## Research branches and original mission
 
 The mission is to combine verifiable environmental analysis, distributed

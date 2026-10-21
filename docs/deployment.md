@@ -60,6 +60,13 @@ the older writer will not retain receipts for its later assessments. Do not drop
 the table as a casual rollback: it contains retained evidence. See the
 [IT/EN persistence contract](EVIDENCE_PERSISTENCE_IT_EN.md).
 
+Migration `004_receipt_catalog.sql` adds the composite assessment/receipt-ID
+index matching the catalog's `COLLATE "C"` keyset query. Apply it after 003 for
+existing databases; new-volume Compose initialization and isolated runners include
+it. It changes no rows or columns. Readiness still checks table/column/access
+compatibility, not index presence or a performance SLA. The catalog remains a
+bounded metadata query; see its [IT/EN contract](RECEIPT_CATALOG_IT_EN.md).
+
 ## Production gates
 
 1. Independent Solidity audit and invariant fuzzing.
