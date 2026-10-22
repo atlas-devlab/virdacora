@@ -1,5 +1,10 @@
 # Virdacora architecture
 
+The Oracle implementation separates domain, application/ports, adapters and a
+composition facade. See the [IT/EN module map and behavioral invariants](CLEAN_ARCHITECTURE_IT_EN.md).
+The authority flow below is unchanged; this structural refactor adds no LLM or
+satellite adapter.
+
 This document describes the intended architecture. The current research MVP
 uses synthetic sensor data and a deterministic mathematical risk model. Oracle
 participants and treasury operations are simulated locally; independently

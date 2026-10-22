@@ -88,7 +88,14 @@ allows receipt discovery and download without sharing the token that starts
 assessments. It is optional, has no default secret, and grants neither sensor
 registration nor assessment execution. Existing Oracle reads remain compatible.
 
+The [Oracle layer separation (IT/EN)](docs/CLEAN_ARCHITECTURE_IT_EN.md) keeps
+domain rules and application use cases independent of HTTP and storage adapters,
+preserving legacy imports and exact evidence behavior. A runtime read capability
+can expose only receipt discovery/retrieval to future clients; this refactor
+does not add a satellite pipeline or an LLM runtime.
+
 ## Research branches and original mission
+
 
 The mission is to combine verifiable environmental analysis, distributed
 coordination, checkable interventions and decision rights for affected

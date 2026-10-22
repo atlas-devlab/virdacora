@@ -1,0 +1,572 @@
+{
+  "archivedRows": [
+    {
+      "observation": {
+        "metric": "water.oxygen.mg_l",
+        "observedAt": "2026-10-22T02:00:00.000Z",
+        "regionId": "synthetic-architecture-region",
+        "sensorId": "synthetic-architecture-sensor",
+        "sequence": 1,
+        "signature": "6H0xPInNUh4NoyZMAoltRrrGsaa8ycAzhSEBSmDQIXMcTB2/4Rm+YH+EglJBBx5XWV69RB7TjPou3EkYHMSTBQ==",
+        "unit": "mg/L",
+        "value": 8
+      },
+      "observationId": "0xdc129603d5fbfd6d6062c603e57155d89759c1b55535557d300ab1be75bf0694"
+    },
+    {
+      "observation": {
+        "metric": "water.oxygen.mg_l",
+        "observedAt": "2026-10-22T03:00:00.000Z",
+        "regionId": "synthetic-architecture-region",
+        "sensorId": "synthetic-architecture-sensor",
+        "sequence": 2,
+        "signature": "xxQeAWKC3YLN8fpVL/QD7pI0SMILJ6nTfj8opiacZgmU31zI6P3wUUyAJKs4RVcKgxD4nyU7VUrQV3hRP4eqAw==",
+        "unit": "µg/L",
+        "value": 7500
+      },
+      "observationId": "0x33cfcad0e77aa6746c141c31e6d86bed792498a042a709e72e1010621c15d00f"
+    },
+    {
+      "observation": {
+        "metric": "water.oxygen.mg_l",
+        "observedAt": "2026-10-22T04:00:00.1239Z",
+        "regionId": "synthetic-architecture-region",
+        "sensorId": "synthetic-architecture-sensor",
+        "sequence": 3,
+        "signature": "DYzNNeIBvZbs7aSEQCrHq9mMcfjaGdVd/rbDZgtOvTGD8x18fRHDhYvSHDpJo8klv8OMzE9w3oQm23BiJyxyBg==",
+        "unit": "mg/L",
+        "value": 7
+      },
+      "observationId": "0x097af1ea65ff2d5131b7753fc1354f03bc7583567bddded5ca94e7409171e67f"
+    },
+    {
+      "observation": {
+        "metric": "water.oxygen.mg_l",
+        "observedAt": "2026-10-22T04:00:00.1231Z",
+        "regionId": "synthetic-architecture-region",
+        "sensorId": "synthetic-architecture-sensor",
+        "sequence": 4,
+        "signature": "8N91NycMQMKAvBsCgMs25oaGGGndT2g9yHKZk2mUQHgGS4eZs0gkwQozLxOoHYi/3XsESZjn1sFfvVIfPgLOAQ==",
+        "unit": "µg/L",
+        "value": 6500
+      },
+      "observationId": "0x53ce080ce44fb0cfa4c9085ab12ed4e49db47ff67512483064b4e5b9df7cdfa9"
+    },
+    {
+      "observation": {
+        "metric": "water.oxygen.mg_l",
+        "observedAt": "2026-10-22T05:00:00.000Z",
+        "regionId": "synthetic-architecture-region",
+        "sensorId": "synthetic-architecture-sensor",
+        "sequence": 5,
+        "signature": "aQFo3bYNjuuwL193r3drYMq9PkbcfCaBqzrGDmju4IFhmSbprymqR8qO/qJhPTscm3Ekf6LMuGL4hRln1L9YBQ==",
+        "unit": "mg/L",
+        "value": 6
+      },
+      "observationId": "0xb1f8d2a78de22857e5a69f18834669eb0bbcf1b72866ac44ee79353361a6c74e"
+    },
+    {
+      "observation": {
+        "metric": "water.oxygen.mg_l",
+        "observedAt": "2026-10-22T06:00:00.000Z",
+        "regionId": "synthetic-architecture-region",
+        "sensorId": "synthetic-architecture-sensor",
+        "sequence": 6,
+        "signature": "SxpIVqpoqMGiN3sUHOhDIptnddYTThlOkfo8saeUByAQG+gsADBSi7VftxgXKKPhtSAyUMxs3hRgNlEaJ/vMCA==",
+        "unit": "µg/L",
+        "value": 5500
+      },
+      "observationId": "0x2feca8aa7d683b7083ae444ebffaf3ba2991f1d367237277872e467e7bf9b69d"
+    }
+  ],
+  "fixture": "synthetic-oracle-http-architecture-v1",
+  "responses": [
+    {
+      "body": {
+        "policyHash": "0xe9025c306265aef0555dd802d9d13025a965b4c803aa6eff53560ae4c8366168",
+        "status": "ok"
+      },
+      "cacheControl": null,
+      "name": "health",
+      "status": 200
+    },
+    {
+      "body": {
+        "status": "ready"
+      },
+      "cacheControl": "no-store",
+      "name": "readiness",
+      "status": 200
+    },
+    {
+      "body": {
+        "error": "UNAUTHORIZED",
+        "message": "invalid oracle token"
+      },
+      "cacheControl": null,
+      "name": "run-auth-before-invalid-input",
+      "status": 401
+    },
+    {
+      "body": {
+        "active": true,
+        "label": "Deterministic synthetic architecture fixture",
+        "publicKeyDerBase64": "MCowBQYDK2VwAyEAZs1gi5KLiOUODv6qM/rxxDzv4HKUsLh+n+CrpqPPdjM=",
+        "regionId": "synthetic-architecture-region",
+        "sensorId": "synthetic-architecture-sensor"
+      },
+      "cacheControl": null,
+      "name": "sensor-registration",
+      "status": 201
+    },
+    {
+      "body": {
+        "accepted": true,
+        "observationId": "0x2feca8aa7d683b7083ae444ebffaf3ba2991f1d367237277872e467e7bf9b69d"
+      },
+      "cacheControl": null,
+      "name": "observation-5",
+      "status": 202
+    },
+    {
+      "body": {
+        "accepted": true,
+        "observationId": "0x097af1ea65ff2d5131b7753fc1354f03bc7583567bddded5ca94e7409171e67f"
+      },
+      "cacheControl": null,
+      "name": "observation-2",
+      "status": 202
+    },
+    {
+      "body": {
+        "accepted": true,
+        "observationId": "0xdc129603d5fbfd6d6062c603e57155d89759c1b55535557d300ab1be75bf0694"
+      },
+      "cacheControl": null,
+      "name": "observation-0",
+      "status": 202
+    },
+    {
+      "body": {
+        "accepted": true,
+        "observationId": "0xb1f8d2a78de22857e5a69f18834669eb0bbcf1b72866ac44ee79353361a6c74e"
+      },
+      "cacheControl": null,
+      "name": "observation-4",
+      "status": 202
+    },
+    {
+      "body": {
+        "accepted": true,
+        "observationId": "0x33cfcad0e77aa6746c141c31e6d86bed792498a042a709e72e1010621c15d00f"
+      },
+      "cacheControl": null,
+      "name": "observation-1",
+      "status": 202
+    },
+    {
+      "body": {
+        "accepted": true,
+        "observationId": "0x53ce080ce44fb0cfa4c9085ab12ed4e49db47ff67512483064b4e5b9df7cdfa9"
+      },
+      "cacheControl": null,
+      "name": "observation-3",
+      "status": 202
+    },
+    {
+      "body": {
+        "error": "OBSERVATION_REPLAY",
+        "message": "observation replay detected"
+      },
+      "cacheControl": null,
+      "name": "replay",
+      "status": 409
+    },
+    {
+      "body": {
+        "error": "INVALID_SIGNATURE",
+        "message": "invalid observation signature"
+      },
+      "cacheControl": null,
+      "name": "tampered-signature",
+      "status": 401
+    },
+    {
+      "body": {
+        "error": "UNAUTHORIZED",
+        "message": "invalid oracle token"
+      },
+      "cacheControl": null,
+      "name": "reader-denied-write",
+      "status": 401
+    },
+    {
+      "body": {
+        "actionDraft": {
+          "action": "WATER_AERATION",
+          "asset": "USDC",
+          "challengeSeconds": 86400,
+          "evidenceHash": "0x9d5557188abb79f3fc523bbb37190d9fee74a6a9c715ce4fdb8addea61cc8ec4",
+          "policyHash": "0xe9025c306265aef0555dd802d9d13025a965b4c803aa6eff53560ae4c8366168",
+          "regionId": "synthetic-architecture-region",
+          "requestedAmount": 0,
+          "reversible": true
+        },
+        "assessment": {
+          "anomalyScore": 0.612749,
+          "assessmentId": "0x70d1ac97c4c356caf3e0247c8a6778ea5becb3c0feafd60fc08c1db2a1d713ba",
+          "confidence": 0.488956,
+          "currentValue": 5.5,
+          "evidenceHash": "0x9d5557188abb79f3fc523bbb37190d9fee74a6a9c715ce4fdb8addea61cc8ec4",
+          "forecastHorizonSeconds": 3600,
+          "forecastValue": 4.800007,
+          "generatedAt": "2026-10-22T06:00:00.000Z",
+          "metric": "water.oxygen.mg_l",
+          "modelVersion": "terravoce-linear-risk-v2-oxygen-units",
+          "observationCount": 6,
+          "regionId": "synthetic-architecture-region",
+          "risk": 0.398287,
+          "slopePerHour": -0.65
+        },
+        "decision": {
+          "action": {
+            "asset": "USDC",
+            "challengeSeconds": 86400,
+            "maxAmount": 250,
+            "name": "WATER_AERATION",
+            "reversible": true
+          },
+          "allowed": true,
+          "policyHash": "0xe9025c306265aef0555dd802d9d13025a965b4c803aa6eff53560ae4c8366168",
+          "reasons": [
+            "all deterministic policy constraints passed"
+          ]
+        },
+        "evidenceReceipt": {
+          "assessment": {
+            "anomalyScore": 0.612749,
+            "assessmentId": "0x70d1ac97c4c356caf3e0247c8a6778ea5becb3c0feafd60fc08c1db2a1d713ba",
+            "confidence": 0.488956,
+            "currentValue": 5.5,
+            "evidenceHash": "0x9d5557188abb79f3fc523bbb37190d9fee74a6a9c715ce4fdb8addea61cc8ec4",
+            "forecastHorizonSeconds": 3600,
+            "forecastValue": 4.800007,
+            "generatedAt": "2026-10-22T06:00:00.000Z",
+            "metric": "water.oxygen.mg_l",
+            "modelVersion": "terravoce-linear-risk-v2-oxygen-units",
+            "observationCount": 6,
+            "regionId": "synthetic-architecture-region",
+            "risk": 0.398287,
+            "slopePerHour": -0.65
+          },
+          "evidenceCore": {
+            "anomalyScore": 0.612749,
+            "confidence": 0.488956,
+            "currentValue": 5.5,
+            "forecastHorizonSeconds": 3600,
+            "forecastValue": 4.800007,
+            "generatedAt": "2026-10-22T06:00:00.000Z",
+            "metric": "water.oxygen.mg_l",
+            "modelVersion": "terravoce-linear-risk-v2-oxygen-units",
+            "observationIds": [
+              "0xdc129603d5fbfd6d6062c603e57155d89759c1b55535557d300ab1be75bf0694",
+              "0x33cfcad0e77aa6746c141c31e6d86bed792498a042a709e72e1010621c15d00f",
+              "0x097af1ea65ff2d5131b7753fc1354f03bc7583567bddded5ca94e7409171e67f",
+              "0x53ce080ce44fb0cfa4c9085ab12ed4e49db47ff67512483064b4e5b9df7cdfa9",
+              "0xb1f8d2a78de22857e5a69f18834669eb0bbcf1b72866ac44ee79353361a6c74e",
+              "0x2feca8aa7d683b7083ae444ebffaf3ba2991f1d367237277872e467e7bf9b69d"
+            ],
+            "regionId": "synthetic-architecture-region",
+            "risk": 0.398287,
+            "slopePerHour": -0.65
+          },
+          "formatVersion": "virdacora-evidence-receipt-v1",
+          "observations": [
+            {
+              "observation": {
+                "metric": "water.oxygen.mg_l",
+                "observedAt": "2026-10-22T02:00:00.000Z",
+                "regionId": "synthetic-architecture-region",
+                "sensorId": "synthetic-architecture-sensor",
+                "sequence": 1,
+                "signature": "6H0xPInNUh4NoyZMAoltRrrGsaa8ycAzhSEBSmDQIXMcTB2/4Rm+YH+EglJBBx5XWV69RB7TjPou3EkYHMSTBQ==",
+                "unit": "mg/L",
+                "value": 8
+              },
+              "observationId": "0xdc129603d5fbfd6d6062c603e57155d89759c1b55535557d300ab1be75bf0694"
+            },
+            {
+              "observation": {
+                "metric": "water.oxygen.mg_l",
+                "observedAt": "2026-10-22T03:00:00.000Z",
+                "regionId": "synthetic-architecture-region",
+                "sensorId": "synthetic-architecture-sensor",
+                "sequence": 2,
+                "signature": "xxQeAWKC3YLN8fpVL/QD7pI0SMILJ6nTfj8opiacZgmU31zI6P3wUUyAJKs4RVcKgxD4nyU7VUrQV3hRP4eqAw==",
+                "unit": "µg/L",
+                "value": 7500
+              },
+              "observationId": "0x33cfcad0e77aa6746c141c31e6d86bed792498a042a709e72e1010621c15d00f"
+            },
+            {
+              "observation": {
+                "metric": "water.oxygen.mg_l",
+                "observedAt": "2026-10-22T04:00:00.1239Z",
+                "regionId": "synthetic-architecture-region",
+                "sensorId": "synthetic-architecture-sensor",
+                "sequence": 3,
+                "signature": "DYzNNeIBvZbs7aSEQCrHq9mMcfjaGdVd/rbDZgtOvTGD8x18fRHDhYvSHDpJo8klv8OMzE9w3oQm23BiJyxyBg==",
+                "unit": "mg/L",
+                "value": 7
+              },
+              "observationId": "0x097af1ea65ff2d5131b7753fc1354f03bc7583567bddded5ca94e7409171e67f"
+            },
+            {
+              "observation": {
+                "metric": "water.oxygen.mg_l",
+                "observedAt": "2026-10-22T04:00:00.1231Z",
+                "regionId": "synthetic-architecture-region",
+                "sensorId": "synthetic-architecture-sensor",
+                "sequence": 4,
+                "signature": "8N91NycMQMKAvBsCgMs25oaGGGndT2g9yHKZk2mUQHgGS4eZs0gkwQozLxOoHYi/3XsESZjn1sFfvVIfPgLOAQ==",
+                "unit": "µg/L",
+                "value": 6500
+              },
+              "observationId": "0x53ce080ce44fb0cfa4c9085ab12ed4e49db47ff67512483064b4e5b9df7cdfa9"
+            },
+            {
+              "observation": {
+                "metric": "water.oxygen.mg_l",
+                "observedAt": "2026-10-22T05:00:00.000Z",
+                "regionId": "synthetic-architecture-region",
+                "sensorId": "synthetic-architecture-sensor",
+                "sequence": 5,
+                "signature": "aQFo3bYNjuuwL193r3drYMq9PkbcfCaBqzrGDmju4IFhmSbprymqR8qO/qJhPTscm3Ekf6LMuGL4hRln1L9YBQ==",
+                "unit": "mg/L",
+                "value": 6
+              },
+              "observationId": "0xb1f8d2a78de22857e5a69f18834669eb0bbcf1b72866ac44ee79353361a6c74e"
+            },
+            {
+              "observation": {
+                "metric": "water.oxygen.mg_l",
+                "observedAt": "2026-10-22T06:00:00.000Z",
+                "regionId": "synthetic-architecture-region",
+                "sensorId": "synthetic-architecture-sensor",
+                "sequence": 6,
+                "signature": "SxpIVqpoqMGiN3sUHOhDIptnddYTThlOkfo8saeUByAQG+gsADBSi7VftxgXKKPhtSAyUMxs3hRgNlEaJ/vMCA==",
+                "unit": "µg/L",
+                "value": 5500
+              },
+              "observationId": "0x2feca8aa7d683b7083ae444ebffaf3ba2991f1d367237277872e467e7bf9b69d"
+            }
+          ],
+          "sensors": [
+            {
+              "publicKeyDerBase64": "MCowBQYDK2VwAyEAZs1gi5KLiOUODv6qM/rxxDzv4HKUsLh+n+CrpqPPdjM=",
+              "regionId": "synthetic-architecture-region",
+              "sensorId": "synthetic-architecture-sensor"
+            }
+          ]
+        },
+        "evidenceReceiptId": "0xf722f6dff9d9610b6d5a1302dc51a6d4254888d6842da50003a54de566aec29e"
+      },
+      "cacheControl": null,
+      "name": "assessment",
+      "status": 201
+    },
+    {
+      "body": {
+        "assessmentId": "0x70d1ac97c4c356caf3e0247c8a6778ea5becb3c0feafd60fc08c1db2a1d713ba",
+        "receiptIds": [
+          "0xf722f6dff9d9610b6d5a1302dc51a6d4254888d6842da50003a54de566aec29e"
+        ]
+      },
+      "cacheControl": "no-store",
+      "name": "catalog",
+      "status": 200
+    },
+    {
+      "body": {
+        "assessment": {
+          "anomalyScore": 0.612749,
+          "assessmentId": "0x70d1ac97c4c356caf3e0247c8a6778ea5becb3c0feafd60fc08c1db2a1d713ba",
+          "confidence": 0.488956,
+          "currentValue": 5.5,
+          "evidenceHash": "0x9d5557188abb79f3fc523bbb37190d9fee74a6a9c715ce4fdb8addea61cc8ec4",
+          "forecastHorizonSeconds": 3600,
+          "forecastValue": 4.800007,
+          "generatedAt": "2026-10-22T06:00:00.000Z",
+          "metric": "water.oxygen.mg_l",
+          "modelVersion": "terravoce-linear-risk-v2-oxygen-units",
+          "observationCount": 6,
+          "regionId": "synthetic-architecture-region",
+          "risk": 0.398287,
+          "slopePerHour": -0.65
+        },
+        "evidenceCore": {
+          "anomalyScore": 0.612749,
+          "confidence": 0.488956,
+          "currentValue": 5.5,
+          "forecastHorizonSeconds": 3600,
+          "forecastValue": 4.800007,
+          "generatedAt": "2026-10-22T06:00:00.000Z",
+          "metric": "water.oxygen.mg_l",
+          "modelVersion": "terravoce-linear-risk-v2-oxygen-units",
+          "observationIds": [
+            "0xdc129603d5fbfd6d6062c603e57155d89759c1b55535557d300ab1be75bf0694",
+            "0x33cfcad0e77aa6746c141c31e6d86bed792498a042a709e72e1010621c15d00f",
+            "0x097af1ea65ff2d5131b7753fc1354f03bc7583567bddded5ca94e7409171e67f",
+            "0x53ce080ce44fb0cfa4c9085ab12ed4e49db47ff67512483064b4e5b9df7cdfa9",
+            "0xb1f8d2a78de22857e5a69f18834669eb0bbcf1b72866ac44ee79353361a6c74e",
+            "0x2feca8aa7d683b7083ae444ebffaf3ba2991f1d367237277872e467e7bf9b69d"
+          ],
+          "regionId": "synthetic-architecture-region",
+          "risk": 0.398287,
+          "slopePerHour": -0.65
+        },
+        "formatVersion": "virdacora-evidence-receipt-v1",
+        "observations": [
+          {
+            "observation": {
+              "metric": "water.oxygen.mg_l",
+              "observedAt": "2026-10-22T02:00:00.000Z",
+              "regionId": "synthetic-architecture-region",
+              "sensorId": "synthetic-architecture-sensor",
+              "sequence": 1,
+              "signature": "6H0xPInNUh4NoyZMAoltRrrGsaa8ycAzhSEBSmDQIXMcTB2/4Rm+YH+EglJBBx5XWV69RB7TjPou3EkYHMSTBQ==",
+              "unit": "mg/L",
+              "value": 8
+            },
+            "observationId": "0xdc129603d5fbfd6d6062c603e57155d89759c1b55535557d300ab1be75bf0694"
+          },
+          {
+            "observation": {
+              "metric": "water.oxygen.mg_l",
+              "observedAt": "2026-10-22T03:00:00.000Z",
+              "regionId": "synthetic-architecture-region",
+              "sensorId": "synthetic-architecture-sensor",
+              "sequence": 2,
+              "signature": "xxQeAWKC3YLN8fpVL/QD7pI0SMILJ6nTfj8opiacZgmU31zI6P3wUUyAJKs4RVcKgxD4nyU7VUrQV3hRP4eqAw==",
+              "unit": "µg/L",
+              "value": 7500
+            },
+            "observationId": "0x33cfcad0e77aa6746c141c31e6d86bed792498a042a709e72e1010621c15d00f"
+          },
+          {
+            "observation": {
+              "metric": "water.oxygen.mg_l",
+              "observedAt": "2026-10-22T04:00:00.1239Z",
+              "regionId": "synthetic-architecture-region",
+              "sensorId": "synthetic-architecture-sensor",
+              "sequence": 3,
+              "signature": "DYzNNeIBvZbs7aSEQCrHq9mMcfjaGdVd/rbDZgtOvTGD8x18fRHDhYvSHDpJo8klv8OMzE9w3oQm23BiJyxyBg==",
+              "unit": "mg/L",
+              "value": 7
+            },
+            "observationId": "0x097af1ea65ff2d5131b7753fc1354f03bc7583567bddded5ca94e7409171e67f"
+          },
+          {
+            "observation": {
+              "metric": "water.oxygen.mg_l",
+              "observedAt": "2026-10-22T04:00:00.1231Z",
+              "regionId": "synthetic-architecture-region",
+              "sensorId": "synthetic-architecture-sensor",
+              "sequence": 4,
+              "signature": "8N91NycMQMKAvBsCgMs25oaGGGndT2g9yHKZk2mUQHgGS4eZs0gkwQozLxOoHYi/3XsESZjn1sFfvVIfPgLOAQ==",
+              "unit": "µg/L",
+              "value": 6500
+            },
+            "observationId": "0x53ce080ce44fb0cfa4c9085ab12ed4e49db47ff67512483064b4e5b9df7cdfa9"
+          },
+          {
+            "observation": {
+              "metric": "water.oxygen.mg_l",
+              "observedAt": "2026-10-22T05:00:00.000Z",
+              "regionId": "synthetic-architecture-region",
+              "sensorId": "synthetic-architecture-sensor",
+              "sequence": 5,
+              "signature": "aQFo3bYNjuuwL193r3drYMq9PkbcfCaBqzrGDmju4IFhmSbprymqR8qO/qJhPTscm3Ekf6LMuGL4hRln1L9YBQ==",
+              "unit": "mg/L",
+              "value": 6
+            },
+            "observationId": "0xb1f8d2a78de22857e5a69f18834669eb0bbcf1b72866ac44ee79353361a6c74e"
+          },
+          {
+            "observation": {
+              "metric": "water.oxygen.mg_l",
+              "observedAt": "2026-10-22T06:00:00.000Z",
+              "regionId": "synthetic-architecture-region",
+              "sensorId": "synthetic-architecture-sensor",
+              "sequence": 6,
+              "signature": "SxpIVqpoqMGiN3sUHOhDIptnddYTThlOkfo8saeUByAQG+gsADBSi7VftxgXKKPhtSAyUMxs3hRgNlEaJ/vMCA==",
+              "unit": "µg/L",
+              "value": 5500
+            },
+            "observationId": "0x2feca8aa7d683b7083ae444ebffaf3ba2991f1d367237277872e467e7bf9b69d"
+          }
+        ],
+        "sensors": [
+          {
+            "publicKeyDerBase64": "MCowBQYDK2VwAyEAZs1gi5KLiOUODv6qM/rxxDzv4HKUsLh+n+CrpqPPdjM=",
+            "regionId": "synthetic-architecture-region",
+            "sensorId": "synthetic-architecture-sensor"
+          }
+        ]
+      },
+      "cacheControl": "no-store",
+      "name": "packet",
+      "status": 200
+    },
+    {
+      "body": {
+        "error": "EVIDENCE_RECEIPT_NOT_FOUND",
+        "message": "evidence receipt not found"
+      },
+      "cacheControl": "no-store",
+      "name": "unknown-packet",
+      "status": 404
+    },
+    {
+      "body": {
+        "error": "INVALID_INPUT",
+        "issues": [
+          {
+            "code": "invalid_format",
+            "format": "regex",
+            "message": "Invalid string: must match pattern /^(?:[1-9][0-9]?|100)$/",
+            "origin": "string",
+            "path": [
+              "limit"
+            ],
+            "pattern": "/^(?:[1-9][0-9]?|100)$/"
+          }
+        ]
+      },
+      "cacheControl": "no-store",
+      "name": "invalid-catalog-limit",
+      "status": 400
+    },
+    {
+      "body": {
+        "anomalyScore": 0.612749,
+        "assessmentId": "0x70d1ac97c4c356caf3e0247c8a6778ea5becb3c0feafd60fc08c1db2a1d713ba",
+        "confidence": 0.488956,
+        "currentValue": 5.5,
+        "evidenceHash": "0x9d5557188abb79f3fc523bbb37190d9fee74a6a9c715ce4fdb8addea61cc8ec4",
+        "forecastHorizonSeconds": 3600,
+        "forecastValue": 4.800007,
+        "generatedAt": "2026-10-22T06:00:00.000Z",
+        "metric": "water.oxygen.mg_l",
+        "modelVersion": "terravoce-linear-risk-v2-oxygen-units",
+        "observationCount": 6,
+        "regionId": "synthetic-architecture-region",
+        "risk": 0.398287,
+        "slopePerHour": -0.65
+      },
+      "cacheControl": null,
+      "name": "latest",
+      "status": 200
+    }
+  ]
+}
