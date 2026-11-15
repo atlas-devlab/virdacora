@@ -1,11 +1,1 @@
-export class DomainError extends Error {
-  public constructor(
-    message: string,
-    public readonly statusCode: number,
-    public readonly code: string
-  ) {
-    super(message);
-    this.name = "DomainError";
-  }
-}
-
+export * from "./domain/errors.js";

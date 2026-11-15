@@ -191,6 +191,12 @@ async function runCase(signal: "SIGTERM" | "SIGINT", adminToken: string, evidenc
     const beforeState = await inspectOwnedContainer(oracleId!, oracleName);
     record.hostProcessIdBefore = beforeState.State.Pid;
     record.pidOneEntrypointVerified = true;
+    stage = "CHECK_DEPLOYED_PACKAGE_EXPORTS";
+    const exportsSmoke = await readFile(new URL("../services/oracle/test/package-exports-smoke.mjs", import.meta.url), "utf8");
+    const exportsResult = await docker(["exec", oracleId!, "node", "--input-type=module", "--eval", exportsSmoke]);
+    assert.deepEqual(JSON.parse(exportsResult.stdout), { application: true, domain: true,
+      readCapability: true, unchangedUnitInterpretation: true });
+    record.deployedPackageExportsVerified = true;
     stage = "CHECK_COMPILED_SERVER_READER_ROLE";
     const unknownId = `0x${"f".repeat(64)}`;
     const catalog = await http(`/v1/assessments/${unknownId}/evidence-receipts`, undefined,

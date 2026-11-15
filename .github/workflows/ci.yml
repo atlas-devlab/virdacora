@@ -52,6 +52,9 @@ jobs:
       - name: Run tests
         run: pnpm test
 
+      - name: Check compiled Oracle package subpaths
+        run: pnpm --filter @terravoce/oracle exec node test/package-exports-smoke.mjs
+
       - name: Verify indexed-store benchmark payloads with synthetic smoke fixture
         # Timing is diagnostic only; no hardware-dependent speed threshold.
         run: pnpm exec tsx scripts/benchmark-oracle-store.ts --rows 2000 --regions 20 --read-samples 20 --write-samples 5 > "$RUNNER_TEMP/oracle-store-smoke.json"

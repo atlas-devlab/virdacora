@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "kind": "oracle-clean-architecture-local",
+  "recordedAtUTC": "2026-10-22T09:18:50Z",
+  "baseCommit": "ad2595ffa24f47b72229b10b1bf5bfefdc949aa7",
+  "baselineFixture": "services/oracle/test/fixtures/oracle-http-baseline.json",
+  "baselineSha256": "073df9d614bc872f2de32b45b1530e8e7b31b7a13316302173644a980188ae5e",
+  "deterministicHttpResponsesCompared": 19,
+  "ordinaryTestsPassed": 356,
+  "oracleTestsPassed": 342,
+  "postgresCasesSkippedLocally": 62,
+  "newRegressionArchitectureAndCapabilityCases": 12,
+  "buildPassed": true,
+  "workspaceCheckPassed": true,
+  "strictTypesIncludingRecursiveTestsAndSignalRunnerPassed": true,
+  "compiledPackageExportsSmokePassed": true,
+  "composeConfigPassed": true,
+  "diffCheckPassed": true,
+  "localPostgresExecuted": false,
+  "localLinuxSignalRunnerExecuted": false,
+  "priorBlockedDockerCleanupRetried": false,
+  "correctedIssue": "The new baseline helper incorrectly inferred a Fastify overload through Parameters; changed to the explicit InjectOptions type without modifying the captured fixture.",
+  "limits": [
+    "Actual PostgreSQL and deployed Linux-image exports require exact-revision CI.",
+    "DomainError.statusCode remains a deliberate compatibility debt.",
+    "The runtime reader is capability narrowing, not caller authentication or a hostile-code sandbox.",
+    "No LLM, satellite processing, numerical-model change, environmental validation or treasury operation is introduced."
+  ]
+}
