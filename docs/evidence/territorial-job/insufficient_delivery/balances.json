@@ -1,0 +1,18 @@
+{
+  "funded": {
+    "treasury": "0",
+    "escrow": "10000000",
+    "executor": "0",
+    "totalSupply": "10000000",
+    "unitDecimals": 6,
+    "simulationBudget": "10 TEST"
+  },
+  "final": {
+    "treasury": "10000000",
+    "escrow": "0",
+    "executor": "0",
+    "totalSupply": "10000000",
+    "unitDecimals": 6,
+    "simulationBudget": "10 TEST"
+  }
+}

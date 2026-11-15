@@ -1,0 +1,66 @@
+{
+  "frozenAtUTC": "2026-11-15T13:41:21.7340196Z",
+  "files": [
+    {
+      "sha256": "c5f80f8177db6bb736ecb291e559f0bae21e5d1d38b9af5e6dff2e8c0e66f033",
+      "path": "docs/TERRITORIAL_JOB_PROTOCOL_IT_EN.md"
+    },
+    {
+      "sha256": "088f77f1425cbf5718d7aaaeb6c6c0531b9a29cf88e09b9aae0af0024b261b4a",
+      "path": "services/environmental-case/src/territorial-review.ts"
+    },
+    {
+      "sha256": "43df3802d9a9a6a0ddc5364c0e0f8bd05dbff94ed4fb3f778818db482ea7ff25",
+      "path": "services/environmental-case/src/territorial-review.test.ts"
+    },
+    {
+      "sha256": "3c2739a4fb24d4efc558c54f1e470125047efbd78efd5ddf7d6e2b00796eb5a3",
+      "path": "services/environmental-case/src/dataset.ts"
+    },
+    {
+      "sha256": "ff1d3dc2984d763e1f2c84d0cdff9b349124427abd472e0d3f8e78fbd07bb76a",
+      "path": "services/environmental-case/src/replay.ts"
+    },
+    {
+      "sha256": "1492e6701f30542874ea0499ae20e123365147b9d14971459d5b52183ff43824",
+      "path": "services/environmental-case/src/case.ts"
+    },
+    {
+      "sha256": "57e40bb9165cb3305d135e671b84cfd44a9bbacaa12b5ad3e7ab719614dd3551",
+      "path": "packages/contracts/scripts/territorial-job-e2e.ts"
+    },
+    {
+      "sha256": "184fc534cccaab72192e10984ace3d2eb69b4d692714cd21fb7eaa24b9267d6e",
+      "path": "packages/contracts/tsconfig.territorial.json"
+    },
+    {
+      "sha256": "8f56d8d57dde1ce3b25e009176ffa70a2c092804754d291bbe4c48dce907c012",
+      "path": "packages/contracts/contracts/TerraResultEscrow.sol"
+    },
+    {
+      "sha256": "9b6edbd111ad4e268bf9e31c766489a3f44f5c7ccd72b8ee0eb01bb330641b68",
+      "path": "packages/contracts/contracts/TerraAutonomyBridge.sol"
+    },
+    {
+      "sha256": "512c37bd9c3b03c76887cd8660945b51bdb32d6e009183f790f6f13b6f72cf57",
+      "path": "docs/datasets/usgs-willamette/continuous.json"
+    },
+    {
+      "sha256": "298ecdf09d96bf5e30068a150e7ce07a14fbb5d7d05e81c0bb61e8b99d080dea",
+      "path": "docs/datasets/usgs-willamette/station.json"
+    },
+    {
+      "sha256": "d18d9afc9976d6144e11be1ef5c0579ba2d64cd4c41beee4ff960b053889f2e2",
+      "path": "docs/datasets/usgs-willamette/manifest.json"
+    },
+    {
+      "sha256": "f0a06df0aa337ee9b4fbc78a4763ffce609297e171f3fe9d0efb99c4d6c786fe",
+      "path": "policies/usgs-data-review-v1.terra"
+    },
+    {
+      "sha256": "d8273e9a0026146c334a013f5c621932ddda7c8a49d7a2fc5eb48eae2d32688b",
+      "path": "pnpm-lock.yaml"
+    }
+  ],
+  "purpose": "pre-first-e2e input record; no environmental parameter or threshold selection"
+}

@@ -59,8 +59,10 @@ GET /v1/evidence-receipts/<receiptId>
 x-oracle-token: <token configurato, non pubblicarlo>
 ```
 
-Il recupero richiede lo stesso token Oracle dell'esecuzione: il pacchetto contiene
-misure granulari. Restituisce la ricevuta direttamente, con `Cache-Control:
+Il recupero accetta il token Oracle oppure il lettore facoltativo configurato
+in `x-evidence-token`, che non autorizza l'esecuzione di valutazioni. Il pacchetto
+contiene misure granulari; vedere [i permessi di lettura](EVIDENCE_ACCESS_IT_EN.md).
+Restituisce la ricevuta direttamente, con `Cache-Control:
 no-store`; token errato → 401, ID malformato autorizzato → 400, ricevuta assente
 → `404 EVIDENCE_RECEIPT_NOT_FOUND`. L'endpoint latest resta invariato e piatto.
 
@@ -137,8 +139,10 @@ fabricated. Unique constraints handle concurrent inserts without requiring UPDAT
 permission; the foreign key prevents orphan receipts. In-memory storage publishes
 the pair synchronously after validation and deep copies; it is not persistent.
 
-`GET /v1/evidence-receipts/:receiptId` requires `x-oracle-token`, returns the packet
-directly and sets `Cache-Control: no-store`. Wrong token → 401; malformed authorized
+`GET /v1/evidence-receipts/:receiptId` accepts `x-oracle-token` or the optional
+configured reader in `x-evidence-token`; the reader cannot run assessments.
+See [reader permissions](EVIDENCE_ACCESS_IT_EN.md). It returns the packet directly
+and sets `Cache-Control: no-store`. Wrong token → 401; malformed authorized
 ID → 400; absent packet → `404 EVIDENCE_RECEIPT_NOT_FOUND`. A single SQL statement
 reads receipt and parent assessment. Content-ID/parent inconsistency gives static
 500 without leaking database details or repairing records. Retrieval does not

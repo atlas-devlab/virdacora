@@ -1,0 +1,56 @@
+[
+  {
+    "reviewer": "scientific",
+    "verified": false,
+    "errorCode": "DELIVERY_NOT_REPRODUCED",
+    "reason": "The complete delivery is not reproduced from the freshly reloaded committed archive",
+    "onChain": {
+      "caseHash": "0x3cee978fda3fd8e84c92e2b0a94dec7bdb5fe0c64560c4b13e8e3babd4414f84",
+      "submittedResultHash": "0x850f2342846007e18718f97c8ea726f3671d932367bb8f44bb7ebe77a34266f5",
+      "proposalId": "1",
+      "deadline": "1797860701",
+      "regionId": "0x84d360bdf90af854d23f8bddad3202584c5c02692b827ca24b5e2d6a40a5669e",
+      "evidenceHash": "0xda3e6308892afd876ddefc2a24c2d298a1e6498d4fcc70abe0ff1ef7fa45911e",
+      "policyHash": "0x6dc1ac1dec30cd3a47bee7cadae8b56dcf457ecd7a6789a9ab5a51c0d03eb31a",
+      "actionHash": "0x8bd8df26d773b10929c1218e17e1e46f99e1d7ec2c0377600e85641abadb533f",
+      "amount": "10000000",
+      "recipient": "0x36C02dA8a0983159322a80FFE9F24b1acfF8B570",
+      "executor": "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
+      "scientificReviewer": "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955",
+      "communityReviewer": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+      "proposalExecuted": true,
+      "bothChambersApproved": true,
+      "scientificApproved": false,
+      "communityApproved": false
+    },
+    "approvalTransactionSent": false,
+    "scope": "simulated reviewer; reproducibility against committed archived USGS data"
+  },
+  {
+    "reviewer": "community",
+    "verified": false,
+    "errorCode": "DELIVERY_NOT_REPRODUCED",
+    "reason": "The complete delivery is not reproduced from the freshly reloaded committed archive",
+    "onChain": {
+      "caseHash": "0x3cee978fda3fd8e84c92e2b0a94dec7bdb5fe0c64560c4b13e8e3babd4414f84",
+      "submittedResultHash": "0x850f2342846007e18718f97c8ea726f3671d932367bb8f44bb7ebe77a34266f5",
+      "proposalId": "1",
+      "deadline": "1797860701",
+      "regionId": "0x84d360bdf90af854d23f8bddad3202584c5c02692b827ca24b5e2d6a40a5669e",
+      "evidenceHash": "0xda3e6308892afd876ddefc2a24c2d298a1e6498d4fcc70abe0ff1ef7fa45911e",
+      "policyHash": "0x6dc1ac1dec30cd3a47bee7cadae8b56dcf457ecd7a6789a9ab5a51c0d03eb31a",
+      "actionHash": "0x8bd8df26d773b10929c1218e17e1e46f99e1d7ec2c0377600e85641abadb533f",
+      "amount": "10000000",
+      "recipient": "0x36C02dA8a0983159322a80FFE9F24b1acfF8B570",
+      "executor": "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
+      "scientificReviewer": "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955",
+      "communityReviewer": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+      "proposalExecuted": true,
+      "bothChambersApproved": true,
+      "scientificApproved": false,
+      "communityApproved": false
+    },
+    "approvalTransactionSent": false,
+    "scope": "simulated reviewer; reproducibility against committed archived USGS data"
+  }
+]

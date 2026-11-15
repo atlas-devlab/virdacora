@@ -1,0 +1,33 @@
+{
+  "assessment": {
+    "assessmentId": "0xadf4a7a9d170e551b6d2f5f5729934269f32e4763d25bd2ad548a8f048f27b54",
+    "regionId": "US-USGS-14211720",
+    "metric": "water.oxygen.mg_l",
+    "modelVersion": "terravoce-linear-risk-v2-oxygen-units",
+    "generatedAt": "2025-08-08T00:00:00.000Z",
+    "observationCount": 12,
+    "currentValue": 8.4,
+    "forecastValue": 8.655594,
+    "forecastHorizonSeconds": 3600,
+    "slopePerHour": 0.074825,
+    "anomalyScore": 0.059057,
+    "confidence": 0.981395,
+    "risk": 0.038387,
+    "evidenceHash": "0xda3e6308892afd876ddefc2a24c2d298a1e6498d4fcc70abe0ff1ef7fa45911e"
+  },
+  "decision": {
+    "allowed": true,
+    "reasons": [
+      "all deterministic policy constraints passed"
+    ],
+    "policyHash": "0x6dc1ac1dec30cd3a47bee7cadae8b56dcf457ecd7a6789a9ab5a51c0d03eb31a",
+    "action": {
+      "name": "DATA_REVIEW",
+      "reversible": true,
+      "maxAmount": 10,
+      "asset": "TEST",
+      "challengeSeconds": 86400
+    }
+  },
+  "importerSignature": "ephemeral local importer; not USGS or sensor authentication"
+}

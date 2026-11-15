@@ -24,6 +24,10 @@ GET /v1/assessments/<assessmentId>/evidence-receipts?limit=20&after=<receiptId>
 x-oracle-token: <token configurato, non pubblicarlo>
 ```
 
+Le due GET del catalogo e della ricevuta accettano anche il lettore facoltativo
+in `x-evidence-token`, senza permettergli di avviare valutazioni. Vedere
+[i permessi di lettura](EVIDENCE_ACCESS_IT_EN.md); l'esempio Oracle resta valido.
+
 La prima pagina omette `after`. Il risultato è un oggetto con `assessmentId`,
 array `receiptIds` e, soltanto se esiste almeno un ulteriore elemento,
 `nextAfter`. Per continuare, usare quel valore come `after`.
@@ -106,7 +110,10 @@ retrieve one exact packet, then verify it offline with separately trusted keys.
 Discovery, retrieval and authentication of evidence remain separate steps. No
 historical proof is fabricated and no variant is selected as authoritative.
 
-`GET /v1/assessments/:assessmentId/evidence-receipts` requires `x-oracle-token`.
+`GET /v1/assessments/:assessmentId/evidence-receipts` accepts `x-oracle-token` or
+the configured optional reader in `x-evidence-token`. Both receipt GETs support
+that reader without granting assessment authority; see
+[reader permissions](EVIDENCE_ACCESS_IT_EN.md).
 Optional `limit` defaults to20, range 1–100, strict unsigned decimal without
 leading zeros, whitespace or exponents. Optional `after` is a lowercase
 0x-prefixed 64-digit hex ID. Unknown/duplicate query parameters and malformed IDs

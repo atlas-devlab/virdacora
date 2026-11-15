@@ -1,0 +1,19 @@
+{
+  "version": "usgs-snapshot-v1",
+  "sourceUrl": "https://api.waterdata.usgs.gov/ogcapi/v1/collections/continuous/items?f=json&monitoring_location_id=USGS-14211720&parameter_code=00300&time=2025-08-01T00%3A00%3A00Z%2F2025-08-15T00%3A00%3A00Z&limit=10000",
+  "stationUrl": "https://api.waterdata.usgs.gov/ogcapi/v1/collections/monitoring-locations/items/USGS-14211720?f=json",
+  "retrievedAt": "2026-10-11T14:29:44.228Z",
+  "sourceHash": "0x512c37bd9c3b03c76887cd8660945b51bdb32d6e009183f790f6f13b6f72cf57",
+  "stationHash": "0x298ecdf09d96bf5e30068a150e7ce07a14fbb5d7d05e81c0bb61e8b99d080dea",
+  "license": "US Government work; public domain",
+  "stationId": "USGS-14211720",
+  "timeSeriesId": "1ccd1e712b6b4cb69fdcfbf407f7358b",
+  "parameterCode": "00300",
+  "start": "2025-08-01T00:00:00Z",
+  "end": "2025-08-15T00:00:00Z",
+  "evaluationStart": "2025-08-08T00:00:00Z",
+  "cadenceSeconds": 1800,
+  "horizonSeconds": 3600,
+  "windowSize": 12,
+  "illustrativeThresholdMgL": 5
+}

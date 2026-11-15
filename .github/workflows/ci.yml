@@ -49,6 +49,9 @@ jobs:
       - name: Check workspace
         run: pnpm check
 
+      - name: Typecheck the territorial job script
+        run: pnpm territorial:check
+
       - name: Run tests
         run: pnpm test
 
@@ -64,6 +67,9 @@ jobs:
 
       - name: Run local blockchain demonstration
         run: pnpm e2e
+
+      - name: Run real archived-data territorial job and rejected deliveries
+        run: pnpm territorial:e2e
 
   postgres-integration:
     name: Real PostgreSQL storage and API contracts

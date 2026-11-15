@@ -1,0 +1,87 @@
+[
+  {
+    "stage": "treasury-governor-bound",
+    "hash": "0x19d230d68916d7eb0952d99fb740c9be6f2959cafcfe04ec9e5be7648fc6395d",
+    "blockNumber": 35
+  },
+  {
+    "stage": "fixed-simulation-budget",
+    "hash": "0xf01f2732d5fef67728dae577dbcec8e24271ec426f356401cd8249d8b64f6029",
+    "blockNumber": 36
+  },
+  {
+    "stage": "policy-activated",
+    "hash": "0x342decc80a4de3fd708bc4852845c2a3b84e6f486de110e32d92ac1f6da7b22b",
+    "blockNumber": 38
+  },
+  {
+    "stage": "community-registered",
+    "hash": "0xdf89d118c154406d03aa7b8afaf15c287ab597a8308102d52b153d1e9bd8f867",
+    "blockNumber": 39
+  },
+  {
+    "stage": "youth-registered",
+    "hash": "0x8ae28cc784fb3ee5867fcc227a80c916fa65cb811656e86d1f899ef556b20568",
+    "blockNumber": 40
+  },
+  {
+    "stage": "second-oracle-role",
+    "hash": "0x2839029a725d1a20545e24744f21aee2804f58a02918fadb02a3a9159fdb299e",
+    "blockNumber": 41
+  },
+  {
+    "stage": "evidence-attestation-1",
+    "hash": "0x1e60bd23a3c0d16060ecc5a4eeb132feaef5e3f5ddc2bb5bc480b3736499374b",
+    "blockNumber": 42
+  },
+  {
+    "stage": "evidence-attestation-2",
+    "hash": "0x7c931c2fe063471491765e38644b3d8e65fa3dd4fa1b46258149041f4c188660",
+    "blockNumber": 43
+  },
+  {
+    "stage": "bridge-authorized",
+    "hash": "0xc518a59dbe2542fae7b691af5e1cf828f2702dbe683ccfecc49e7020ce174ed0",
+    "blockNumber": 45
+  },
+  {
+    "stage": "bridge-proposal",
+    "hash": "0x2c1467edcee0606b560de27325c241afcc25f2061dddaebf116b2c5ed4e8d350",
+    "blockNumber": 46
+  },
+  {
+    "stage": "case-bound",
+    "hash": "0xa312bff83c04b867855fc5912c237b3d4a5ccfe1f4a94e38780376241ff4b5b4",
+    "blockNumber": 47
+  },
+  {
+    "stage": "community-challenge",
+    "hash": "0x130770c1d29b0cc7dcb11f624394efef5a15f2b86a1093fd49976273a86a41a4",
+    "blockNumber": 48
+  },
+  {
+    "stage": "community-approval-vote",
+    "hash": "0xffad129a0876e3b7d908c0ef588f429486b551c79b355c705c87a8f3cfd31539",
+    "blockNumber": 49
+  },
+  {
+    "stage": "youth-approval-vote",
+    "hash": "0x785bc12deccc5872cf24e82a990514d27072bf2f2455cf3ffa365a7feaa4b14c",
+    "blockNumber": 50
+  },
+  {
+    "stage": "civic-execution-to-escrow",
+    "hash": "0x2ff8bd753144de687910ab9ab6211792e0a63bcd10bed9fcf4aade4a7060fb5a",
+    "blockNumber": 52
+  },
+  {
+    "stage": "executor-delivery-submitted",
+    "hash": "0x2ed3ce665bfcb7c00f5d5aabccf8ed34d771224cd6c14fc1a56e494e210c4246",
+    "blockNumber": 53
+  },
+  {
+    "stage": "community-rejection-refund",
+    "hash": "0x2aa308a1ca9916eb75e1b6f985309de1047fb5d7b645859fddc47376dd96669b",
+    "blockNumber": 54
+  }
+]

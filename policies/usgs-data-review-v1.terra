@@ -1,0 +1,13 @@
+# Routine data review, not an ecological emergency or a physical intervention.
+# TEST is a valueless local token. Risk/confidence are demonstration heuristics.
+policy "usgs-willamette-data-review" version 1 {
+  region "US-USGS-14211720";
+  metric "water.oxygen.mg_l";
+  when risk >= 0 and confidence >= 0 and observations >= 12;
+  allow "DATA_REVIEW" reversible;
+  budget 10 TEST per 7 days;
+  challenge 24 hours;
+  require community challenge;
+  require guardian pause;
+  forbid irreversible;
+}

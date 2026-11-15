@@ -1,0 +1,826 @@
+{
+  "version": "territorial-job-local-v1",
+  "caseHash": "0x3cee978fda3fd8e84c92e2b0a94dec7bdb5fe0c64560c4b13e8e3babd4414f84",
+  "mission": "distributed environmental evidence, bounded intervention funding, and decision rights for affected communities and youth",
+  "workDelivered": "reproducible review of real archived USGS oxygen data",
+  "source": {
+    "stationId": "USGS-14211720",
+    "periodStart": "2025-08-01T00:00:00Z",
+    "periodEnd": "2025-08-15T00:00:00Z",
+    "sourceHash": "0x512c37bd9c3b03c76887cd8660945b51bdb32d6e009183f790f6f13b6f72cf57",
+    "manifestHash": "0x0ad6681ae60e0ceb8f320feebd6f529c92258c6d4f8a29c572f64a8a59625f1a",
+    "archiveBytesUnchanged": true,
+    "liveRetrievalPerformed": false
+  },
+  "limits": {
+    "identitiesAndReviews": "simulated; not independent people",
+    "consensus": "3-of-4 local signature fixture; ABCI not launched",
+    "network": "one ephemeral Hardhat network; transaction hashes have no public explorer",
+    "funding": "valueless local mock tokens",
+    "physicalPilot": "not performed",
+    "ecologicalImprovementVerified": false,
+    "prediction": "retrospective finalized archive; not live forecasting or field validation"
+  },
+  "scientificResult": {
+    "predictionMgL": 8.655594,
+    "observedMgL": 8.2,
+    "persistenceMgL": 8.4,
+    "absoluteErrorMgL": 0.4555940000000014,
+    "persistenceAbsoluteErrorMgL": 0.20000000000000107,
+    "compensationRequiresFavourableForecast": false,
+    "replay": {
+      "version": "oxygen-replay-v1",
+      "sourceHash": "0x512c37bd9c3b03c76887cd8660945b51bdb32d6e009183f790f6f13b6f72cf57",
+      "dataVintage": "retrospective approved archive; not an as-of-origin availability backtest",
+      "modelVersion": "terravoce-linear-risk-v1",
+      "horizonSeconds": 3600,
+      "windowSize": 12,
+      "evaluationStart": "2025-08-08T00:00:00Z",
+      "evaluatedPairs": 335,
+      "skippedGapsOrMissingTargets": 0,
+      "quality": {
+        "total": 673,
+        "accepted": 673,
+        "excluded": [],
+        "missingIntervals": 0,
+        "unit": "mg/L",
+        "approval": "Approved"
+      },
+      "threshold": {
+        "mgL": 5,
+        "status": "illustrative; not a local legal or ecological standard"
+      },
+      "observedLowOxygenEvents": 0,
+      "linear": {
+        "maeMgL": 0.2420380447761197,
+        "rmseMgL": 0.329716367392072,
+        "falseAlerts": 0,
+        "missedLowOxygen": 0
+      },
+      "persistence": {
+        "maeMgL": 0.20477611940298532,
+        "rmseMgL": 0.2973514930982543,
+        "falseAlerts": 0,
+        "missedLowOxygen": 0
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "scenario": "positive",
+      "caseHash": "0x3cee978fda3fd8e84c92e2b0a94dec7bdb5fe0c64560c4b13e8e3babd4414f84",
+      "submittedResultHash": "0x68aba721f7c3c0933aa20c8a1849d64189dc41fd419d40f434cb19444fee90bc",
+      "outcome": "verified-review-paid",
+      "contracts": {
+        "token": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+        "treasury": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
+        "governor": "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
+        "escrow": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
+        "bridge": "0x9A676e781A523b5d0C0e43731313A708CB607508"
+      },
+      "identities": {
+        "mode": "local simulated identities controlled by one process",
+        "community": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+        "youth": "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc",
+        "executor": "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
+        "scientificReviewer": "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
+      },
+      "governance": {
+        "communityVote": true,
+        "youthVote": true,
+        "challengeExercised": true
+      },
+      "funding": {
+        "budget": "10 TEST",
+        "actualMockSymbol": "TUSD",
+        "value": "none",
+        "paymentBasis": "complete reproducible DATA_REVIEW delivery"
+      },
+      "fundedBalances": {
+        "treasury": "0",
+        "escrow": "10000000",
+        "executor": "0",
+        "totalSupply": "10000000",
+        "unitDecimals": 6,
+        "simulationBudget": "10 TEST"
+      },
+      "finalBalances": {
+        "treasury": "0",
+        "escrow": "0",
+        "executor": "10000000",
+        "totalSupply": "10000000",
+        "unitDecimals": 6,
+        "simulationBudget": "10 TEST"
+      },
+      "reviews": [
+        {
+          "reviewer": "scientific",
+          "verified": true,
+          "caseHash": "0x3cee978fda3fd8e84c92e2b0a94dec7bdb5fe0c64560c4b13e8e3babd4414f84",
+          "resultHash": "0x68aba721f7c3c0933aa20c8a1849d64189dc41fd419d40f434cb19444fee90bc",
+          "scope": "reproducibility against pinned USGS snapshot; not independent field review",
+          "archiveReloaded": true,
+          "onChain": {
+            "caseHash": "0x3cee978fda3fd8e84c92e2b0a94dec7bdb5fe0c64560c4b13e8e3babd4414f84",
+            "submittedResultHash": "0x68aba721f7c3c0933aa20c8a1849d64189dc41fd419d40f434cb19444fee90bc",
+            "proposalId": "1",
+            "deadline": "1797342102",
+            "regionId": "0x84d360bdf90af854d23f8bddad3202584c5c02692b827ca24b5e2d6a40a5669e",
+            "evidenceHash": "0xda3e6308892afd876ddefc2a24c2d298a1e6498d4fcc70abe0ff1ef7fa45911e",
+            "policyHash": "0x6dc1ac1dec30cd3a47bee7cadae8b56dcf457ecd7a6789a9ab5a51c0d03eb31a",
+            "actionHash": "0x8bd8df26d773b10929c1218e17e1e46f99e1d7ec2c0377600e85641abadb533f",
+            "amount": "10000000",
+            "recipient": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
+            "executor": "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
+            "scientificReviewer": "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955",
+            "communityReviewer": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+            "proposalExecuted": true,
+            "bothChambersApproved": true,
+            "scientificApproved": false,
+            "communityApproved": false
+          },
+          "approvalTransactionSent": true,
+          "transaction": {
+            "stage": "scientific-delivery-approved",
+            "hash": "0xd520528b2f8da16bc7ed319cd84e163556762e5985743f5229e6afc49ac3b9b1",
+            "blockNumber": 26
+          }
+        },
+        {
+          "reviewer": "community",
+          "verified": true,
+          "caseHash": "0x3cee978fda3fd8e84c92e2b0a94dec7bdb5fe0c64560c4b13e8e3babd4414f84",
+          "resultHash": "0x68aba721f7c3c0933aa20c8a1849d64189dc41fd419d40f434cb19444fee90bc",
+          "scope": "reproducibility against pinned USGS snapshot; not independent field review",
+          "archiveReloaded": true,
+          "onChain": {
+            "caseHash": "0x3cee978fda3fd8e84c92e2b0a94dec7bdb5fe0c64560c4b13e8e3babd4414f84",
+            "submittedResultHash": "0x68aba721f7c3c0933aa20c8a1849d64189dc41fd419d40f434cb19444fee90bc",
+            "proposalId": "1",
+            "deadline": "1797342102",
+            "regionId": "0x84d360bdf90af854d23f8bddad3202584c5c02692b827ca24b5e2d6a40a5669e",
+            "evidenceHash": "0xda3e6308892afd876ddefc2a24c2d298a1e6498d4fcc70abe0ff1ef7fa45911e",
+            "policyHash": "0x6dc1ac1dec30cd3a47bee7cadae8b56dcf457ecd7a6789a9ab5a51c0d03eb31a",
+            "actionHash": "0x8bd8df26d773b10929c1218e17e1e46f99e1d7ec2c0377600e85641abadb533f",
+            "amount": "10000000",
+            "recipient": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
+            "executor": "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
+            "scientificReviewer": "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955",
+            "communityReviewer": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+            "proposalExecuted": true,
+            "bothChambersApproved": true,
+            "scientificApproved": true,
+            "communityApproved": false
+          },
+          "approvalTransactionSent": true,
+          "transaction": {
+            "stage": "community-delivery-approved",
+            "hash": "0x1d4058b97d9e95a93de1c858d5fca73fb88b8282f40c14ccd2625b82469dc295",
+            "blockNumber": 27
+          }
+        }
+      ],
+      "stages": [
+        {
+          "stage": "premature-governance-rejected",
+          "error": {
+            "name": "ProposalNotReady",
+            "selector": "0xecd618b6"
+          }
+        },
+        {
+          "stage": "community-only-rejected-after-voting-before-youth-vote",
+          "error": {
+            "name": "ProposalNotReady",
+            "selector": "0xecd618b6"
+          },
+          "missingYouthConsent": true,
+          "counterfactualSnapshotRestored": true
+        },
+        {
+          "stage": "funded-with-both-chambers",
+          "balances": {
+            "treasury": "0",
+            "escrow": "10000000",
+            "executor": "0",
+            "totalSupply": "10000000",
+            "unitDecimals": 6,
+            "simulationBudget": "10 TEST"
+          }
+        },
+        {
+          "stage": "payment-without-reviews-rejected",
+          "error": {
+            "name": "NotVerified",
+            "selector": "0xa95362b5"
+          }
+        },
+        {
+          "stage": "single-review-payment-rejected",
+          "error": {
+            "name": "NotVerified",
+            "selector": "0xa95362b5"
+          }
+        },
+        {
+          "stage": "duplicate-payment-rejected",
+          "error": {
+            "name": "NotVerified",
+            "selector": "0xa95362b5"
+          }
+        }
+      ],
+      "transactions": [
+        {
+          "stage": "treasury-governor-bound",
+          "hash": "0xd1931ecd7cd9ae560d8940ce6e93dc7769fedd833ba474fb6ab20031c23c8d8b",
+          "blockNumber": 7
+        },
+        {
+          "stage": "fixed-simulation-budget",
+          "hash": "0xc0a8fafe18b3a724b66a462b649aa67aa12dc1eb84a865ce3aa35f7e1b599d30",
+          "blockNumber": 8
+        },
+        {
+          "stage": "policy-activated",
+          "hash": "0xc9edb5dd57d7bdb57ea1dda8ccb201e6da7091d0d2e8a285c5c78528631a53e7",
+          "blockNumber": 10
+        },
+        {
+          "stage": "community-registered",
+          "hash": "0xd6189b0d7729123f717bffc4979ab3184a175ae497d6b204d37fb3e20fa6e20e",
+          "blockNumber": 11
+        },
+        {
+          "stage": "youth-registered",
+          "hash": "0x9e8afc2206d617248114f0f5935f51ec03ed6312c731ef4521c87444eb8d832d",
+          "blockNumber": 12
+        },
+        {
+          "stage": "second-oracle-role",
+          "hash": "0xa40283c65fb84b5071c0dce8bf4e250c62f387fd8b547300a3d43af61fb3a6f2",
+          "blockNumber": 13
+        },
+        {
+          "stage": "evidence-attestation-1",
+          "hash": "0xb5c9f0368a2465eeaab94278261bc1269421066b1f44705d1f104abae603b4c6",
+          "blockNumber": 14
+        },
+        {
+          "stage": "evidence-attestation-2",
+          "hash": "0x8a78de8cd02a109b2bac4ef922e801012c1dcd08563d344378ad5fe5b3569301",
+          "blockNumber": 15
+        },
+        {
+          "stage": "bridge-authorized",
+          "hash": "0xda469b00b8789d5776c64483f689a060e5037bc8f54f1149f2b8f8a3aeb2ed0c",
+          "blockNumber": 17
+        },
+        {
+          "stage": "bridge-proposal",
+          "hash": "0x1a5707a8cb6cc51b210ea71c16a9b6d58724144bc68d8fc9664a8894deb46834",
+          "blockNumber": 18
+        },
+        {
+          "stage": "case-bound",
+          "hash": "0x39b8c307135267d91bce6304829fc7a7cc9a224546bf2c9a9ef574d199fda879",
+          "blockNumber": 19
+        },
+        {
+          "stage": "community-challenge",
+          "hash": "0xb4361767b851b26e30ceadaf19b4fc3ac019feda2d593396eba529d348be6e8e",
+          "blockNumber": 20
+        },
+        {
+          "stage": "community-approval-vote",
+          "hash": "0xe549b5e0878fbf43d9abadc6ed5879fd6cebc5287a74a9d5ad2e9fa926ff5ad6",
+          "blockNumber": 21
+        },
+        {
+          "stage": "youth-approval-vote",
+          "hash": "0x96c4984f4afda831270723713d106b2625151143c3a5107b5b3727a960edae6a",
+          "blockNumber": 22
+        },
+        {
+          "stage": "civic-execution-to-escrow",
+          "hash": "0x0fedaad2c98aeb60ba3d30622086e860176fe71a823366e16d04f978f25eccfc",
+          "blockNumber": 24
+        },
+        {
+          "stage": "executor-delivery-submitted",
+          "hash": "0xa2dc73a12158a9feee97230da759fbed2f649dbe3e411c9198e82d7c07a66938",
+          "blockNumber": 25
+        },
+        {
+          "stage": "scientific-delivery-approved",
+          "hash": "0xd520528b2f8da16bc7ed319cd84e163556762e5985743f5229e6afc49ac3b9b1",
+          "blockNumber": 26
+        },
+        {
+          "stage": "community-delivery-approved",
+          "hash": "0x1d4058b97d9e95a93de1c858d5fca73fb88b8282f40c14ccd2625b82469dc295",
+          "blockNumber": 27
+        },
+        {
+          "stage": "verified-delivery-paid",
+          "hash": "0x73b9aac3d9a0822f3dcd196fb819d45032418fe44a59303fc2612d1fb6f85b94",
+          "blockNumber": 28
+        }
+      ]
+    },
+    {
+      "scenario": "altered_delivery",
+      "caseHash": "0x3cee978fda3fd8e84c92e2b0a94dec7bdb5fe0c64560c4b13e8e3babd4414f84",
+      "submittedResultHash": "0xdd036ba8669d2eaffa8dcfda59326a8ba1308dc0de044ccad5c36f8d0537e149",
+      "outcome": "invalid-delivery-rejected-and-refunded",
+      "contracts": {
+        "token": "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d",
+        "treasury": "0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f",
+        "governor": "0x4A679253410272dd5232B3Ff7cF5dbB88f295319",
+        "escrow": "0xc5a5C42992dECbae36851359345FE25997F5C42d",
+        "bridge": "0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9"
+      },
+      "identities": {
+        "mode": "local simulated identities controlled by one process",
+        "community": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+        "youth": "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc",
+        "executor": "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
+        "scientificReviewer": "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
+      },
+      "governance": {
+        "communityVote": true,
+        "youthVote": true,
+        "challengeExercised": true
+      },
+      "funding": {
+        "budget": "10 TEST",
+        "actualMockSymbol": "TUSD",
+        "value": "none",
+        "paymentBasis": "complete reproducible DATA_REVIEW delivery"
+      },
+      "fundedBalances": {
+        "treasury": "0",
+        "escrow": "10000000",
+        "executor": "0",
+        "totalSupply": "10000000",
+        "unitDecimals": 6,
+        "simulationBudget": "10 TEST"
+      },
+      "finalBalances": {
+        "treasury": "10000000",
+        "escrow": "0",
+        "executor": "0",
+        "totalSupply": "10000000",
+        "unitDecimals": 6,
+        "simulationBudget": "10 TEST"
+      },
+      "reviews": [
+        {
+          "reviewer": "scientific-source-integrity-check",
+          "verified": false,
+          "errorCode": "SOURCE_INTEGRITY_FAILED",
+          "reason": "The archive could not be freshly loaded and validated",
+          "onChain": {
+            "caseHash": "0x3cee978fda3fd8e84c92e2b0a94dec7bdb5fe0c64560c4b13e8e3babd4414f84",
+            "submittedResultHash": "0xdd036ba8669d2eaffa8dcfda59326a8ba1308dc0de044ccad5c36f8d0537e149",
+            "proposalId": "1",
+            "deadline": "1797601328",
+            "regionId": "0x84d360bdf90af854d23f8bddad3202584c5c02692b827ca24b5e2d6a40a5669e",
+            "evidenceHash": "0xda3e6308892afd876ddefc2a24c2d298a1e6498d4fcc70abe0ff1ef7fa45911e",
+            "policyHash": "0x6dc1ac1dec30cd3a47bee7cadae8b56dcf457ecd7a6789a9ab5a51c0d03eb31a",
+            "actionHash": "0x8bd8df26d773b10929c1218e17e1e46f99e1d7ec2c0377600e85641abadb533f",
+            "amount": "10000000",
+            "recipient": "0xc5a5C42992dECbae36851359345FE25997F5C42d",
+            "executor": "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
+            "scientificReviewer": "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955",
+            "communityReviewer": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+            "proposalExecuted": true,
+            "bothChambersApproved": true,
+            "scientificApproved": false,
+            "communityApproved": false
+          },
+          "approvalTransactionSent": false,
+          "scope": "simulated reviewer; reproducibility against committed archived USGS data"
+        },
+        {
+          "reviewer": "scientific",
+          "verified": false,
+          "errorCode": "DELIVERY_NOT_REPRODUCED",
+          "reason": "The complete delivery is not reproduced from the freshly reloaded committed archive",
+          "onChain": {
+            "caseHash": "0x3cee978fda3fd8e84c92e2b0a94dec7bdb5fe0c64560c4b13e8e3babd4414f84",
+            "submittedResultHash": "0xdd036ba8669d2eaffa8dcfda59326a8ba1308dc0de044ccad5c36f8d0537e149",
+            "proposalId": "1",
+            "deadline": "1797601328",
+            "regionId": "0x84d360bdf90af854d23f8bddad3202584c5c02692b827ca24b5e2d6a40a5669e",
+            "evidenceHash": "0xda3e6308892afd876ddefc2a24c2d298a1e6498d4fcc70abe0ff1ef7fa45911e",
+            "policyHash": "0x6dc1ac1dec30cd3a47bee7cadae8b56dcf457ecd7a6789a9ab5a51c0d03eb31a",
+            "actionHash": "0x8bd8df26d773b10929c1218e17e1e46f99e1d7ec2c0377600e85641abadb533f",
+            "amount": "10000000",
+            "recipient": "0xc5a5C42992dECbae36851359345FE25997F5C42d",
+            "executor": "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
+            "scientificReviewer": "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955",
+            "communityReviewer": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+            "proposalExecuted": true,
+            "bothChambersApproved": true,
+            "scientificApproved": false,
+            "communityApproved": false
+          },
+          "approvalTransactionSent": false,
+          "scope": "simulated reviewer; reproducibility against committed archived USGS data"
+        },
+        {
+          "reviewer": "community",
+          "verified": false,
+          "errorCode": "DELIVERY_NOT_REPRODUCED",
+          "reason": "The complete delivery is not reproduced from the freshly reloaded committed archive",
+          "onChain": {
+            "caseHash": "0x3cee978fda3fd8e84c92e2b0a94dec7bdb5fe0c64560c4b13e8e3babd4414f84",
+            "submittedResultHash": "0xdd036ba8669d2eaffa8dcfda59326a8ba1308dc0de044ccad5c36f8d0537e149",
+            "proposalId": "1",
+            "deadline": "1797601328",
+            "regionId": "0x84d360bdf90af854d23f8bddad3202584c5c02692b827ca24b5e2d6a40a5669e",
+            "evidenceHash": "0xda3e6308892afd876ddefc2a24c2d298a1e6498d4fcc70abe0ff1ef7fa45911e",
+            "policyHash": "0x6dc1ac1dec30cd3a47bee7cadae8b56dcf457ecd7a6789a9ab5a51c0d03eb31a",
+            "actionHash": "0x8bd8df26d773b10929c1218e17e1e46f99e1d7ec2c0377600e85641abadb533f",
+            "amount": "10000000",
+            "recipient": "0xc5a5C42992dECbae36851359345FE25997F5C42d",
+            "executor": "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
+            "scientificReviewer": "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955",
+            "communityReviewer": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+            "proposalExecuted": true,
+            "bothChambersApproved": true,
+            "scientificApproved": false,
+            "communityApproved": false
+          },
+          "approvalTransactionSent": false,
+          "scope": "simulated reviewer; reproducibility against committed archived USGS data"
+        }
+      ],
+      "stages": [
+        {
+          "stage": "premature-governance-rejected",
+          "error": {
+            "name": "ProposalNotReady",
+            "selector": "0xecd618b6"
+          }
+        },
+        {
+          "stage": "funded-with-both-chambers",
+          "balances": {
+            "treasury": "0",
+            "escrow": "10000000",
+            "executor": "0",
+            "totalSupply": "10000000",
+            "unitDecimals": 6,
+            "simulationBudget": "10 TEST"
+          }
+        },
+        {
+          "stage": "payment-without-reviews-rejected",
+          "error": {
+            "name": "NotVerified",
+            "selector": "0xa95362b5"
+          }
+        },
+        {
+          "stage": "altered-raw-bytes-rejected",
+          "originalManifestRetained": true,
+          "sourceDatasetUnchanged": true
+        },
+        {
+          "stage": "invalid-delivery-payment-rejected",
+          "error": {
+            "name": "NotVerified",
+            "selector": "0xa95362b5"
+          }
+        },
+        {
+          "stage": "payment-after-refund-rejected",
+          "error": {
+            "name": "NotVerified",
+            "selector": "0xa95362b5"
+          }
+        }
+      ],
+      "transactions": [
+        {
+          "stage": "treasury-governor-bound",
+          "hash": "0x12596643f394d16eefef2c48c085e8f0492fd3650f251990e39cf0c014faf090",
+          "blockNumber": 35
+        },
+        {
+          "stage": "fixed-simulation-budget",
+          "hash": "0xf01f2732d5fef67728dae577dbcec8e24271ec426f356401cd8249d8b64f6029",
+          "blockNumber": 36
+        },
+        {
+          "stage": "policy-activated",
+          "hash": "0x342decc80a4de3fd708bc4852845c2a3b84e6f486de110e32d92ac1f6da7b22b",
+          "blockNumber": 38
+        },
+        {
+          "stage": "community-registered",
+          "hash": "0xdf89d118c154406d03aa7b8afaf15c287ab597a8308102d52b153d1e9bd8f867",
+          "blockNumber": 39
+        },
+        {
+          "stage": "youth-registered",
+          "hash": "0x8ae28cc784fb3ee5867fcc227a80c916fa65cb811656e86d1f899ef556b20568",
+          "blockNumber": 40
+        },
+        {
+          "stage": "second-oracle-role",
+          "hash": "0x2839029a725d1a20545e24744f21aee2804f58a02918fadb02a3a9159fdb299e",
+          "blockNumber": 41
+        },
+        {
+          "stage": "evidence-attestation-1",
+          "hash": "0x1e60bd23a3c0d16060ecc5a4eeb132feaef5e3f5ddc2bb5bc480b3736499374b",
+          "blockNumber": 42
+        },
+        {
+          "stage": "evidence-attestation-2",
+          "hash": "0x7c931c2fe063471491765e38644b3d8e65fa3dd4fa1b46258149041f4c188660",
+          "blockNumber": 43
+        },
+        {
+          "stage": "bridge-authorized",
+          "hash": "0xc518a59dbe2542fae7b691af5e1cf828f2702dbe683ccfecc49e7020ce174ed0",
+          "blockNumber": 45
+        },
+        {
+          "stage": "bridge-proposal",
+          "hash": "0x04dc757b84f3989e45de5a34a063e57f649923596e3b12b54056eb0b781b8ce4",
+          "blockNumber": 46
+        },
+        {
+          "stage": "case-bound",
+          "hash": "0xa312bff83c04b867855fc5912c237b3d4a5ccfe1f4a94e38780376241ff4b5b4",
+          "blockNumber": 47
+        },
+        {
+          "stage": "community-challenge",
+          "hash": "0x130770c1d29b0cc7dcb11f624394efef5a15f2b86a1093fd49976273a86a41a4",
+          "blockNumber": 48
+        },
+        {
+          "stage": "community-approval-vote",
+          "hash": "0xffad129a0876e3b7d908c0ef588f429486b551c79b355c705c87a8f3cfd31539",
+          "blockNumber": 49
+        },
+        {
+          "stage": "youth-approval-vote",
+          "hash": "0x785bc12deccc5872cf24e82a990514d27072bf2f2455cf3ffa365a7feaa4b14c",
+          "blockNumber": 50
+        },
+        {
+          "stage": "civic-execution-to-escrow",
+          "hash": "0x2ff8bd753144de687910ab9ab6211792e0a63bcd10bed9fcf4aade4a7060fb5a",
+          "blockNumber": 52
+        },
+        {
+          "stage": "executor-delivery-submitted",
+          "hash": "0x2ed3ce665bfcb7c00f5d5aabccf8ed34d771224cd6c14fc1a56e494e210c4246",
+          "blockNumber": 53
+        },
+        {
+          "stage": "community-rejection-refund",
+          "hash": "0x2aa308a1ca9916eb75e1b6f985309de1047fb5d7b645859fddc47376dd96669b",
+          "blockNumber": 54
+        }
+      ]
+    },
+    {
+      "scenario": "insufficient_delivery",
+      "caseHash": "0x3cee978fda3fd8e84c92e2b0a94dec7bdb5fe0c64560c4b13e8e3babd4414f84",
+      "submittedResultHash": "0x850f2342846007e18718f97c8ea726f3671d932367bb8f44bb7ebe77a34266f5",
+      "outcome": "invalid-delivery-rejected-and-refunded",
+      "contracts": {
+        "token": "0x998abeb3E57409262aE5b751f60747921B33613E",
+        "treasury": "0x0E801D84Fa97b50751Dbf25036d067dCf18858bF",
+        "governor": "0x8f86403A4DE0BB5791fa46B8e795C547942fE4Cf",
+        "escrow": "0x36C02dA8a0983159322a80FFE9F24b1acfF8B570",
+        "bridge": "0xCD8a1C3ba11CF5ECfa6267617243239504a98d90"
+      },
+      "identities": {
+        "mode": "local simulated identities controlled by one process",
+        "community": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+        "youth": "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc",
+        "executor": "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
+        "scientificReviewer": "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
+      },
+      "governance": {
+        "communityVote": true,
+        "youthVote": true,
+        "challengeExercised": true
+      },
+      "funding": {
+        "budget": "10 TEST",
+        "actualMockSymbol": "TUSD",
+        "value": "none",
+        "paymentBasis": "complete reproducible DATA_REVIEW delivery"
+      },
+      "fundedBalances": {
+        "treasury": "0",
+        "escrow": "10000000",
+        "executor": "0",
+        "totalSupply": "10000000",
+        "unitDecimals": 6,
+        "simulationBudget": "10 TEST"
+      },
+      "finalBalances": {
+        "treasury": "10000000",
+        "escrow": "0",
+        "executor": "0",
+        "totalSupply": "10000000",
+        "unitDecimals": 6,
+        "simulationBudget": "10 TEST"
+      },
+      "reviews": [
+        {
+          "reviewer": "scientific",
+          "verified": false,
+          "errorCode": "DELIVERY_NOT_REPRODUCED",
+          "reason": "The complete delivery is not reproduced from the freshly reloaded committed archive",
+          "onChain": {
+            "caseHash": "0x3cee978fda3fd8e84c92e2b0a94dec7bdb5fe0c64560c4b13e8e3babd4414f84",
+            "submittedResultHash": "0x850f2342846007e18718f97c8ea726f3671d932367bb8f44bb7ebe77a34266f5",
+            "proposalId": "1",
+            "deadline": "1797860552",
+            "regionId": "0x84d360bdf90af854d23f8bddad3202584c5c02692b827ca24b5e2d6a40a5669e",
+            "evidenceHash": "0xda3e6308892afd876ddefc2a24c2d298a1e6498d4fcc70abe0ff1ef7fa45911e",
+            "policyHash": "0x6dc1ac1dec30cd3a47bee7cadae8b56dcf457ecd7a6789a9ab5a51c0d03eb31a",
+            "actionHash": "0x8bd8df26d773b10929c1218e17e1e46f99e1d7ec2c0377600e85641abadb533f",
+            "amount": "10000000",
+            "recipient": "0x36C02dA8a0983159322a80FFE9F24b1acfF8B570",
+            "executor": "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
+            "scientificReviewer": "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955",
+            "communityReviewer": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+            "proposalExecuted": true,
+            "bothChambersApproved": true,
+            "scientificApproved": false,
+            "communityApproved": false
+          },
+          "approvalTransactionSent": false,
+          "scope": "simulated reviewer; reproducibility against committed archived USGS data"
+        },
+        {
+          "reviewer": "community",
+          "verified": false,
+          "errorCode": "DELIVERY_NOT_REPRODUCED",
+          "reason": "The complete delivery is not reproduced from the freshly reloaded committed archive",
+          "onChain": {
+            "caseHash": "0x3cee978fda3fd8e84c92e2b0a94dec7bdb5fe0c64560c4b13e8e3babd4414f84",
+            "submittedResultHash": "0x850f2342846007e18718f97c8ea726f3671d932367bb8f44bb7ebe77a34266f5",
+            "proposalId": "1",
+            "deadline": "1797860552",
+            "regionId": "0x84d360bdf90af854d23f8bddad3202584c5c02692b827ca24b5e2d6a40a5669e",
+            "evidenceHash": "0xda3e6308892afd876ddefc2a24c2d298a1e6498d4fcc70abe0ff1ef7fa45911e",
+            "policyHash": "0x6dc1ac1dec30cd3a47bee7cadae8b56dcf457ecd7a6789a9ab5a51c0d03eb31a",
+            "actionHash": "0x8bd8df26d773b10929c1218e17e1e46f99e1d7ec2c0377600e85641abadb533f",
+            "amount": "10000000",
+            "recipient": "0x36C02dA8a0983159322a80FFE9F24b1acfF8B570",
+            "executor": "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
+            "scientificReviewer": "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955",
+            "communityReviewer": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+            "proposalExecuted": true,
+            "bothChambersApproved": true,
+            "scientificApproved": false,
+            "communityApproved": false
+          },
+          "approvalTransactionSent": false,
+          "scope": "simulated reviewer; reproducibility against committed archived USGS data"
+        }
+      ],
+      "stages": [
+        {
+          "stage": "premature-governance-rejected",
+          "error": {
+            "name": "ProposalNotReady",
+            "selector": "0xecd618b6"
+          }
+        },
+        {
+          "stage": "funded-with-both-chambers",
+          "balances": {
+            "treasury": "0",
+            "escrow": "10000000",
+            "executor": "0",
+            "totalSupply": "10000000",
+            "unitDecimals": 6,
+            "simulationBudget": "10 TEST"
+          }
+        },
+        {
+          "stage": "payment-without-reviews-rejected",
+          "error": {
+            "name": "NotVerified",
+            "selector": "0xa95362b5"
+          }
+        },
+        {
+          "stage": "invalid-delivery-payment-rejected",
+          "error": {
+            "name": "NotVerified",
+            "selector": "0xa95362b5"
+          }
+        },
+        {
+          "stage": "payment-after-refund-rejected",
+          "error": {
+            "name": "NotVerified",
+            "selector": "0xa95362b5"
+          }
+        }
+      ],
+      "transactions": [
+        {
+          "stage": "treasury-governor-bound",
+          "hash": "0xc8ab58aa3d1500d5d6fe62dd9a893e4d851ee82e08428c6f19358fd9982b3b1c",
+          "blockNumber": 61
+        },
+        {
+          "stage": "fixed-simulation-budget",
+          "hash": "0xaea8cdab688503f963bf3e5807cef0e1d7f0e051046161018cf93478cdfc363c",
+          "blockNumber": 62
+        },
+        {
+          "stage": "policy-activated",
+          "hash": "0x1762d64c92603bb27fa3f79455232fcad21fc6f261ece14bb200be1991dee2e1",
+          "blockNumber": 64
+        },
+        {
+          "stage": "community-registered",
+          "hash": "0xe789b21f83b75a6c881887ecc79f1c0eb25555063995aefb2c3c70e47a370506",
+          "blockNumber": 65
+        },
+        {
+          "stage": "youth-registered",
+          "hash": "0xdfac78d8347ce5d203108ac6367ebad0f7ae6adb10bdc5acecd3ebd93bb5d393",
+          "blockNumber": 66
+        },
+        {
+          "stage": "second-oracle-role",
+          "hash": "0xa338c3ea8d35e2a78ba373c2fe78b61b108a0281f6ead85cb9fba29b5d525299",
+          "blockNumber": 67
+        },
+        {
+          "stage": "evidence-attestation-1",
+          "hash": "0x14b06456202190f3c9806c9f33402e487216d8c443de4e96886946a592724ea6",
+          "blockNumber": 68
+        },
+        {
+          "stage": "evidence-attestation-2",
+          "hash": "0xe04f6377b0154bd9b2080bead93fa665888c9fbfa37bf601a6c4caeaaf520911",
+          "blockNumber": 69
+        },
+        {
+          "stage": "bridge-authorized",
+          "hash": "0x25c637e531cbb0c4cddbffba75d9590144fd9ba67275352931336e6656a87fea",
+          "blockNumber": 71
+        },
+        {
+          "stage": "bridge-proposal",
+          "hash": "0x4adb62828e1166b3f916ca6362694a1388bc8e3207edcf29acf73228bb611553",
+          "blockNumber": 72
+        },
+        {
+          "stage": "case-bound",
+          "hash": "0x644b3928ec362e3ce3c665e94d4da67ec4068e056c6637889230021372cb0244",
+          "blockNumber": 73
+        },
+        {
+          "stage": "community-challenge",
+          "hash": "0xf09b066c24b263f19f9fa33b571763b3575c31f86832e111813f2c3d4428707a",
+          "blockNumber": 74
+        },
+        {
+          "stage": "community-approval-vote",
+          "hash": "0xcf627c42ccfe8e4089046b09ea13a345021808674e5a1820ad17010ab65ccd0a",
+          "blockNumber": 75
+        },
+        {
+          "stage": "youth-approval-vote",
+          "hash": "0xc19677cd92fb71cd83ebac74c4986a48fb58f0272dc3f47275a9bada09de116f",
+          "blockNumber": 76
+        },
+        {
+          "stage": "civic-execution-to-escrow",
+          "hash": "0x7d6f609be7444b03e05870b08573a6b26cd1d4e412dc51b8d39b09b97422fc13",
+          "blockNumber": 78
+        },
+        {
+          "stage": "executor-delivery-submitted",
+          "hash": "0x75eb161874443c2fac928956e675d1b7fe4e9ab2d0456ceb0b7d682158886385",
+          "blockNumber": 79
+        },
+        {
+          "stage": "community-rejection-refund",
+          "hash": "0x5246b57e687b8ffa4d33f1b9ce0d6855cf5b09850b4115942690249fdd0edc0e",
+          "blockNumber": 80
+        }
+      ]
+    }
+  ]
+}
