@@ -1490,6 +1490,107 @@ describe.skipIf(databaseUrl === undefined)("real PostgreSQL observation storage"
     expect(await store.latestAssessment(legacy.regionId, legacy.metric)).toEqual(legacy);
   });
 
+  it("lets an evidence reader discover and verify an exact signed receipt after application restart through a read-only PostgreSQL client", async () => {
+    const archive = await createSignedArchive(false, true);
+    const trusted = [{ sensorId: archive.sensor.sensorId, regionId: archive.sensor.regionId,
+      publicKeyDerBase64: archive.publicKey }];
+    const run = await archive.run();
+    expect(run.statusCode).toBe(201);
+    const result = run.json<{ evidenceReceiptId: string; assessment: Assessment; evidenceReceipt: EvidenceReceipt }>();
+    const snapshot = async () => ({
+      sensors: (await fixture.inspector.query("SELECT * FROM sensors ORDER BY sensor_id")).rows,
+      observations: await archive.snapshot(),
+      assessments: (await fixture.inspector.query("SELECT * FROM assessments ORDER BY assessment_id")).rows,
+      receipts: (await fixture.inspector.query("SELECT * FROM assessment_evidence ORDER BY receipt_id")).rows
+    });
+    const before = await snapshot();
+    await fixture.closeStore(store);
+    store = fixture.createStore({ readOnly: true });
+    const readerToken = "synthetic-evidence-reader-2026-10-21-read-only";
+    const reopened = buildApp({ store, policySource, adminToken: "synthetic-admin", oracleToken: "synthetic-oracle",
+      evidenceReadToken: readerToken });
+    fixture.useStoreOwner(store, () => reopened.close());
+    const keyLookup = vi.spyOn(store, "getSensor").mockRejectedValue(new Error("reader must not use live keys"));
+    const windowLookup = vi.spyOn(store, "listObservations").mockRejectedValue(new Error("reader must not reconstruct a window"));
+    try {
+      const catalogue = await reopened.inject({ method: "GET",
+        url: `/v1/assessments/${result.assessment.assessmentId}/evidence-receipts`,
+        headers: { "x-evidence-token": readerToken } });
+      expect(catalogue.statusCode).toBe(200);
+      expect(catalogue.headers["cache-control"]).toBe("no-store");
+      expect(catalogue.json()).toEqual({ assessmentId: result.assessment.assessmentId,
+        receiptIds: [result.evidenceReceiptId] });
+      const discoveredId = catalogue.json<{ receiptIds: string[] }>().receiptIds[0]!;
+      const proof = await reopened.inject({ method: "GET", url: `/v1/evidence-receipts/${discoveredId}`,
+        headers: { "x-evidence-token": readerToken } });
+      expect(proof.statusCode).toBe(200);
+      expect(proof.headers["cache-control"]).toBe("no-store");
+      expect(proof.json()).toEqual(result.evidenceReceipt);
+      expect(proof.json().observations).toEqual(archive.rows);
+      expect(packetId(proof.json<EvidenceReceipt>())).toBe(result.evidenceReceiptId);
+      await expect(verifyEvidenceReceipt(proof.json(), trusted)).resolves.toEqual(result.assessment);
+      const legacyOracleRead = await reopened.inject({ method: "GET", url: `/v1/evidence-receipts/${discoveredId}`,
+        headers: { "x-oracle-token": "synthetic-oracle" } });
+      expect(legacyOracleRead.statusCode).toBe(200);
+      expect(legacyOracleRead.json()).toEqual(result.evidenceReceipt);
+      expect(canonicalJson(proof.json())).not.toContain(readerToken);
+      expect(keyLookup).not.toHaveBeenCalled();
+      expect(windowLookup).not.toHaveBeenCalled();
+      expect(await snapshot()).toEqual(before);
+    } finally { keyLookup.mockRestore(); windowLookup.mockRestore(); }
+  });
+
+  it("rejects reader credentials on assessment and sensor writes before any side effects on a writable database", async () => {
+    const archive = await createSignedArchive(false, true);
+    const receipt = packetFor(archive);
+    const receiptId = await store.saveAssessmentWithReceipt(receipt);
+    const snapshot = async () => ({
+      sensors: (await fixture.inspector.query("SELECT * FROM sensors ORDER BY sensor_id")).rows,
+      observations: await archive.snapshot(),
+      assessments: (await fixture.inspector.query("SELECT * FROM assessments ORDER BY assessment_id")).rows,
+      receipts: (await fixture.inspector.query("SELECT * FROM assessment_evidence ORDER BY receipt_id")).rows
+    });
+    const before = await snapshot();
+    await fixture.closeStore(store);
+    store = fixture.createStore(); // Writable: passing cannot be attributed to DB write denial.
+    const readerToken = "synthetic-evidence-reader-2026-10-21-no-writer";
+    const app = buildApp({ store, policySource, adminToken: "synthetic-admin", oracleToken: "synthetic-oracle",
+      evidenceReadToken: readerToken });
+    fixture.useStoreOwner(store, () => app.close());
+    const saving = vi.spyOn(store, "saveAssessmentWithReceipt");
+    const registering = vi.spyOn(store, "registerSensor");
+    const readingWindow = vi.spyOn(store, "listObservations");
+    try {
+      const assessmentPayload = { regionId: archive.sensor.regionId, metric: "water.oxygen.mg_l",
+        forecastHorizonHours: 1, requestedAction: "WATER_AERATION", requestedAmount: 0, asset: "USDC" };
+      for (const headers of [{ "x-evidence-token": readerToken }, { "x-oracle-token": readerToken }]) {
+        const rejected = await app.inject({ method: "POST", url: "/v1/assessments/run", headers,
+          payload: assessmentPayload });
+        expect(rejected.statusCode).toBe(401);
+        expect(rejected.json()).toEqual({ error: "UNAUTHORIZED", message: "invalid oracle token" });
+      }
+      for (const headers of [{ "x-evidence-token": readerToken }, { "x-admin-token": readerToken }]) {
+        const rejected = await app.inject({ method: "POST", url: "/v1/sensors", headers,
+          payload: { ...archive.sensor, sensorId: "synthetic-reader-write-attempt" } });
+        expect(rejected.statusCode).toBe(401);
+        expect(rejected.json()).toEqual({ error: "UNAUTHORIZED", message: "invalid administrator token" });
+      }
+      expect(saving).not.toHaveBeenCalled();
+      expect(registering).not.toHaveBeenCalled();
+      expect(readingWindow).not.toHaveBeenCalled();
+      const catalogue = await app.inject({ method: "GET",
+        url: `/v1/assessments/${receipt.assessment.assessmentId}/evidence-receipts`,
+        headers: { "x-evidence-token": readerToken } });
+      expect(catalogue.statusCode).toBe(200);
+      expect(catalogue.json()).toEqual({ assessmentId: receipt.assessment.assessmentId, receiptIds: [receiptId] });
+      const proof = await app.inject({ method: "GET", url: `/v1/evidence-receipts/${receiptId}`,
+        headers: { "x-evidence-token": readerToken } });
+      expect(proof.statusCode).toBe(200);
+      expect(proof.json()).toEqual(receipt);
+      expect(await snapshot()).toEqual(before);
+    } finally { saving.mockRestore(); registering.mockRestore(); readingWindow.mockRestore(); }
+  });
+
   it("uses actual Ed25519 API verification with PostgreSQL and preserves rejected sequence availability", async () => {
     const pair = generateKeyPairSync("ed25519");
     const publicKey = pair.publicKey.export({ format: "der", type: "spki" }).toString("base64");

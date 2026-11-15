@@ -83,6 +83,11 @@ using the same strict ASCII ordering in memory and PostgreSQL. Full packets and
 independent offline verification stay separate; the catalog is not a completeness
 or authenticity certificate.
 
+The [separate evidence reader credential (IT/EN)](docs/EVIDENCE_ACCESS_IT_EN.md)
+allows receipt discovery and download without sharing the token that starts
+assessments. It is optional, has no default secret, and grants neither sensor
+registration nor assessment execution. Existing Oracle reads remain compatible.
+
 ## Research branches and original mission
 
 The mission is to combine verifiable environmental analysis, distributed

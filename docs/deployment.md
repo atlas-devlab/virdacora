@@ -67,6 +67,29 @@ it. It changes no rows or columns. Readiness still checks table/column/access
 compatibility, not index presence or a performance SLA. The catalog remains a
 bounded metadata query; see its [IT/EN contract](RECEIPT_CATALOG_IT_EN.md).
 
+## Optional receipt reader credential
+
+Configure `EVIDENCE_READ_API_TOKEN` in the process environment, or in the private
+`.env` consumed by Compose. The example leaves it empty, which disables this
+role; there is no default reader secret. Local `pnpm` does not automatically
+load `.env`. Generate a distinct random value, 32–256 visible ASCII characters;
+length validation cannot measure entropy. Do not reuse the admin/Oracle value.
+Invalid active configuration fails before creating the store. Configuration
+errors are static and contain no token value.
+
+Clients send it in `x-evidence-token` only on the receipt catalog and packet GET
+routes, over protected transport. Keep it out of URLs, source control and logs.
+The legacy Oracle credential can still read those routes; it remains a writer
+credential. Either correct header grants a read, even if the other is wrong.
+Do not distribute the Oracle token to read-only clients.
+
+Rotation/revocation requires a configuration update and process restart; no
+individual identity, region scope or token-management service is added. Clearing
+the optional value disables the reader on restart without modifying retained
+data or the database schema. Existing development defaults for admin/Oracle
+are unchanged and must not be used as production secrets. This feature neither
+deploys a service nor configures HTTPS. See the [IT/EN access contract](EVIDENCE_ACCESS_IT_EN.md).
+
 ## Production gates
 
 1. Independent Solidity audit and invariant fuzzing.
