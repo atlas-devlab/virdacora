@@ -12,9 +12,9 @@ See the [identity and compatibility notes](docs/BRAND_IT_EN.md),
 An open source research prototype for making environmental data and decisions
 traceable and reproducible.
 
-The current example follows synthetic dissolved-oxygen observations through a
-simple risk model, explicit policy rules, and a community decision on a local
-simulated blockchain.
+The examples follow synthetic and archived real dissolved-oxygen observations
+through a simple risk model, explicit policy rules, and a community decision on
+a local simulated blockchain.
 
 **Status: research MVP.** There is no public-chain deployment, live environmental
 pilot, real treasury funding, connected physical actuator, or independent audit.
@@ -100,15 +100,15 @@ does not add a satellite pipeline or an LLM runtime.
 The mission is to combine verifiable environmental analysis, distributed
 coordination, checkable interventions and decision rights for affected
 communities and young people. Token ownership does not buy environmental votes.
-The current `main` demonstration remains the synthetic prototype described below.
-Later real-data, forecasting, source-discovery and first-attestor experiments
+The territorial demonstration below integrates one archived real-data review.
+Other forecasting, source-discovery and first-attestor experiments
 are on [the research branch](https://github.com/atlas-devlab/virdacora/tree/feat/autonomous-source-evidence)
 and the stacked pull requests; they have not all been merged into `main`.
 [Current research presentation](https://github.com/atlas-devlab/virdacora/blob/feat/autonomous-source-evidence/docs/PROJECT_PRESENTATION_IT_EN.md).
 
 ## Complete territorial data-review demonstration
 
-This branch connects the existing research case to the current Oracle: real
+The territorial demonstration connects the research case to the current Oracle: real
 archived USGS oxygen measurements, signed local ingestion, reproducible analysis,
 a bounded proposal, community and youth approval, delivery review and simulated
 compensation. The first job is a review of the Willamette archive; the delivered
