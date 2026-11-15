@@ -1,0 +1,94 @@
+{
+    "type":"Feature",
+    "properties":{
+        "id":"USGS-14211720",
+        "agency_code":"USGS",
+        "agency_name":"U.S. Geological Survey",
+        "monitoring_location_number":"14211720",
+        "monitoring_location_name":"WILLAMETTE RIVER AT PORTLAND, OR",
+        "district_code":"41",
+        "country_code":"US",
+        "country_name":"United States of America",
+        "state_code":"41",
+        "state_name":"Oregon",
+        "county_code":"051",
+        "county_name":"Multnomah County",
+        "minor_civil_division_code":null,
+        "site_type_code":"ST-TS",
+        "site_type":"Tidal stream",
+        "hydrologic_unit_code":"170900120202",
+        "basin_code":null,
+        "altitude":1.55,
+        "altitude_accuracy":1.0,
+        "altitude_method_code":"M",
+        "altitude_method_name":"Interpolated from topographic map.",
+        "vertical_datum":"NGVD29",
+        "vertical_datum_name":"National Geodetic Vertical Datum of 1929",
+        "horizontal_positional_accuracy_code":"S",
+        "horizontal_positional_accuracy":"Accurate to + or - 1 sec.",
+        "horizontal_position_method_code":"N",
+        "horizontal_position_method_name":"Interpolated from Digital MAP.",
+        "original_horizontal_datum":"NAD83",
+        "original_horizontal_datum_name":"North American Datum of 1983",
+        "drainage_area":11200.0,
+        "contributing_drainage_area":null,
+        "time_zone_abbreviation":"PST",
+        "uses_daylight_savings":"Y",
+        "construction_date":null,
+        "aquifer_code":null,
+        "national_aquifer_code":null,
+        "aquifer_type_code":null,
+        "well_constructed_depth":null,
+        "hole_constructed_depth":null,
+        "depth_source_code":null,
+        "revision_note":"Tidally filtered daily discharges for Feb. 15 to Mar.  2, Apr. 2, 2007, and Feb. 9, 10, June 1-4, 7-9, 2010 have been revised and are available via NWISWeb.",
+        "revision_created":"2017-11-13T06:00:00+00:00",
+        "revision_modified":null
+    },
+    "id":"USGS-14211720",
+    "geometry":{
+        "type":"Point",
+        "coordinates":[
+            -122.669166666667,
+            45.5175
+        ]
+    },
+    "links":[
+        {
+            "type":"application/json",
+            "rel":"root",
+            "title":"The landing page of this server as JSON",
+            "href":"https://api.waterdata.usgs.gov/ogcapi/v1?f=json"
+        },
+        {
+            "type":"text/html",
+            "rel":"root",
+            "title":"The landing page of this server as HTML",
+            "href":"https://api.waterdata.usgs.gov/ogcapi/v1?f=html"
+        },
+        {
+            "rel":"self",
+            "type":"application/geo+json",
+            "title":"This document as JSON",
+            "href":"https://api.waterdata.usgs.gov/ogcapi/v1/collections/monitoring-locations/items/USGS-14211720?f=json"
+        },
+        {
+            "rel":"alternate",
+            "type":"application/ld+json",
+            "title":"This document as RDF (JSON-LD)",
+            "href":"https://api.waterdata.usgs.gov/ogcapi/v1/collections/monitoring-locations/items/USGS-14211720?f=jsonld"
+        },
+        {
+            "rel":"alternate",
+            "type":"text/html",
+            "title":"This document as HTML",
+            "href":"https://api.waterdata.usgs.gov/ogcapi/v1/collections/monitoring-locations/items/USGS-14211720?f=html"
+        },
+        {
+            "rel":"collection",
+            "type":"application/json",
+            "title":"Monitoring locations",
+            "href":"https://api.waterdata.usgs.gov/ogcapi/v1/collections/monitoring-locations"
+        }
+    ]
+}

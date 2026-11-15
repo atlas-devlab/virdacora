@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false
+  },
+  "include": ["hardhat.config.ts", "scripts/territorial-job-e2e.ts", "types/ethers-contracts/hardhat.d.ts"]
+}

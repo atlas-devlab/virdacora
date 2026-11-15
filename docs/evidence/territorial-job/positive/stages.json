@@ -1,0 +1,50 @@
+[
+  {
+    "stage": "premature-governance-rejected",
+    "error": {
+      "name": "ProposalNotReady",
+      "selector": "0xecd618b6"
+    }
+  },
+  {
+    "stage": "community-only-rejected-after-voting-before-youth-vote",
+    "error": {
+      "name": "ProposalNotReady",
+      "selector": "0xecd618b6"
+    },
+    "missingYouthConsent": true,
+    "counterfactualSnapshotRestored": true
+  },
+  {
+    "stage": "funded-with-both-chambers",
+    "balances": {
+      "treasury": "0",
+      "escrow": "10000000",
+      "executor": "0",
+      "totalSupply": "10000000",
+      "unitDecimals": 6,
+      "simulationBudget": "10 TEST"
+    }
+  },
+  {
+    "stage": "payment-without-reviews-rejected",
+    "error": {
+      "name": "NotVerified",
+      "selector": "0xa95362b5"
+    }
+  },
+  {
+    "stage": "single-review-payment-rejected",
+    "error": {
+      "name": "NotVerified",
+      "selector": "0xa95362b5"
+    }
+  },
+  {
+    "stage": "duplicate-payment-rejected",
+    "error": {
+      "name": "NotVerified",
+      "selector": "0xa95362b5"
+    }
+  }
+]

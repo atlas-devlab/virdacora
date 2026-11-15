@@ -1,0 +1,68 @@
+[
+  {
+    "reviewer": "scientific",
+    "verified": true,
+    "caseHash": "0x3cee978fda3fd8e84c92e2b0a94dec7bdb5fe0c64560c4b13e8e3babd4414f84",
+    "resultHash": "0x68aba721f7c3c0933aa20c8a1849d64189dc41fd419d40f434cb19444fee90bc",
+    "scope": "reproducibility against pinned USGS snapshot; not independent field review",
+    "archiveReloaded": true,
+    "onChain": {
+      "caseHash": "0x3cee978fda3fd8e84c92e2b0a94dec7bdb5fe0c64560c4b13e8e3babd4414f84",
+      "submittedResultHash": "0x68aba721f7c3c0933aa20c8a1849d64189dc41fd419d40f434cb19444fee90bc",
+      "proposalId": "1",
+      "deadline": "1797342251",
+      "regionId": "0x84d360bdf90af854d23f8bddad3202584c5c02692b827ca24b5e2d6a40a5669e",
+      "evidenceHash": "0xda3e6308892afd876ddefc2a24c2d298a1e6498d4fcc70abe0ff1ef7fa45911e",
+      "policyHash": "0x6dc1ac1dec30cd3a47bee7cadae8b56dcf457ecd7a6789a9ab5a51c0d03eb31a",
+      "actionHash": "0x8bd8df26d773b10929c1218e17e1e46f99e1d7ec2c0377600e85641abadb533f",
+      "amount": "10000000",
+      "recipient": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
+      "executor": "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
+      "scientificReviewer": "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955",
+      "communityReviewer": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+      "proposalExecuted": true,
+      "bothChambersApproved": true,
+      "scientificApproved": false,
+      "communityApproved": false
+    },
+    "approvalTransactionSent": true,
+    "transaction": {
+      "stage": "scientific-delivery-approved",
+      "hash": "0x16d080b67bf18b370650a55da75be0bda99858318da6628c0e8c767d35277497",
+      "blockNumber": 26
+    }
+  },
+  {
+    "reviewer": "community",
+    "verified": true,
+    "caseHash": "0x3cee978fda3fd8e84c92e2b0a94dec7bdb5fe0c64560c4b13e8e3babd4414f84",
+    "resultHash": "0x68aba721f7c3c0933aa20c8a1849d64189dc41fd419d40f434cb19444fee90bc",
+    "scope": "reproducibility against pinned USGS snapshot; not independent field review",
+    "archiveReloaded": true,
+    "onChain": {
+      "caseHash": "0x3cee978fda3fd8e84c92e2b0a94dec7bdb5fe0c64560c4b13e8e3babd4414f84",
+      "submittedResultHash": "0x68aba721f7c3c0933aa20c8a1849d64189dc41fd419d40f434cb19444fee90bc",
+      "proposalId": "1",
+      "deadline": "1797342251",
+      "regionId": "0x84d360bdf90af854d23f8bddad3202584c5c02692b827ca24b5e2d6a40a5669e",
+      "evidenceHash": "0xda3e6308892afd876ddefc2a24c2d298a1e6498d4fcc70abe0ff1ef7fa45911e",
+      "policyHash": "0x6dc1ac1dec30cd3a47bee7cadae8b56dcf457ecd7a6789a9ab5a51c0d03eb31a",
+      "actionHash": "0x8bd8df26d773b10929c1218e17e1e46f99e1d7ec2c0377600e85641abadb533f",
+      "amount": "10000000",
+      "recipient": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
+      "executor": "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
+      "scientificReviewer": "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955",
+      "communityReviewer": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+      "proposalExecuted": true,
+      "bothChambersApproved": true,
+      "scientificApproved": true,
+      "communityApproved": false
+    },
+    "approvalTransactionSent": true,
+    "transaction": {
+      "stage": "community-delivery-approved",
+      "hash": "0x2897bd8caa2c6f386f40ff0a6b7920edda6265c8beae2a899036e18fddfb3c75",
+      "blockNumber": 27
+    }
+  }
+]

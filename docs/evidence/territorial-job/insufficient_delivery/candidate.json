@@ -1,0 +1,14 @@
+{
+  "version": "environmental-result-v1",
+  "caseHash": "0x3cee978fda3fd8e84c92e2b0a94dec7bdb5fe0c64560c4b13e8e3babd4414f84",
+  "sourceHash": "0x512c37bd9c3b03c76887cd8660945b51bdb32d6e009183f790f6f13b6f72cf57",
+  "stationId": "USGS-14211720",
+  "timeSeriesId": "1ccd1e712b6b4cb69fdcfbf407f7358b",
+  "deliveredAction": "DATA_REVIEW",
+  "unit": "mg/L",
+  "approval": "Approved",
+  "predictionMgL": 8.655594,
+  "outcome": "public-data-review-delivered",
+  "ecologicalImprovementVerified": false,
+  "resultHash": "0x850f2342846007e18718f97c8ea726f3671d932367bb8f44bb7ebe77a34266f5"
+}

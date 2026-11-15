@@ -1,0 +1,23 @@
+{
+  "version": "environmental-result-v1",
+  "caseHash": "0x3cee978fda3fd8e84c92e2b0a94dec7bdb5fe0c64560c4b13e8e3babd4414f84",
+  "sourceHash": "0x512c37bd9c3b03c76887cd8660945b51bdb32d6e009183f790f6f13b6f72cf57",
+  "stationId": "USGS-14211720",
+  "timeSeriesId": "1ccd1e712b6b4cb69fdcfbf407f7358b",
+  "deliveredAction": "DATA_REVIEW",
+  "targetRecord": {
+    "id": "538749e2-5a87-4d27-bd89-3424175c6fa4",
+    "time": "2025-08-08T01:00:00.000Z",
+    "value": 9.2,
+    "lastModified": "2026-04-29T21:15:15.518Z"
+  },
+  "unit": "mg/L",
+  "approval": "Approved",
+  "predictionMgL": 8.655594,
+  "persistenceMgL": 8.4,
+  "absoluteErrorMgL": 0.5444059999999986,
+  "persistenceAbsoluteErrorMgL": 0.7999999999999989,
+  "outcome": "public-data-review-delivered",
+  "ecologicalImprovementVerified": false,
+  "resultHash": "0xdd036ba8669d2eaffa8dcfda59326a8ba1308dc0de044ccad5c36f8d0537e149"
+}
