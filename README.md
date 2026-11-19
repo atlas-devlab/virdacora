@@ -25,6 +25,28 @@ refers here to the experimental policy language in this repository.
 > Per una spiegazione completa in italiano, leggi la
 > [guida operativa](GUIDA_OPERATIVA.md).
 
+## Review the Willamette evidence offline
+
+Reproduce the archived dissolved-oxygen analysis and review three simulated
+deliveries against commitments recorded in the repository. The report shows
+the archived source, the result of each review and the model's performance
+against a forecast that holds the latest measurement constant.
+
+From the repository root with Node.js 24 or later and pnpm 11.7.0:
+
+```sh
+pnpm install --frozen-lockfile
+pnpm --filter '@terravoce/environmental-case...' build
+pnpm --silent territorial:verify
+```
+
+Use `--format html` for a standalone report to open in a browser or
+`--format csv` for the chronological forecast pairs. After setup, verification runs
+offline with the committed archive. See the [review guide (IT/EN)](docs/TERRITORIAL_REVIEW_IT_EN.md)
+for export examples and the scope of the evidence.
+
+## Oracle operation and evidence receipts
+
 Oracle storage, request-boundary fixes and the reproducible synthetic performance
 comparison are explained in [Italian and English](docs/ORACLE_RESILIENCE_IT_EN.md).
 Run `pnpm benchmark:oracle` for the local indexed-store comparison.
@@ -176,6 +198,7 @@ traduzione o una prova della demo sono già contributi utili.
 | `packages/protocol` | Signed observation and assessment schemas |
 | `packages/contracts` | Evidence, policy, civic governance, treasury and ENV contracts |
 | `services/oracle` | Sensor API, deterministic analysis, storage and policy evaluation |
+| `services/environmental-case` | Archived USGS import, forecast comparison and offline verification of territorial deliveries |
 | `policies` | Demonstration policy for Po Delta water oxygen |
 | `docs` | Architecture, API, invariants, threat model, deployment and validation |
 
