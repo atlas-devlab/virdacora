@@ -45,6 +45,10 @@ Use `--format html` for a standalone report to open in a browser or
 offline with the committed archive. See the [review guide (IT/EN)](docs/TERRITORIAL_REVIEW_IT_EN.md)
 for export examples and the scope of the evidence.
 
+To fetch the same historical window from USGS and run the territorial
+simulation with the newly captured evidence, see the
+[Willamette acquisition and verification guide (IT/EN)](docs/WILLAMETTE_CAPTURE_IT_EN.md).
+
 ## Read dissolved-oxygen data from external sources
 
 Query USGS or Water Quality Portal for one station and date window, or load a

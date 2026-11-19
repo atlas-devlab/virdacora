@@ -31,6 +31,7 @@ const featureSchema = z.object({
 const collectionSchema = z.object({
   type: z.literal("FeatureCollection"), features: z.array(featureSchema),
   numberReturned: z.number().int().nonnegative().optional(),
+  numberMatched: z.number().int().nonnegative().optional(),
   links: z.array(z.object({ rel: z.string(), href: z.string() }))
 });
 export interface Measurement {
@@ -42,11 +43,14 @@ export interface Dataset {
   quality: { total: number; accepted: number; excluded: { id: string; reason: string }[];
     missingIntervals: number; unit: "mg/L"; approval: "Approved" };
 }
-export function validateDataset(raw: string, stationRaw: string, input: unknown): Dataset {
+export function validateDataset(raw: string | Uint8Array, stationRaw: string | Uint8Array, input: unknown): Dataset {
   const manifest = manifestSchema.parse(input);
   if (sha256Hex(raw) !== manifest.sourceHash || sha256Hex(stationRaw) !== manifest.stationHash) {
     throw new Error("Snapshot hash mismatch");
   }
+  const utf8 = new TextDecoder("utf-8", { fatal: true });
+  const stationJson = typeof stationRaw === "string" ? stationRaw : utf8.decode(stationRaw);
+  const measurementsJson = typeof raw === "string" ? raw : utf8.decode(raw);
   for (const source of [manifest.sourceUrl, manifest.stationUrl]) {
     const url = new URL(source);
     if (url.origin !== "https://api.waterdata.usgs.gov" || url.username || url.password) {
@@ -62,14 +66,15 @@ export function validateDataset(raw: string, stationRaw: string, input: unknown)
       new URL(manifest.stationUrl).pathname !== `/ogcapi/v1/collections/monitoring-locations/items/${manifest.stationId}`) {
     throw new Error("Source query does not match manifest");
   }
-  const station = z.object({ properties: z.object({ id: z.string(), agency_code: z.literal("USGS") }) }).parse(JSON.parse(stationRaw));
+  const station = z.object({ properties: z.object({ id: z.string(), agency_code: z.literal("USGS") }) }).parse(JSON.parse(stationJson));
   if (station.properties.id !== manifest.stationId) throw new Error("Station metadata mismatch");
   const start = Date.parse(manifest.start), end = Date.parse(manifest.end);
   const evaluationStart = Date.parse(manifest.evaluationStart);
   if (start >= evaluationStart || evaluationStart >= end) throw new Error("Invalid evaluation split");
-  const data = collectionSchema.parse(JSON.parse(raw));
+  const data = collectionSchema.parse(JSON.parse(measurementsJson));
   if (data.links.some((link) => link.rel === "next") || data.features.length >= 10000 ||
-      (data.numberReturned !== undefined && data.numberReturned !== data.features.length)) {
+      (data.numberReturned !== undefined && data.numberReturned !== data.features.length) ||
+      (data.numberMatched !== undefined && data.numberMatched !== data.features.length)) {
     throw new Error("Incomplete or inconsistent snapshot");
   }
   const measurements: Measurement[] = [], excluded: Dataset["quality"]["excluded"] = [];
@@ -102,8 +107,8 @@ export function validateDataset(raw: string, stationRaw: string, input: unknown)
 }
 export async function loadDataset(folder: string): Promise<Dataset> {
   const [raw, station, manifest] = await Promise.all([
-    readFile(resolve(folder, "continuous.json"), "utf8"),
-    readFile(resolve(folder, "station.json"), "utf8"),
+    readFile(resolve(folder, "continuous.json")),
+    readFile(resolve(folder, "station.json")),
     readFile(resolve(folder, "manifest.json"), "utf8")
   ]);
   return validateDataset(raw, station, JSON.parse(manifest));

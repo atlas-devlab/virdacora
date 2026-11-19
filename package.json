@@ -11,6 +11,8 @@
     "territorial:check": "pnpm --filter @terravoce/contracts territorial:check",
     "territorial:e2e": "pnpm --filter @terravoce/contracts territorial:e2e",
     "territorial:verify": "tsx scripts/verify-territorial-archive.ts",
+    "territorial:willamette": "tsx scripts/run-willamette-territorial.ts",
+    "territorial:verify-import": "tsx scripts/verify-imported-territorial.ts",
     "water:source": "tsx scripts/read-water-oxygen-source.ts",
     "build": "pnpm -r --if-present build",
     "check": "pnpm -r --if-present check",

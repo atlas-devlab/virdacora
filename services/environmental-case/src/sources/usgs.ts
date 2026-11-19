@@ -12,6 +12,26 @@ const statisticCode = "00011";
 const maxRows = 2_000;
 const dayMs = 86_400_000;
 
+function readUsgsGeoJson(url: URL, fetchImpl: typeof fetch) {
+  if (url.origin !== new URL(endpoint).origin || url.username || url.password) {
+    throw new Error("Expected an official USGS endpoint.");
+  }
+  return readProviderResponse(url, fetchImpl, { headers: { accept: "application/geo+json, application/json" } });
+}
+
+export function readUsgsContinuousPayload(url: URL, fetchImpl: typeof fetch) {
+  if (url.pathname !== new URL(endpoint).pathname) throw new Error("Expected the USGS continuous endpoint.");
+  return readUsgsGeoJson(url, fetchImpl);
+}
+
+export function readUsgsStationPayload(url: URL, stationId: string, fetchImpl: typeof fetch) {
+  if (!/^USGS-\d{8,15}$/.test(stationId) ||
+      url.pathname !== `/ogcapi/v1/collections/monitoring-locations/items/${stationId}`) {
+    throw new Error("Expected the USGS monitoring-location endpoint for this station.");
+  }
+  return readUsgsGeoJson(url, fetchImpl);
+}
+
 const collection = z.object({
   type: z.literal("FeatureCollection"),
   features: z.array(z.object({
@@ -47,9 +67,7 @@ export async function fetchUsgsOxygen(
     time: `${start.toISOString()}/${endExclusive.toISOString()}`, limit: String(maxRows),
   }).toString();
 
-  const { text, sha256 } = await readProviderResponse(url, fetchImpl, {
-    headers: { accept: "application/geo+json, application/json" },
-  });
+  const { text, sha256 } = await readUsgsContinuousPayload(url, fetchImpl);
   const page = collection.parse(JSON.parse(text));
   if (page.links.some(link => link.rel === "next") ||
       (page.features.length === maxRows && page.numberMatched === undefined) ||
