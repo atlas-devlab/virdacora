@@ -49,6 +49,9 @@ To fetch the same historical window from USGS and run the territorial
 simulation with the newly captured evidence, see the
 [Willamette acquisition and verification guide (IT/EN)](docs/WILLAMETTE_CAPTURE_IT_EN.md).
 
+For discrete samples from Water Quality Portal or Water Rangers, see the
+[territorial review guide (IT/EN)](docs/DISCRETE_TERRITORIAL_IT_EN.md).
+
 ## Read dissolved-oxygen data from external sources
 
 Query USGS or Water Quality Portal for one station and date window, or load a

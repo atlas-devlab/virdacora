@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import {
-  normalizeOxygenValue, parseSourceCsv, readProviderResponse, validateStationWindow,
+  decodeSource, normalizeOxygenValue, parseSourceCsv, readProviderResponse, validateStationWindow,
   type OxygenSourceBatch, type StationWindow, type WaterOxygenReading,
 } from "./source.js";
 
@@ -67,10 +67,7 @@ function readRow(row: Record<string, string>, query: StationWindow): WaterOxygen
   };
 }
 
-/** Load the public WQX 3.0 physical/chemical results profile for one station. */
-export async function fetchWqpOxygen(
-  query: StationWindow, fetchImpl: typeof fetch = fetch,
-): Promise<OxygenSourceBatch> {
+function wqpResultsUrl(query: StationWindow): URL {
   validateStationWindow(query);
   const url = new URL(resultsEndpoint);
   url.search = new URLSearchParams({
@@ -82,20 +79,55 @@ export async function fetchWqpOxygen(
     mimeType: "csv",
     dataProfile: "fullPhysChem",
   }).toString();
-  const { text, sha256 } = await readProviderResponse(url, fetchImpl);
+  return url;
+}
+
+function parseWqpPayload(
+  { text, sha256 }: ReturnType<typeof decodeSource>, query: StationWindow, url: URL, retrievedAt: string,
+  requireDiscrete = false,
+): OxygenSourceBatch {
+  const retrieval = new Date(retrievedAt);
+  if (!Number.isFinite(retrieval.valueOf()) || retrieval.toISOString() !== retrievedAt) {
+    throw new Error("Expected the WQP retrieval timestamp in canonical UTC format.");
+  }
   if (/^ERROR:\s+INCOMPLETE DATA\b/im.test(text)) {
     throw new Error("Water Quality Portal reported an incomplete download.");
   }
   const rows = parseSourceCsv(text, requiredColumns);
+  if (requireDiscrete && rows.some(row => row.Result_DataLoggerLine?.trim())) {
+    throw new Error("The WQP response includes logger records. Choose a discrete-sample dataset for this territorial review.");
+  }
   return {
     schema: "virdacora-oxygen-source-v1",
     provider: "wqp",
     sourceUrl: url.toString(),
     termsUrl: "https://waterqualitydata.us/beta/portal_userguide/",
     attribution: "Water Quality Portal (National Water Quality Monitoring Council, USGS, EPA), DOI 10.5066/P9QRKUVJ. Credit the submitting organization recorded on each result.",
-    retrievedAt: new Date().toISOString(),
+    retrievedAt,
     sourceSha256: sha256,
     inputRows: rows.length,
     readings: rows.map(row => readRow(row, query)),
   };
+}
+
+/** Reproduce the normalized batch from exact WQX 3.0 response bytes offline. */
+export function parseWqpOxygen(
+  bytes: Uint8Array, query: StationWindow, retrievedAt: string, options: { requireDiscrete?: boolean } = {},
+): OxygenSourceBatch {
+  const url = wqpResultsUrl(query);
+  return parseWqpPayload(decodeSource(bytes), query, url, retrievedAt, options.requireDiscrete);
+}
+
+/** Load the public WQX 3.0 physical/chemical results profile for one station. */
+export async function captureWqpOxygen(
+  query: StationWindow, fetchImpl: typeof fetch = fetch,
+): Promise<{ bytes: Uint8Array; batch: OxygenSourceBatch }> {
+  const url = wqpResultsUrl(query);
+  const payload = await readProviderResponse(url, fetchImpl);
+  const batch = parseWqpPayload(payload, query, url, new Date().toISOString());
+  return { bytes: payload.bytes, batch };
+}
+
+export async function fetchWqpOxygen(query: StationWindow, fetchImpl: typeof fetch = fetch): Promise<OxygenSourceBatch> {
+  return (await captureWqpOxygen(query, fetchImpl)).batch;
 }

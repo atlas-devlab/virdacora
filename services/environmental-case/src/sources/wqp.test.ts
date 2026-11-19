@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { createHash } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
-import { fetchWqpOxygen } from "./wqp.js";
+import { captureWqpOxygen, fetchWqpOxygen, parseWqpOxygen } from "./wqp.js";
 
 const query = { stationId: "USGS-14211720", start: "2025-08-01", end: "2025-08-31" };
 const sample = {
@@ -115,5 +115,19 @@ describe("Water Quality Portal dissolved oxygen", () => {
     const fetchImpl = fromPortal(csv());
     await expect(fetchWqpOxygen({ ...query, end: "2025-09-01" }, fetchImpl)).rejects.toThrow();
     expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("retains exact response bytes and reproduces the batch without fetching", async () => {
+    const raw = `\ufeff${csv({ Result_MeasureStatusIdentifier: "Accepted" })}`;
+    const fetchImpl = fromPortal(raw);
+    const { bytes, batch } = await captureWqpOxygen(query, fetchImpl);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(bytes).toEqual(Buffer.from(raw));
+    expect(batch.sourceSha256).toBe(`0x${createHash("sha256").update(bytes).digest("hex")}`);
+    expect(parseWqpOxygen(bytes, query, batch.retrievedAt!)).toEqual(batch);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(() => parseWqpOxygen(bytes, query, "2025-02-30T00:00:00.000Z")).toThrow(/retrieval timestamp/);
+    expect(() => parseWqpOxygen(Buffer.from(raw + "ERROR: INCOMPLETE DATA\n"), query, batch.retrievedAt!))
+      .toThrow(/incomplete download/);
   });
 });

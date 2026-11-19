@@ -7,3 +7,4 @@ export { fetchUsgsOxygen } from "./sources/usgs.js";
 export { fetchWqpOxygen } from "./sources/wqp.js";
 export { importWaterRangersOxygen } from "./sources/water-rangers.js";
 export { captureWillametteSnapshot } from "./willamette-capture.js";
+export * from "./discrete-territorial.js";
