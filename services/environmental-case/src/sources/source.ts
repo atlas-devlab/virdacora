@@ -104,7 +104,8 @@ export async function readProviderResponse(url: URL, fetchImpl: typeof fetch, op
   } finally {
     reader.releaseLock();
   }
-  return decodeSource(Buffer.concat(chunks, total));
+  const bytes = Buffer.concat(chunks, total);
+  return { bytes, ...decodeSource(bytes) };
 }
 
 export async function readLocalSourceCsv(path: string) {

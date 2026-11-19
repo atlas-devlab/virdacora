@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { dirname, isAbsolute, resolve } from "node:path";
 import { canonicalJson, sha256Hex } from "@terravoce/protocol";
 import { buildApp, MemoryObservationStore } from "@terravoce/oracle";
 import {
@@ -18,19 +18,36 @@ import type {
 // This executable uses one ephemeral Hardhat network and three separate sets of
 // contracts. Every civic identity, certificate signer and reviewer is simulated.
 // No external RPC, real payment, model training or physical intervention is used.
-const datasetFolder = resolve("../../docs/datasets/usgs-willamette");
-const policySource = await readFile(resolve("../../policies/usgs-data-review-v1.terra"), "utf8");
+const datasetOverride = process.env.VIRDACORA_TERRITORIAL_DATASET;
+const captureCaseHash = process.env.VIRDACORA_TERRITORIAL_CAPTURE_CASE_HASH;
+const outputOverride = process.env.VIRDACORA_TERRITORIAL_OUTPUT;
+if (datasetOverride !== undefined || captureCaseHash !== undefined) {
+  assert.ok(datasetOverride && isAbsolute(datasetOverride), "An absolute captured dataset path is required");
+  assert.ok(captureCaseHash && /^0x[0-9a-f]{64}$/.test(captureCaseHash), "A valid acquisition case hash is required");
+  assert.ok(outputOverride && isAbsolute(outputOverride), "An absolute simulation output path is required");
+}
+const datasetFolder = resolve(datasetOverride ?? "../../docs/datasets/usgs-willamette");
+const repositoryPolicy = resolve("../../policies/usgs-data-review-v1.terra");
+const policyPath = datasetOverride === undefined ? repositoryPolicy : resolve(datasetFolder, "policy.terra");
+const originalPolicy = await readFile(policyPath);
+if (datasetOverride !== undefined) {
+  assert.deepEqual(originalPolicy, await readFile(repositoryPolicy), "Captured policy differs from the Willamette policy");
+}
+const policySource = originalPolicy.toString("utf8");
 const archiveNames = ["continuous.json", "station.json", "manifest.json"] as const;
-const originalArchive = await Promise.all(archiveNames.map((name) => readFile(resolve(datasetFolder, name), "utf8")));
+const originalArchive = await Promise.all(archiveNames.map((name) => readFile(resolve(datasetFolder, name))));
 const dataset = await loadDataset(datasetFolder);
 const spec = prepareCase(dataset, policySource);
+if (captureCaseHash !== undefined) {
+  assert.equal(spec.caseHash, captureCaseHash, "Captured dataset and policy must reproduce the acquisition case hash");
+}
 const expectedResult = deliverResult(dataset, spec);
 assert.equal(spec.requestedAmount, 10);
 assert.equal(spec.asset, "TEST");
 assert.equal(spec.action, "DATA_REVIEW");
 assert.equal(expectedResult.ecologicalImprovementVerified, false);
 
-const outputFolder = resolve(process.env.VIRDACORA_TERRITORIAL_OUTPUT ?? "../../outputs/territorial-job");
+const outputFolder = resolve(outputOverride ?? "../../outputs/territorial-job");
 await mkdir(dirname(outputFolder), { recursive: true });
 // EEXIST is intentionally fatal, including for an empty existing directory.
 await mkdir(outputFolder);
@@ -147,7 +164,8 @@ try {
     importerSignature: "ephemeral local importer; not USGS or sensor authentication"
   });
 
-  const { ethers, networkHelpers } = await network.create();
+  const { ethers, networkHelpers, networkConfig } = await network.create("default");
+  assert.equal(networkConfig.type, "edr-simulated", "The territorial simulation needs a local Hardhat network");
   const signers = await ethers.getSigners();
   function signerAt(index: number) {
     const signer = signers[index];
@@ -162,6 +180,8 @@ try {
   const day = 86400, unit = 1_000_000n, amount = 10n * unit;
   const regionId = ethers.id(spec.regionId), caseURI = `urn:terravoce:case:${spec.caseHash}`;
   const results = [];
+  const submittedResultHashes: Partial<Record<Scenario, string>> = {};
+  let fundedCaseHash: string | undefined;
 
   for (const scenario of ["positive", "altered_delivery", "insufficient_delivery"] as const) {
     const folder = resolve(outputFolder, scenario);
@@ -365,7 +385,8 @@ try {
         for (const [index, name] of archiveNames.entries()) {
           const content = originalArchive[index];
           assert.ok(content !== undefined);
-          await writeFile(resolve(tamperedFolder, name), name === "continuous.json" ? content + " " : content, { flag: "wx" });
+          const bytes = name === "continuous.json" ? Buffer.concat([content, Buffer.from(" ")]) : content;
+          await writeFile(resolve(tamperedFolder, name), bytes, { flag: "wx" });
         }
         await rejectedReview("scientific-source-integrity-check", tamperedFolder, "SOURCE_INTEGRITY_FAILED");
         stages.push({ stage: "altered-raw-bytes-rejected", originalManifestRetained: true, sourceDatasetUnchanged: true });
@@ -388,6 +409,14 @@ try {
     assert.deepEqual([finalBalances.treasury, finalBalances.escrow, finalBalances.executor],
       scenario === "positive" ? ["0", "0", amount.toString()] : [amount.toString(), "0", "0"]);
     assert.equal(await escrow.getFunction("settled")(), true);
+    if (captureCaseHash !== undefined) {
+      const terms = await escrow.getFunction("terms")();
+      const submittedHash = await escrow.getFunction("resultHash")() as string;
+      assert.equal(terms.caseHash, captureCaseHash);
+      assert.equal(submittedHash, candidate.resultHash);
+      fundedCaseHash = terms.caseHash as string;
+      submittedResultHashes[scenario] = submittedHash;
+    }
     const summary = { scenario, caseHash: spec.caseHash, submittedResultHash: candidate.resultHash,
       outcome: scenario === "positive" ? "verified-review-paid" : "invalid-delivery-rejected-and-refunded",
       contracts: { token: await token.getAddress(), treasury: treasuryAddress, governor: await governor.getAddress(),
@@ -405,15 +434,24 @@ try {
     results.push(summary);
   }
 
-  const finalArchive = await Promise.all(archiveNames.map((name) => readFile(resolve(datasetFolder, name), "utf8")));
+  const finalArchive = await Promise.all(archiveNames.map((name) => readFile(resolve(datasetFolder, name))));
   assert.deepEqual(finalArchive, originalArchive, "Pinned source bytes must remain unchanged");
+  if (datasetOverride !== undefined) {
+    assert.deepEqual(await readFile(policyPath), originalPolicy, "Captured policy bytes must remain unchanged");
+  }
   const { rows: _rows, ...scientificReplay } = replay(dataset);
   const report = { version: "territorial-job-local-v1", caseHash: spec.caseHash,
     mission: "distributed environmental evidence, bounded intervention funding, and decision rights for affected communities and youth",
     workDelivered: "reproducible review of real archived USGS oxygen data",
     source: { stationId: dataset.manifest.stationId, periodStart: dataset.manifest.start, periodEnd: dataset.manifest.end,
       sourceHash: dataset.manifest.sourceHash, manifestHash: spec.datasetManifestHash,
-      archiveBytesUnchanged: true, liveRetrievalPerformed: false },
+      archiveBytesUnchanged: true, liveRetrievalPerformed: false,
+      ...(datasetOverride === undefined ? {} : {
+        input: "supplied-usgs-snapshot", sourceUrl: dataset.manifest.sourceUrl,
+        stationUrl: dataset.manifest.stationUrl, stationHash: dataset.manifest.stationHash,
+        retrievedAt: dataset.manifest.retrievedAt,
+        retrievalContext: "snapshot supplied by acquisition; simulation reads local files",
+      }) },
     limits: { identitiesAndReviews: "simulated; not independent people", consensus: "3-of-4 local signature fixture; ABCI not launched",
       network: "one ephemeral Hardhat network; transaction hashes have no public explorer", funding: "valueless local mock tokens",
       physicalPilot: "not performed", ecologicalImprovementVerified: false,
@@ -424,8 +462,24 @@ try {
       compensationRequiresFavourableForecast: false, replay: scientificReplay },
     scenarios: results };
   await save(outputFolder, "territorial-job-report.json", report);
+  let commitmentsSha256: string | undefined;
+  if (captureCaseHash !== undefined) {
+    const { positive, altered_delivery, insufficient_delivery } = submittedResultHashes;
+    assert.ok(fundedCaseHash && positive && altered_delivery && insufficient_delivery, "Incomplete escrow commitments");
+    const commitments = {
+      schema: "virdacora-territorial-commitments-v1", mode: "local-simulation", fundedCaseHash,
+      submittedResultHashes: { positive, altered_delivery, insufficient_delivery },
+    };
+    const bytes = Buffer.from(JSON.stringify(commitments, null, 2) + "\n", "utf8");
+    await writeFile(resolve(outputFolder, "commitments.json"), bytes, { flag: "wx" });
+    commitmentsSha256 = sha256Hex(bytes);
+  }
   console.log(JSON.stringify({ completed: true, caseHash: spec.caseHash, outputFolder,
+    ...(commitmentsSha256 === undefined ? {} : { mode: "local-simulation", commitmentsSha256 }),
     scenarios: results.map(({ scenario, outcome, finalBalances }) => ({ scenario, outcome, finalBalances })) }, null, 2));
+  if (commitmentsSha256 !== undefined) {
+    console.log(`VIRDACORA_TERRITORIAL_CAPTURE_ANCHOR=${commitmentsSha256}`);
+  }
 } finally {
   await app.close();
 }
