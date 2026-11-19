@@ -34,8 +34,9 @@ prototipo. Non sono il nome pubblico attuale. Alcuni entrano in hash,
 firme, metadati e prove già archiviate. Non vengono sostituiti per un cambio
 grafico: farlo senza una migrazione versionata romperebbe le verifiche.
 
-Restano conservati anche la licenza MIT precedente, i registri di esperimenti,
-le versioni dei modelli, i dati originali e le intestazioni di copyright.
+Restano conservati i riferimenti alle licenze MIT e AGPL precedenti, i registri
+di esperimenti, le versioni dei modelli, i dati originali e le intestazioni di
+copyright.
 Il nome ERC-20 sperimentale esistente è un identificatore storico; non viene
 presentato come un token Virdacora lanciato o venduto. La migrazione di questi
 identificatori richiede un lavoro tecnico distinto, con nuove versioni e test.
@@ -70,7 +71,7 @@ metadata. Renaming them needs a separately versioned technical migration;
 branding changes must not invalidate evidence. The old experimental ERC-20
 name is retained and is not described as a launched Virdacora token.
 
-The earlier MIT license and specific MIT/Apache notices remain valid.
+Earlier MIT and AGPL grants and specific MIT/Apache notices retain their terms.
 Logo use follows [TRADEMARK_POLICY.md](../TRADEMARK_POLICY.md); source terms
 follow [LICENSE_POLICY.md](../LICENSE_POLICY.md).
 

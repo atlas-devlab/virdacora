@@ -8,7 +8,7 @@ non afferma che il marchio sia registrato o che il nome sia stato legalmente
 liberato. La ricerca preliminare e la registrazione sono passaggi distinti.
 
 La licenza del software non concede diritti sul marchio. Il nome, il logo e i
-file in `docs/assets` sono esclusi dalla licenza predefinita AGPL del codice.
+file in `docs/assets` sono esclusi dalla licenza predefinita del codice.
 La politica disciplina l'identità del progetto; non garantisce diritti esclusivi
 su immagini generate con AI né limita usi consentiti dalla legge.
 
@@ -35,7 +35,7 @@ This policy does not claim trademark registration or completed legal clearance.
 Preliminary searching and registration are separate steps.
 
 The software license grants no trademark rights. The name, logo and files in
-`docs/assets` are excluded from the default AGPL source license. This policy
+`docs/assets` are excluded from the default source license. This policy
 does not guarantee exclusive rights in AI-generated images or restrict uses
 permitted by law.
 

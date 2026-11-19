@@ -9,7 +9,7 @@ has not been completed. The repository is public.
 See the [identity and compatibility notes](docs/BRAND_IT_EN.md),
 [source terms](LICENSE_POLICY.md) and [Italian/English introduction](docs/LINKEDIN_POST_IT_EN.md).
 
-An open source research prototype for making environmental data and decisions
+A source-available research prototype for making environmental data and decisions
 traceable and reproducible.
 
 The examples follow synthetic and archived real dissolved-oxygen observations
@@ -221,8 +221,9 @@ and the boundaries of that verification.
 
 ## License
 
-Default source terms are [AGPLv3, version 3 only](LICENSE). Earlier MIT
-permissions and explicit MIT/Apache notices are retained; see
-[LICENSE_POLICY.md](LICENSE_POLICY.md). External data and dependencies retain
-their own terms in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Original project code and documentation on `main` are provided under the
+[PolyForm Noncommercial License 1.0.0](LICENSE), subject to the exceptions in
+[LICENSE_POLICY.md](LICENSE_POLICY.md). That policy links the earlier MIT and
+AGPL revisions and describes how to request separate commercial permission.
+External data and dependencies follow [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 The name and logo follow [TRADEMARK_POLICY.md](TRADEMARK_POLICY.md).
