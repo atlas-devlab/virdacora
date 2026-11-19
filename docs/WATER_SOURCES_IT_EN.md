@@ -27,7 +27,8 @@ esempio sono raccolti sotto [Commands](#commands).
   non fanno parte dell'output.
 
 Il comando restituisce JSON per impostazione predefinita. Usa `--format csv`
-per le righe di misura oppure `--format html` per un report autonomo. Conserva
+per le righe di misura oppure `--format html` per un report autonomo con un massimo
+di 250 righe visibili. JSON e CSV contengono tutte le righe importate. Il comando conserva
 l'URL della fonte, l'attribuzione e la SHA-256 del contenuto letto. Il valore
 normalizzato in mg/L è disponibile per le concentrazioni numeriche con unità
 supportata. Un risultato WQX censurato conserva valore e metadati originali.

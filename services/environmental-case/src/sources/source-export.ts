@@ -41,13 +41,18 @@ export function renderOxygenSourceHtml(batch: OxygenSourceBatch): string {
       .filter(Boolean).join(" ");
     const flags = [reading.status, ...reading.qualifiers, reading.detectionCondition].filter(Boolean).join(" · ");
     const rawValue = [reading.valueText, reading.unit].filter(Boolean).join(" ");
-    return `<tr><th scope="row">${escapeHtml(reading.stationName ?? reading.stationId)}<br>
-      <span>${escapeHtml(reading.stationId)}</span></th><td>${escapeHtml(reading.observedAtUtc ?? (reported || null))}</td>
+    const station = reading.stationName && reading.stationName !== reading.stationId
+      ? `${escapeHtml(reading.stationName)}<br><span>${escapeHtml(reading.stationId)}</span>`
+      : escapeHtml(reading.stationId);
+    return `<tr><th scope="row">${station}</th><td>${escapeHtml(reading.observedAtUtc ?? (reported || null))}</td>
       <td>${escapeHtml(rawValue || null)}</td><td>${escapeHtml(reading.valueMgL)}</td>
       <td>${escapeHtml(flags || null)}</td>
       <td>${escapeHtml(reading.seriesId ?? reading.activityId ?? reading.recordId)}</td></tr>`;
   }).join("\n");
   const normalized = batch.readings.filter(reading => reading.valueMgL !== null).length;
+  const readingCount = `${batch.readings.length} ${batch.readings.length === 1 ? "misura" : "misure"}`;
+  const inputCount = `${batch.inputRows} ${batch.inputRows === 1 ? "riga di origine" : "righe di origine"}`;
+  const valueCount = `${normalized} ${normalized === 1 ? "valore espresso" : "valori espressi"} in mg/L`;
 
   return `<!doctype html>
 <html lang="it">
@@ -79,9 +84,10 @@ export function renderOxygenSourceHtml(batch: OxygenSourceBatch): string {
 </head>
 <body><main>
   <header><p>Virdacora</p><h1>Ossigeno disciolto</h1><p>${providerNames[batch.provider]}</p></header>
-  <section><h2>Esito dell’importazione</h2><p>${batch.readings.length} misure di ossigeno su ${batch.inputRows} righe ricevute o lette. ${normalized} valori espressi in mg/L.</p>
+  <section><h2>Esito dell’importazione</h2><p>${readingCount} di ossigeno su ${inputCount}. ${valueCount}.</p>
+    <p>L’orario conserva il riferimento del fornitore quando l’UTC è assente.</p>
     <div class="scroll" role="region" aria-label="Misure di ossigeno" tabindex="0"><table>
-      <caption>${visible.length === batch.readings.length ? `${visible.length} misure` : `Prime ${visible.length} misure. JSON e CSV contengono l’intero risultato.`} · L’orario conserva il riferimento del fornitore quando l’UTC è assente.</caption>
+      <caption>${visible.length === batch.readings.length ? readingCount : `Prime ${visible.length} misure. JSON e CSV contengono l’intero risultato.`}</caption>
       <thead><tr><th scope="col">Stazione</th><th scope="col">Data e ora</th><th scope="col">Valore originale</th>
         <th scope="col">mg/L</th><th scope="col">Stato e qualificatori</th><th scope="col">Serie o riferimento del record</th></tr></thead>
       <tbody>${rows}</tbody>
