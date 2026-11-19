@@ -11,6 +11,22 @@ archive bytes for every review, reproduce the funded case, bind the exact submit
 result hash and compare the complete delivery. The caller must obtain the trusted
 case/result commitments from the escrow; the helper does not authenticate a chain.
 
+## Offline review of the archived case
+
+Run this from the repository root after installing the locked dependencies:
+
+```sh
+pnpm --filter '@terravoce/environmental-case...' build
+pnpm --silent territorial:verify
+```
+
+The command reviews the three archived submissions against commitments recorded
+in Git and reproduces the full forecast comparison. It writes a summary to
+stdout. See the [review guide (IT/EN)](../../docs/TERRITORIAL_REVIEW_IT_EN.md)
+to export HTML or CSV and interpret what the checks cover.
+
+## Full local governance demonstration
+
 From the repository root:
 
 ```sh

@@ -5,17 +5,15 @@ traceable and reproducible. Everyone can contribute, in English or Italian.
 You do not need to code or be an environmental specialist to ask a question,
 share an idea, improve an explanation, translate a paragraph, or try the demo.
 
-## One shared goal
+## Try the first archived replay
 
-The first goal is an offline replay of one openly licensed dissolved-oxygen
-time series from one monitoring station, tracked in
-[issue #3](https://github.com/atlas-devlab/virdacora/issues/3). The replay is not
-implemented yet.
-
-Compare the current model with a simple prediction based on the latest measured
-value, and report the errors. You can help by suggesting a public dataset or
-asking a question about the example. The scientific criteria below apply to
-the experiment's conclusions, not to whether you are allowed to take part.
+The Willamette example compares forecasts of dissolved oxygen with a baseline
+that holds the latest measurement constant. Follow the
+[offline review guide](docs/TERRITORIAL_REVIEW_IT_EN.md) to reproduce the
+comparison and export the results. The example covers one monitoring station
+and one approved archive. You can suggest another public dataset, review the
+threshold assumptions or ask about the result in
+[issue #3](https://github.com/atlas-devlab/virdacora/issues/3).
 
 ## Choose a small first step
 
@@ -54,7 +52,7 @@ Use generated identities, synthetic observations and valueless test tokens.
 Keep funded wallets, API credentials, sensor identities and personal data out
 of commits, logs and issues. Do not commit generated builds or dependencies.
 
-## Validation target for the replay
+## Validation criteria for a new replay
 
 Document the dataset's source, license, units, timestamps, station metadata,
 measurement quality flags, and missing values. Choose a fixed forecast horizon

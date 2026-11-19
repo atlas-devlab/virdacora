@@ -10,6 +10,7 @@
   "scripts": {
     "territorial:check": "pnpm --filter @terravoce/contracts territorial:check",
     "territorial:e2e": "pnpm --filter @terravoce/contracts territorial:e2e",
+    "territorial:verify": "tsx scripts/verify-territorial-archive.ts",
     "build": "pnpm -r --if-present build",
     "check": "pnpm -r --if-present check",
     "test": "pnpm -r --if-present test",
