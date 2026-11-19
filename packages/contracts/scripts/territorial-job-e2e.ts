@@ -5,7 +5,8 @@ import { dirname, isAbsolute, resolve } from "node:path";
 import { canonicalJson, sha256Hex } from "@terravoce/protocol";
 import { buildApp, MemoryObservationStore } from "@terravoce/oracle";
 import {
-  deliverResult, importerObservations, loadDataset, prepareCase, replay,
+  deliverResult, importerObservations, loadDataset, loadDiscreteTerritorialCase,
+  makeDiscreteTerritorialCandidate, prepareCase, replay, reviewDiscreteTerritorialDelivery,
   reviewTerritorialDelivery, sameAssessment, TerritorialReviewError, windowAt,
   type TerritorialReviewErrorCode
 } from "@terravoce/environmental-case";
@@ -21,31 +22,49 @@ import type {
 const datasetOverride = process.env.VIRDACORA_TERRITORIAL_DATASET;
 const captureCaseHash = process.env.VIRDACORA_TERRITORIAL_CAPTURE_CASE_HASH;
 const outputOverride = process.env.VIRDACORA_TERRITORIAL_OUTPUT;
-if (datasetOverride !== undefined || captureCaseHash !== undefined) {
+const requestedMode = process.env.VIRDACORA_TERRITORIAL_MODE;
+assert.ok(requestedMode === undefined || requestedMode === "discrete", "Unknown territorial simulation mode");
+const discrete = requestedMode === "discrete";
+if (discrete || datasetOverride !== undefined || captureCaseHash !== undefined) {
   assert.ok(datasetOverride && isAbsolute(datasetOverride), "An absolute captured dataset path is required");
   assert.ok(captureCaseHash && /^0x[0-9a-f]{64}$/.test(captureCaseHash), "A valid acquisition case hash is required");
   assert.ok(outputOverride && isAbsolute(outputOverride), "An absolute simulation output path is required");
 }
 const datasetFolder = resolve(datasetOverride ?? "../../docs/datasets/usgs-willamette");
-const repositoryPolicy = resolve("../../policies/usgs-data-review-v1.terra");
-const policyPath = datasetOverride === undefined ? repositoryPolicy : resolve(datasetFolder, "policy.terra");
-const originalPolicy = await readFile(policyPath);
-if (datasetOverride !== undefined) {
-  assert.deepEqual(originalPolicy, await readFile(repositoryPolicy), "Captured policy differs from the Willamette policy");
-}
-const policySource = originalPolicy.toString("utf8");
-const archiveNames = ["continuous.json", "station.json", "manifest.json"] as const;
+const rawSourceName = discrete ? "observations.csv" : "continuous.json";
+const archiveNames = discrete ? [rawSourceName, "manifest.json"] : [rawSourceName, "station.json", "manifest.json"];
 const originalArchive = await Promise.all(archiveNames.map((name) => readFile(resolve(datasetFolder, name))));
-const dataset = await loadDataset(datasetFolder);
-const spec = prepareCase(dataset, policySource);
+async function loadWillametteJob() {
+  const repositoryPolicy = resolve("../../policies/usgs-data-review-v1.terra");
+  const policyPath = datasetOverride === undefined ? repositoryPolicy : resolve(datasetFolder, "policy.terra");
+  const originalPolicy = await readFile(policyPath);
+  if (datasetOverride !== undefined) {
+    assert.deepEqual(originalPolicy, await readFile(repositoryPolicy), "Captured policy differs from the Willamette policy");
+  }
+  const policySource = originalPolicy.toString("utf8");
+  const dataset = await loadDataset(datasetFolder);
+  const spec = prepareCase(dataset, policySource);
+  const result = deliverResult(dataset, spec);
+  assert.equal(result.ecologicalImprovementVerified, false);
+  return { mode: "willamette" as const, spec, result, dataset, policyPath, originalPolicy, policySource };
+}
+
+const job = discrete
+  ? { mode: "discrete" as const, ...await loadDiscreteTerritorialCase(datasetFolder) }
+  : await loadWillametteJob();
+const { spec, result: expectedResult } = job;
 if (captureCaseHash !== undefined) {
   assert.equal(spec.caseHash, captureCaseHash, "Captured dataset and policy must reproduce the acquisition case hash");
 }
-const expectedResult = deliverResult(dataset, spec);
 assert.equal(spec.requestedAmount, 10);
 assert.equal(spec.asset, "TEST");
 assert.equal(spec.action, "DATA_REVIEW");
-assert.equal(expectedResult.ecologicalImprovementVerified, false);
+
+const attestation = job.mode === "discrete"
+  ? { kind: 0, hash: job.spec.evidenceHash, time: job.spec.capturedAt }
+  : { kind: 1, hash: job.spec.assessment.evidenceHash, time: job.spec.origin };
+const attestedAt = Math.floor(Date.parse(attestation.time) / 1000);
+assert.ok(Number.isSafeInteger(attestedAt) && attestedAt > 0, "Invalid evidence timestamp");
 
 const outputFolder = resolve(outputOverride ?? "../../outputs/territorial-job");
 await mkdir(dirname(outputFolder), { recursive: true });
@@ -57,11 +76,6 @@ async function save(folder: string, name: string, value: unknown) {
 }
 await save(outputFolder, "case.json", spec);
 await save(outputFolder, "expected-result.json", expectedResult);
-
-const imported = importerObservations(windowAt(dataset, spec.origin));
-const app = buildApp({ store: new MemoryObservationStore(), policySource,
-  adminToken: "territorial-local-admin", oracleToken: "territorial-local-oracle",
-  now: () => new Date(spec.origin) });
 
 type Scenario = "positive" | "altered_delivery" | "insufficient_delivery";
 type TransactionEvidence = { stage: string; hash: string; blockNumber: number };
@@ -120,7 +134,8 @@ async function requireCustomError(action: () => Promise<unknown>, contract: Cust
 }
 
 function candidateFor(scenario: Scenario) {
-  const { resultHash: _originalHash, ...core } = structuredClone(expectedResult);
+  if (job.mode === "discrete") return makeDiscreteTerritorialCandidate(job.result, scenario);
+  const { resultHash: _originalHash, ...core } = structuredClone(job.result);
   if (scenario === "altered_delivery") {
     core.targetRecord.value += 1;
     core.absoluteErrorMgL = Math.abs(core.predictionMgL - core.targetRecord.value);
@@ -137,33 +152,60 @@ function candidateFor(scenario: Scenario) {
   return { ...candidate, resultHash };
 }
 
-try {
-  const registration = await app.inject({ method: "POST", url: "/v1/sensors",
-    headers: { "x-admin-token": "territorial-local-admin" }, payload: {
-      sensorId: "usgs-http-importer-14211720", regionId: spec.regionId,
-      publicKeyDerBase64: imported.publicKeyDerBase64,
-      label: "Ephemeral local importer signature; not a USGS sensor signature"
-    } });
-  assert.equal(registration.statusCode, 201, registration.body);
-  for (const entry of imported.observations) {
-    const response = await app.inject({ method: "POST", url: "/v1/observations", payload: entry.observation });
-    assert.equal(response.statusCode, 202, response.body);
+function reviewDelivery(sourceFolder: string, chain: OnChainCommitments, candidate: unknown) {
+  const { caseHash: fundedCaseHash, submittedResultHash } = chain;
+  if (job.mode === "discrete") {
+    return reviewDiscreteTerritorialDelivery({ sourceFolder, committedCase: job.spec,
+      fundedCaseHash, submittedResultHash, candidate });
   }
-  const response = await app.inject({ method: "POST", url: "/v1/assessments/run",
-    headers: { "x-oracle-token": "territorial-local-oracle" }, payload: {
-      regionId: spec.regionId, metric: "water.oxygen.mg_l", forecastHorizonHours: 1,
-      requestedAction: spec.action, requestedAmount: spec.requestedAmount, asset: spec.asset
-    } });
-  assert.equal(response.statusCode, 201, response.body);
-  const oracle = response.json();
-  assert.equal(oracle.decision.allowed, true);
-  assert.equal(oracle.actionDraft.policyHash, spec.policyHash);
-  sameAssessment(oracle.assessment, spec.assessment);
-  await save(outputFolder, "oracle-assessment.json", {
-    assessment: oracle.assessment, decision: oracle.decision,
-    importerSignature: "ephemeral local importer; not USGS or sensor authentication"
-  });
+  return reviewTerritorialDelivery({ datasetFolder: sourceFolder, policySource: job.policySource,
+    committedCase: job.spec, fundedCaseHash, submittedResultHash, candidate });
+}
 
+async function runWillametteOracle({ dataset, spec, policySource }: Awaited<ReturnType<typeof loadWillametteJob>>) {
+  const imported = importerObservations(windowAt(dataset, spec.origin));
+  const app = buildApp({ store: new MemoryObservationStore(), policySource,
+    adminToken: "territorial-local-admin", oracleToken: "territorial-local-oracle",
+    now: () => new Date(spec.origin) });
+  try {
+    const registration = await app.inject({ method: "POST", url: "/v1/sensors",
+      headers: { "x-admin-token": "territorial-local-admin" }, payload: {
+        sensorId: "usgs-http-importer-14211720", regionId: spec.regionId,
+        publicKeyDerBase64: imported.publicKeyDerBase64,
+        label: "Ephemeral local importer signature; not a USGS sensor signature"
+      } });
+    assert.equal(registration.statusCode, 201, registration.body);
+    for (const entry of imported.observations) {
+      const response = await app.inject({ method: "POST", url: "/v1/observations", payload: entry.observation });
+      assert.equal(response.statusCode, 202, response.body);
+    }
+    const response = await app.inject({ method: "POST", url: "/v1/assessments/run",
+      headers: { "x-oracle-token": "territorial-local-oracle" }, payload: {
+        regionId: spec.regionId, metric: "water.oxygen.mg_l", forecastHorizonHours: 1,
+        requestedAction: spec.action, requestedAmount: spec.requestedAmount, asset: spec.asset
+      } });
+    assert.equal(response.statusCode, 201, response.body);
+    const oracle = response.json();
+    assert.equal(oracle.decision.allowed, true);
+    assert.equal(oracle.actionDraft.policyHash, spec.policyHash);
+    sameAssessment(oracle.assessment, spec.assessment);
+    await save(outputFolder, "oracle-assessment.json", {
+      assessment: oracle.assessment, decision: oracle.decision,
+      importerSignature: "ephemeral local importer; not USGS or sensor authentication"
+    });
+  } finally {
+    await app.close();
+  }
+}
+
+if (job.mode === "willamette") await runWillametteOracle(job);
+else {
+  await save(outputFolder, "source-evidence.json", { kind: "ObservationBatch", evidenceHash: attestation.hash,
+    capturedAt: attestation.time, caseHash: spec.caseHash, regionId: spec.regionId,
+    scope: "discrete oxygen source reproducibility", sourceManifest: "../source/manifest.json" });
+}
+
+async function runSimulation() {
   const { ethers, networkHelpers, networkConfig } = await network.create("default");
   assert.equal(networkConfig.type, "edr-simulated", "The territorial simulation needs a local Hardhat network");
   const signers = await ethers.getSigners();
@@ -209,7 +251,7 @@ try {
     await mined("treasury-governor-bound", treasury.getFunction("setGovernor")(await governor.getAddress()));
     await mined("fixed-simulation-budget", token.getFunction("mint")(await treasury.getAddress(), amount));
     const escrow: TerraResultEscrow = await ethers.deployContract("TerraResultEscrow", [await governor.getAddress(), {
-      caseHash: spec.caseHash, regionId, evidenceHash: spec.assessment.evidenceHash, policyHash: spec.policyHash,
+      caseHash: spec.caseHash, regionId, evidenceHash: attestation.hash, policyHash: spec.policyHash,
       amount, executor: executor.address, scientificReviewer: scientist.address, communityReviewer: community.address
     }]);
     const escrowAddress: string = await escrow.getAddress(), treasuryAddress: string = await treasury.getAddress();
@@ -222,13 +264,16 @@ try {
     await mined("second-oracle-role", evidence.getFunction("grantRole")(await evidence.getFunction("ORACLE_ROLE")(), oracle2.address));
     for (const [index, signer] of [admin, oracle2].entries()) {
       await mined(`evidence-attestation-${index + 1}`, evidence.connect(signer).getFunction("attestEvidence")(
-        spec.assessment.evidenceHash, regionId, sha256Hex(canonicalJson(spec)),
-        Math.floor(Date.parse(spec.origin) / 1000), 1, caseURI));
+        attestation.hash, regionId, sha256Hex(canonicalJson(spec)), attestedAt, attestation.kind, caseURI));
     }
+    const acceptedEvidence = await evidence.getFunction("evidence")(attestation.hash);
+    assert.equal(acceptedEvidence.accepted, true);
+    assert.equal(acceptedEvidence.kind, BigInt(attestation.kind));
+    assert.equal(acceptedEvidence.observedAt, BigInt(attestedAt));
     const bridge: TerraAutonomyBridge = await ethers.deployContract("TerraAutonomyBridge", [await governor.getAddress(), operators.map((s) => s.address)]);
     await mined("bridge-authorized", governor.getFunction("grantRole")(
       await governor.getFunction("AUTOMATION_ROLE")(), await bridge.getAddress()));
-    const request = { regionId, evidenceHash: spec.assessment.evidenceHash, policyHash: spec.policyHash,
+    const request = { regionId, evidenceHash: attestation.hash, policyHash: spec.policyHash,
       actionHash: ethers.id(spec.action), recipient: escrowAddress, amount, riskTier: 0,
       requestAutonomy: true, metadataURI: caseURI };
     const validUntil = (await networkHelpers.time.latest()) + 3600;
@@ -298,7 +343,7 @@ try {
       const submittedResultHash = await escrow.getFunction("resultHash")();
       assert.equal(terms.caseHash, spec.caseHash);
       assert.equal(terms.regionId, regionId);
-      assert.equal(terms.evidenceHash, spec.assessment.evidenceHash);
+      assert.equal(terms.evidenceHash, attestation.hash);
       assert.equal(terms.policyHash, spec.policyHash);
       assert.equal(terms.amount, amount);
       assert.equal(terms.executor, executor.address);
@@ -343,15 +388,16 @@ try {
     async function rejectedReview(reviewer: string, sourceFolder: string, expectedCode: TerritorialReviewErrorCode) {
       const chain: OnChainCommitments = await onChainCommitments();
       let reason = "";
-      await assert.rejects(() => reviewTerritorialDelivery({ datasetFolder: sourceFolder, policySource, committedCase: spec,
-        fundedCaseHash: chain.caseHash, submittedResultHash: chain.submittedResultHash, candidate }), (error: unknown) => {
+      await assert.rejects(() => reviewDelivery(sourceFolder, chain, candidate), (error: unknown) => {
         assert.ok(error instanceof TerritorialReviewError);
         assert.equal(error.code, expectedCode);
         reason = error.message;
         return true;
       });
+      const scope = job.mode === "discrete" ? "simulated reviewer; reproducibility against the committed discrete observation batch"
+        : "simulated reviewer; reproducibility against committed archived USGS data";
       const record = { reviewer, verified: false, errorCode: expectedCode, reason, onChain: chain,
-        approvalTransactionSent: false, scope: "simulated reviewer; reproducibility against committed archived USGS data" };
+        approvalTransactionSent: false, scope };
       reviews.push(record);
       return record;
     }
@@ -359,8 +405,7 @@ try {
     if (scenario === "positive") {
       for (const [reviewer, signer] of [["scientific", scientist], ["community", community]] as const) {
         const chain: OnChainCommitments = await onChainCommitments();
-        const verdict = await reviewTerritorialDelivery({ datasetFolder, policySource, committedCase: spec,
-          fundedCaseHash: chain.caseHash, submittedResultHash: chain.submittedResultHash, candidate });
+        const verdict = await reviewDelivery(datasetFolder, chain, candidate);
         assert.equal(verdict.verified, true);
         assert.equal(verdict.archiveReloaded, true);
         const beforeApproval = await onChainCommitments();
@@ -385,7 +430,7 @@ try {
         for (const [index, name] of archiveNames.entries()) {
           const content = originalArchive[index];
           assert.ok(content !== undefined);
-          const bytes = name === "continuous.json" ? Buffer.concat([content, Buffer.from(" ")]) : content;
+          const bytes = name === rawSourceName ? Buffer.concat([content, Buffer.from(" ")]) : content;
           await writeFile(resolve(tamperedFolder, name), bytes, { flag: "wx" });
         }
         await rejectedReview("scientific-source-integrity-check", tamperedFolder, "SOURCE_INTEGRITY_FAILED");
@@ -436,32 +481,45 @@ try {
 
   const finalArchive = await Promise.all(archiveNames.map((name) => readFile(resolve(datasetFolder, name))));
   assert.deepEqual(finalArchive, originalArchive, "Pinned source bytes must remain unchanged");
-  if (datasetOverride !== undefined) {
-    assert.deepEqual(await readFile(policyPath), originalPolicy, "Captured policy bytes must remain unchanged");
+  if (job.mode === "willamette" && datasetOverride !== undefined) {
+    assert.deepEqual(await readFile(job.policyPath), job.originalPolicy, "Captured policy bytes must remain unchanged");
   }
-  const { rows: _rows, ...scientificReplay } = replay(dataset);
-  const report = { version: "territorial-job-local-v1", caseHash: spec.caseHash,
-    mission: "distributed environmental evidence, bounded intervention funding, and decision rights for affected communities and youth",
-    workDelivered: "reproducible review of real archived USGS oxygen data",
-    source: { stationId: dataset.manifest.stationId, periodStart: dataset.manifest.start, periodEnd: dataset.manifest.end,
-      sourceHash: dataset.manifest.sourceHash, manifestHash: spec.datasetManifestHash,
-      archiveBytesUnchanged: true, liveRetrievalPerformed: false,
-      ...(datasetOverride === undefined ? {} : {
-        input: "supplied-usgs-snapshot", sourceUrl: dataset.manifest.sourceUrl,
-        stationUrl: dataset.manifest.stationUrl, stationHash: dataset.manifest.stationHash,
-        retrievedAt: dataset.manifest.retrievedAt,
-        retrievalContext: "snapshot supplied by acquisition; simulation reads local files",
-      }) },
-    limits: { identitiesAndReviews: "simulated; not independent people", consensus: "3-of-4 local signature fixture; ABCI not launched",
-      network: "one ephemeral Hardhat network; transaction hashes have no public explorer", funding: "valueless local mock tokens",
-      physicalPilot: "not performed", ecologicalImprovementVerified: false,
-      prediction: "retrospective finalized archive; not live forecasting or field validation" },
-    scientificResult: { predictionMgL: expectedResult.predictionMgL, observedMgL: expectedResult.targetRecord.value,
-      persistenceMgL: expectedResult.persistenceMgL, absoluteErrorMgL: expectedResult.absoluteErrorMgL,
-      persistenceAbsoluteErrorMgL: expectedResult.persistenceAbsoluteErrorMgL,
-      compensationRequiresFavourableForecast: false, replay: scientificReplay },
-    scenarios: results };
-  await save(outputFolder, "territorial-job-report.json", report);
+  const limits = { identitiesAndReviews: "simulated; not independent people", consensus: "3-of-4 local signature fixture; ABCI not launched",
+    network: "one ephemeral Hardhat network; transaction hashes have no public explorer", funding: "valueless local mock tokens",
+    physicalPilot: "not performed", ecologicalImprovementVerified: false };
+  if (job.mode === "discrete") {
+    await save(outputFolder, "territorial-job-report.json", {
+      version: "territorial-discrete-job-local-v1", caseHash: spec.caseHash,
+      workDelivered: "reproducible review of discrete dissolved-oxygen data",
+      source: { input: "supplied-discrete-observation-batch", sourceManifest: "../source/manifest.json",
+        evidenceKind: "ObservationBatch", evidenceHash: attestation.hash, capturedAt: attestation.time,
+        archiveBytesUnchanged: true },
+      limits, evidenceResult: job.result, scenarios: results,
+    });
+  } else {
+    const { dataset, spec, result: expected } = job;
+    const { rows: _rows, ...scientificReplay } = replay(dataset);
+    await save(outputFolder, "territorial-job-report.json", {
+      version: "territorial-job-local-v1", caseHash: spec.caseHash,
+      mission: "distributed environmental evidence, bounded intervention funding, and decision rights for affected communities and youth",
+      workDelivered: "reproducible review of real archived USGS oxygen data",
+      source: { stationId: dataset.manifest.stationId, periodStart: dataset.manifest.start, periodEnd: dataset.manifest.end,
+        sourceHash: dataset.manifest.sourceHash, manifestHash: spec.datasetManifestHash,
+        archiveBytesUnchanged: true, liveRetrievalPerformed: false,
+        ...(datasetOverride === undefined ? {} : {
+          input: "supplied-usgs-snapshot", sourceUrl: dataset.manifest.sourceUrl,
+          stationUrl: dataset.manifest.stationUrl, stationHash: dataset.manifest.stationHash,
+          retrievedAt: dataset.manifest.retrievedAt,
+          retrievalContext: "snapshot supplied by acquisition; simulation reads local files",
+        }) },
+      limits: { ...limits, prediction: "retrospective finalized archive; not live forecasting or field validation" },
+      scientificResult: { predictionMgL: expected.predictionMgL, observedMgL: expected.targetRecord.value,
+        persistenceMgL: expected.persistenceMgL, absoluteErrorMgL: expected.absoluteErrorMgL,
+        persistenceAbsoluteErrorMgL: expected.persistenceAbsoluteErrorMgL,
+        compensationRequiresFavourableForecast: false, replay: scientificReplay },
+      scenarios: results,
+    });
+  }
   let commitmentsSha256: string | undefined;
   if (captureCaseHash !== undefined) {
     const { positive, altered_delivery, insufficient_delivery } = submittedResultHashes;
@@ -480,6 +538,6 @@ try {
   if (commitmentsSha256 !== undefined) {
     console.log(`VIRDACORA_TERRITORIAL_CAPTURE_ANCHOR=${commitmentsSha256}`);
   }
-} finally {
-  await app.close();
 }
+
+await runSimulation();
