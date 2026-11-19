@@ -1,11 +1,10 @@
 # Virdacora: guida operativa per chi prende in mano il progetto
 
-> **Identità e licenza - 14 ottobre 2026.** Il progetto adotta il nome Virdacora.
-> La repository [atlas-devlab/virdacora](https://github.com/atlas-devlab/virdacora)
-> è pubblica. I termini correnti sono AGPLv3 con le eccezioni
-> documentate in [LICENSE_POLICY.md](LICENSE_POLICY.md); i permessi MIT precedenti
-> restano validi. Consulta [README](README.md) e [CONTRIBUTING](CONTRIBUTING.md).
-> È un prototipo di ricerca.
+> Virdacora è un prototipo di ricerca con un
+> [repository pubblico su GitHub](https://github.com/atlas-devlab/virdacora).
+> La licenza predefinita è [PolyForm Noncommercial 1.0.0](LICENSE).
+> La [policy delle licenze](LICENSE_POLICY.md) documenta le eccezioni e i
+> permessi concessi in precedenza sotto MIT e AGPL.
 
 ## A chi serve questa guida
 

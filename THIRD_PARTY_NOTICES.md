@@ -14,8 +14,9 @@ respective licenses. These images and dependency source trees are not vendored
 in this repository.
 
 The MIT SPDX headers in the project Solidity contracts have been preserved.
-The original project MIT notice is retained in [LICENSES/MIT-legacy.txt](LICENSES/MIT-legacy.txt);
-those permissions are not revoked by the new default AGPL source license.
+The original project MIT notice remains available in
+[LICENSES/MIT-legacy.txt](LICENSES/MIT-legacy.txt). For the historical MIT and
+AGPL snapshots, see [LICENSE_POLICY.md](LICENSE_POLICY.md).
 The recovered philosophical research downloads, build outputs, local runtime
 data and tooling archives are excluded from this source publication.
 
@@ -25,7 +26,7 @@ data and tooling archives are excluded from this source publication.
 Survey Water Data for the Nation oxygen observations for station `USGS-14211720`,
 2025-08-01 through 2025-08-15 UTC. The retained manifest records the exact source
 and station URLs, retrieval time and hashes. Its source terms are recorded as
-`US Government work; public domain`; those data do not acquire the project's
-AGPL source-code license. Attribution does not imply USGS endorsement or a
-producer signature. Upstream data can be revised; this run uses the archived
+`US Government work; public domain`. These terms also apply to USGS observations
+reproduced in project evidence records. Attribution does not imply USGS endorsement
+or a producer signature. Upstream data can be revised. This run uses the archived
 snapshot and performs no new environmental acquisition.

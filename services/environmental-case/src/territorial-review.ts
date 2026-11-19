@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { canonicalJson, sha256Hex } from "@terravoce/protocol";
 import { prepareCase, verifyResult, type EnvironmentalCase } from "./case.js";
 import { loadDataset, type Dataset } from "./dataset.js";

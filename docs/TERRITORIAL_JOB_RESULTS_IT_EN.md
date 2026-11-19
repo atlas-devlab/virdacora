@@ -116,6 +116,10 @@ cambia solo l'etichetta del riepilogo. Il vecchio caso storico conserva i propri
 hash; l'Oracle corrente produce correttamente nuovi identificativi versionati.
 Vedere [compatibilità ed errata](TERRITORIAL_JOB_COMPATIBILITY_IT_EN.md).
 
+Per verificare i [16 hash degli input della prova finale](evidence/territorial-job/execution-inputs.json),
+usa il [commit della prova][territorial-run-revision]. Le tre intestazioni SPDX
+sono state aggiornate nel passaggio a PolyForm e i file correnti hanno hash diversi.
+
 ### Verifiche realmente eseguite
 
 - Build del workspace e check ordinari superati.
@@ -201,6 +205,10 @@ The [execution record](evidence/territorial-job/territorial-job-report.json) is
 copied from the final local run. Its case, candidate, review, balances, stages and
 transaction files are in the same tree; every hash is a local simulation receipt,
 not a public-chain explorer reference. The [pre-run input hashes](evidence/territorial-job/execution-inputs.json)
-identify the final tested source files. [First-run erratum evidence](evidence/territorial-job/first-run-erratum/territorial-job-report.json)
+identify the final tested source files at the [archived revision][territorial-run-revision].
+The transition to PolyForm updated three SPDX headers and changed those files'
+hashes on `main`. [First-run erratum evidence](evidence/territorial-job/first-run-erratum/territorial-job-report.json)
 remains separate. The protocol and compatibility note explain the acceptance
 criteria and trust boundaries.
+
+[territorial-run-revision]: https://github.com/atlas-devlab/virdacora/tree/8e0d0d68f8dbaa58eb0d89ce0b7cdcb5790ae94e

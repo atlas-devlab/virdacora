@@ -89,8 +89,9 @@ private channel with the maintainer before sharing sensitive details.
 
 ## License
 
-New contributions use AGPL-3.0-only unless the affected file has a specific
-MIT, Apache-2.0 or other notice. Preserve those terms and attribution; discuss
-a change to an existing file license explicitly. Submit only material you
-can license compatibly. No copyright assignment is required. See
+New contributions use `PolyForm-Noncommercial-1.0.0` unless the affected file
+has a specific MIT, Apache-2.0 or other notice. Preserve applicable terms and
+attribution. Discuss any change to a file's license with the maintainer. Submit
+only material you can license under the applicable terms. Contributors retain
+copyright in their contributions. See
 [LICENSE_POLICY.md](LICENSE_POLICY.md) and [TRADEMARK_POLICY.md](TRADEMARK_POLICY.md).
