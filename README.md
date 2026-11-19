@@ -45,6 +45,19 @@ Use `--format html` for a standalone report to open in a browser or
 offline with the committed archive. See the [review guide (IT/EN)](docs/TERRITORIAL_REVIEW_IT_EN.md)
 for export examples and the scope of the evidence.
 
+## Read dissolved-oxygen data from external sources
+
+Query USGS or Water Quality Portal for one station and date window, or load a
+Water Rangers simple-table export. The command includes source and quality
+metadata and can return JSON, CSV or a standalone HTML report.
+
+```sh
+pnpm --silent water:source --provider usgs --station USGS-14211720 --start 2025-08-08 --end 2025-08-08
+```
+
+See the [water-source guide (IT/EN)](docs/WATER_SOURCES_IT_EN.md) for setup,
+all three inputs, export formats and attribution.
+
 ## Oracle operation and evidence receipts
 
 Oracle storage, request-boundary fixes and the reproducible synthetic performance

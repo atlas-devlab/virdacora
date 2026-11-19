@@ -5,9 +5,12 @@ notices remain applicable. The exact dependency versions and integrity hashes
 are recorded in `pnpm-lock.yaml`.
 
 Direct runtime dependencies include OpenZeppelin Contracts, Zod, Chevrotain,
-Fastify and node-postgres. Development tools include Hardhat and its toolbox,
-TypeScript, tsx and Vitest. Read the license files distributed with the installed
-packages before redistributing them.
+Fastify, node-postgres and `csv-parse`. Development tools include Hardhat and
+its toolbox, TypeScript, tsx and Vitest. Read the license files distributed with
+the installed packages before redistributing them.
+
+`csv-parse` is distributed under MIT. Its package includes the copyright
+notice for Adaltas and the full license text.
 
 Docker uses Node.js and PostgreSQL base images, whose components retain their
 respective licenses. These images and dependency source trees are not vendored
@@ -30,3 +33,17 @@ and station URLs, retrieval time and hashes. Its source terms are recorded as
 reproduced in project evidence records. Attribution does not imply USGS endorsement
 or a producer signature. Upstream data can be revised. This run uses the archived
 snapshot and performs no new environmental acquisition.
+
+## External water-data sources
+
+The on-demand source command records the origin and attribution with each
+batch. Credit the U.S. Geological Survey for USGS-produced data under its
+[copyright and credit guidance](https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits).
+For Water Quality Portal, retain the submitting organization and include the
+[portal citation](https://waterqualitydata.us/beta/portal_userguide/#cite-the-water-quality-portal).
+Consult the originating organization's terms for the selected results.
+
+Water Rangers datasets available for download come with a dataset-specific
+attribution and the [Open Data Commons Attribution License](https://opendatacommons.org/licenses/by/1-0/).
+Keep that attribution with any reused export. See the
+[Water Rangers data sharing guide](https://data.waterrangers.com/api/faq).
