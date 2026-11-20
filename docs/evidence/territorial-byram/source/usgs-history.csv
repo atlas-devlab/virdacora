@@ -1,0 +1,150 @@
+monitoringLocationIdentifier,characteristicGroup,characteristic,characteristicUserSupplied,resultCount,activityCount,firstActivity,mostRecentActivity
+USGS-02486500,Information,Sample accounting number,Sample accounting number,1,1,1974-10-29,1974-10-29
+USGS-02486500,Information,Sampling depth,Sampling depth,12,12,1978-06-07,1978-06-08
+USGS-02486500,"Inorganics, Major, Metals",Calcium,"Calcium, water, filtered",28,28,1969-10-08,1978-06-07
+USGS-02486500,"Inorganics, Major, Metals",Magnesium,"Magnesium, suspended sediment",1,1,1974-10-29,1974-10-29
+USGS-02486500,"Inorganics, Major, Metals",Magnesium,"Magnesium, water, filtered",27,27,1969-10-08,1978-06-07
+USGS-02486500,"Inorganics, Major, Metals",Magnesium,"Magnesium, water, unfiltered, recoverable",2,2,1974-10-29,1976-09-22
+USGS-02486500,"Inorganics, Major, Metals",Potassium,"Potassium, water, filtered",19,19,1969-10-08,1973-07-18
+USGS-02486500,"Inorganics, Major, Metals",Sodium,"Sodium, water, filtered",20,20,1969-10-08,1978-06-07
+USGS-02486500,"Inorganics, Major, Metals",Sodium adsorption ratio [(Na)/(sq root of 1/2 Ca + Mg)],"Sodium adsorption ratio (SAR), water",20,20,1969-10-08,1978-06-07
+USGS-02486500,"Inorganics, Major, Metals","Sodium, percent total cations","Sodium fraction of cations, water",19,19,1969-10-08,1973-07-18
+USGS-02486500,"Inorganics, Major, Non-metals","Acidity, (H+)","Hydrogen ion, water, unfiltered, calculated",82,82,1969-10-08,1978-06-08
+USGS-02486500,"Inorganics, Major, Non-metals",Alkalinity,"Acid neutralizing capacity (ANC) as calcium carbonate, water, unfiltered, fixed endpoint (EP) (pH 4.5) titration, field",28,28,1969-10-08,1978-06-07
+USGS-02486500,"Inorganics, Major, Non-metals",Bicarbonate,"Bicarbonate as bicarbonate, water, unfiltered, fixed endpoint (EP) (pH 4.5) titration, field",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Inorganics, Major, Non-metals",Carbon dioxide,"Carbon dioxide, water, unfiltered",27,27,1969-10-08,1976-09-22
+USGS-02486500,"Inorganics, Major, Non-metals",Carbonate,"Carbonate as carbonate, water, unfiltered, fixed endpoint (EP) (pH 8.3) titration, field",4,4,1974-10-29,1978-06-07
+USGS-02486500,"Inorganics, Major, Non-metals",Chloride,"Chloride, water, filtered",16,16,1971-10-27,1978-06-07
+USGS-02486500,"Inorganics, Major, Non-metals",Dissolved oxygen (DO),"Dissolved oxygen (DO), water, unfiltered",191,191,1969-10-08,1978-06-09
+USGS-02486500,"Inorganics, Major, Non-metals",Fluoride,"Fluoride, water, filtered",1,1,1978-06-07,1978-06-07
+USGS-02486500,"Inorganics, Major, Non-metals",Silica,"Silica as silicon dioxide, water, filtered",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Inorganics, Major, Non-metals",Sulfate,"Sulfate, water, filtered",28,28,1969-10-08,1978-06-07
+USGS-02486500,"Inorganics, Minor, Metals",Cadmium,"Cadmium, bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Inorganics, Minor, Metals",Cadmium,"Cadmium, water, unfiltered",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Inorganics, Minor, Metals",Chromium,"Chromium, bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Inorganics, Minor, Metals",Chromium,"Chromium, water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Inorganics, Minor, Metals",Cobalt,"Cobalt, bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Inorganics, Minor, Metals",Cobalt,"Cobalt, water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Inorganics, Minor, Metals",Copper,"Copper, bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Inorganics, Minor, Metals",Copper,"Copper, water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Inorganics, Minor, Metals",Iron,"Iron, bed sediment (dry mass basis), complete digestion",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Inorganics, Minor, Metals",Iron,"Iron, water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Inorganics, Minor, Metals",Lead,"Lead, bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Inorganics, Minor, Metals",Lead,"Lead, water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Inorganics, Minor, Metals",Manganese,"Manganese, bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Inorganics, Minor, Metals",Manganese,"Manganese, water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Inorganics, Minor, Metals",Mercury,"Mercury, bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Inorganics, Minor, Metals",Mercury,"Mercury, water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Inorganics, Minor, Metals",Zinc,"Zinc, bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Inorganics, Minor, Metals",Zinc,"Zinc, water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Inorganics, Minor, Non-metals",Arsenic,"Arsenic, bed sediment (dry mass basis), complete digestion",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Inorganics, Minor, Non-metals",Arsenic,"Arsenic, water, unfiltered",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Inorganics, Minor, Non-metals",Selenium,"Selenium, bed sediment (dry mass basis), complete digestion",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Inorganics, Minor, Non-metals",Selenium,"Selenium, water, unfiltered",5,5,1974-10-29,1978-06-07
+USGS-02486500,Microbiological,Fecal Coliform,"Fecal coliforms (most probable number), water, EC broth method",1,1,1971-07-20,1971-07-20
+USGS-02486500,Microbiological,Fecal Coliform,"Fecal coliforms, water, M-FC MF method (0.45 micron filter)",12,12,1971-04-07,1976-09-22
+USGS-02486500,Microbiological,Fecal Coliform,"Fecal coliforms, water, M-FC MF method (0.7 micron filter)",8,8,1977-08-30,1978-06-08
+USGS-02486500,Microbiological,Fecal Streptococcus Group Bacteria,"Fecal streptococci, water, KF streptococcus MF method",8,8,1977-08-30,1978-06-08
+USGS-02486500,Microbiological,Fecal Streptococcus Group Bacteria,"Fecal streptococci, water, m-Enterococcus MF method",13,13,1974-09-12,1976-09-22
+USGS-02486500,Microbiological,Total Coliform,"Total coliforms, water, M-Endo MF method, immediate",19,19,1969-10-08,1973-07-18
+USGS-02486500,Nutrient,Ammonia and ammonium,"Total ammonia (NH4+ and NH3) as ammonium, water, filtered",7,7,1971-10-27,1972-10-04
+USGS-02486500,Nutrient,Ammonia and ammonium,"Total ammonia (NH4+ and NH3) as ammonium, water, unfiltered",27,27,1973-01-16,1978-06-08
+USGS-02486500,Nutrient,Ammonia and ammonium,"Total ammonia (NH4+ and NH3) as nitrogen, water, filtered",2,2,1972-06-06,1972-10-04
+USGS-02486500,Nutrient,Ammonia and ammonium,"Total ammonia (NH4+ and NH3) as nitrogen, water, unfiltered",24,24,1974-09-12,1978-06-08
+USGS-02486500,Nutrient,Inorganic nitrogen (nitrate and nitrite),"Nitrate plus nitrite as nitrogen, water, unfiltered",25,25,1974-01-30,1978-06-08
+USGS-02486500,Nutrient,Kjeldahl nitrogen,"Total ammonia (NH4+ and NH3) plus organic nitrogen as nitrogen, water, unfiltered",25,25,1974-01-30,1978-06-08
+USGS-02486500,Nutrient,Nitrate,"Nitrate as nitrate, water, filtered",13,13,1971-04-07,1973-01-16
+USGS-02486500,Nutrient,Nitrate,"Nitrate as nitrate, water, unfiltered",3,3,1973-01-16,1973-07-18
+USGS-02486500,Nutrient,Nitrate,"Nitrate as nitrogen, water, filtered",12,12,1971-04-07,1973-01-16
+USGS-02486500,Nutrient,Nitrate,"Nitrate as nitrogen, water, unfiltered",3,3,1973-01-16,1973-07-18
+USGS-02486500,Nutrient,Nitrite,"Nitrite as nitrite, water, filtered",19,19,1969-10-08,1972-10-04
+USGS-02486500,Nutrient,Nitrite,"Nitrite as nitrite, water, unfiltered",3,3,1973-01-16,1973-07-18
+USGS-02486500,Nutrient,Nitrite,"Nitrite as nitrogen, water, filtered",14,14,1969-10-08,1972-10-04
+USGS-02486500,Nutrient,"Nitrogen, mixed forms (NH3), (NH4), organic, (NO2) and (NO3)","Total nitrogen (nitrate + nitrite + total ammonia + organic nitrogen) as nitrate, water, unfiltered",25,25,1974-01-30,1978-06-08
+USGS-02486500,Nutrient,"Nitrogen, mixed forms (NH3), (NH4), organic, (NO2) and (NO3)","Total nitrogen (nitrate + nitrite + total ammonia + organic nitrogen) as nitrogen, water, unfiltered, calculated",25,25,1974-01-30,1978-06-08
+USGS-02486500,Nutrient,Organic Nitrogen,"Organic nitrogen as nitrogen, water, unfiltered",44,44,1969-10-08,1978-06-08
+USGS-02486500,Nutrient,Orthophosphate,"Orthophosphate as orthophosphate, water, filtered",1,1,1971-12-08,1971-12-08
+USGS-02486500,Nutrient,Phosphate-phosphorus,"Phosphate as orthophosphate, water, unfiltered",21,21,1969-10-08,1973-07-18
+USGS-02486500,Nutrient,Phosphorus,"Phosphorus as phosphorus, water, unfiltered",25,25,1974-01-30,1978-06-08
+USGS-02486500,"Organics, Other",Chlorinated naphthalenes,"Polychlorinated naphthalenes (PCNs), water, unfiltered, recoverable",2,2,1976-09-22,1978-06-07
+USGS-02486500,"Organics, Other",Oil and Grease,"Oil and grease, water, unfiltered, recoverable",4,4,1974-10-29,1976-09-22
+USGS-02486500,"Organics, Other",Oil and Grease,"Oil and grease, water, unfiltered, recoverable, freon extraction, gravimetric",1,1,1978-06-07,1978-06-07
+USGS-02486500,"Organics, Other",Organic carbon,"Dissolved organic carbon (DOC), water, filtered",4,4,1972-10-04,1973-07-18
+USGS-02486500,"Organics, Other",Organic carbon,"Total organic carbon (TOC), water, unfiltered",16,16,1972-10-04,1978-06-07
+USGS-02486500,"Organics, Other",Phenols,"Phenolic compounds, water, unfiltered, recoverable",6,6,1974-01-30,1978-06-07
+USGS-02486500,"Organics, PCBs",Polychlorinated biphenyls,"Polychlorinated biphenyls (PCBs), bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Organics, PCBs",Polychlorinated biphenyls,"Polychlorinated biphenyls (PCBs), water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide","2,4,5-T","2-(2,4,5-Trichlorophenoxy)acetic acid (2,4,5-T), bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide","2,4,5-T","2-(2,4,5-Trichlorophenoxy)acetic acid (2,4,5-T), water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide","2,4-D","2-(2,4-Dichlorophenoxy)acetic acid (2,4-D), bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide","2,4-D","2-(2,4-Dichlorophenoxy)acetic acid (2,4-D), water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Aldrin,"Aldrin, bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Aldrin,"Aldrin, water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Carbophenothion,"Carbophenothion, bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Carbophenothion,"Carbophenothion, water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Carbophenothion-methyl,"Methyl trithion, bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Carbophenothion-methyl,"Methyl trithion, water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide","Chlordane, technical","Chlordane (technical), bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide","Chlordane, technical","Chlordane (technical), water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Diazinon,"Diazinon, bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Diazinon,"Diazinon, water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Dieldrin,"Dieldrin, bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Dieldrin,"Dieldrin, water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Endrin,"Endrin, bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Endrin,"Endrin, water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Ethion,"Ethion, bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Ethion,"Ethion, water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Heptachlor,"Heptachlor, bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Heptachlor,"Heptachlor, water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Heptachlor epoxide,"Heptachlor epoxide, bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Heptachlor epoxide,"Heptachlor epoxide, water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Malathion,"Malathion, bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Malathion,"Malathion, water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Methyl parathion,"Methyl parathion, bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Methyl parathion,"Methyl parathion, water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Parathion,"Parathion, bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Parathion,"Parathion, water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Silvex,"Silvex, bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Silvex,"Silvex, water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Toxaphene,"Toxaphene, bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",Toxaphene,"Toxaphene, water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",gamma-HCH (Lindane),"Lindane, bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide",gamma-HCH (Lindane),"Lindane, water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide","p,p'-DDD","1,1-Dichloro-2,2-bis(p-chlorophenyl)ethane (p,p'-DDD), bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide","p,p'-DDD","1,1-Dichloro-2,2-bis(p-chlorophenyl)ethane (p,p'-DDD), water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide","p,p'-DDE","1-Chloro-4-[2,2-dichloro-1-(4-chlorophenyl)ethenyl]benzene (p,p'-DDE), bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide","p,p'-DDE","1-Chloro-4-[2,2-dichloro-1-(4-chlorophenyl)ethenyl]benzene (p,p'-DDE), water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide","p,p'-DDT","1-Chloro-4-[2,2,2-trichloro-1-(4-chlorophenyl)ethyl]benzene (p,p'-DDT), bed sediment (dry mass basis), recoverable",3,3,1974-10-29,1978-06-07
+USGS-02486500,"Organics, Pesticide","p,p'-DDT","1-Chloro-4-[2,2,2-trichloro-1-(4-chlorophenyl)ethyl]benzene (p,p'-DDT), water, unfiltered, recoverable",5,5,1974-10-29,1978-06-07
+USGS-02486500,Physical,"Biochemical oxygen demand, standard conditions","Biochemical oxygen demand (BOD), water, unfiltered, 5 days at 20 degrees Celsius",34,34,1969-11-06,1978-06-08
+USGS-02486500,Physical,"Chemical oxygen demand, (high level)","Chemical oxygen demand (COD), water, unfiltered, high level",17,17,1974-01-30,1976-09-22
+USGS-02486500,Physical,"Chemical oxygen demand, (low level)","Chemical oxygen demand (COD), water, unfiltered, low level",21,21,1969-10-08,1973-07-18
+USGS-02486500,Physical,Color,"Color, water, filtered",27,27,1969-10-08,1978-06-07
+USGS-02486500,Physical,"Hardness, Ca, Mg","Hardness as calcium carbonate, water",28,28,1969-10-08,1978-06-07
+USGS-02486500,Physical,"Hardness, non-carbonate","Noncarbonate hardness as calcium carbonate, water, unfiltered, field",5,5,1974-10-29,1978-06-07
+USGS-02486500,Physical,"Height, gage","Gage height, above datum",94,47,1978-06-07,1978-06-09
+USGS-02486500,Physical,Specific conductance,"Specific conductance, water, unfiltered, normalized to 25 degrees Celsius",202,202,1969-10-08,1978-06-09
+USGS-02486500,Physical,Stream flow,Discharge,20,10,1969-10-08,1972-10-04
+USGS-02486500,Physical,"Stream flow, instantaneous","Discharge, instantaneous",300,150,1973-12-07,1978-06-09
+USGS-02486500,Physical,"Temperature, water","Temperature, water",193,193,1969-10-08,1978-06-09
+USGS-02486500,Physical,Total dissolved solids,"Dissolved solids flux, water, filtered",11,11,1974-01-30,1976-09-22
+USGS-02486500,Physical,Total dissolved solids,"Dissolved solids, water, filtered",21,21,1971-10-27,1978-06-07
+USGS-02486500,Physical,Total dissolved solids,"Dissolved solids, water, filtered, dried at 105 degrees Celsius",21,21,1970-03-05,1974-10-29
+USGS-02486500,Physical,Total dissolved solids,"Dissolved solids, water, filtered, dried at 180 degrees Celsius",12,12,1974-01-30,1978-06-07
+USGS-02486500,Physical,Total dissolved solids,"Dissolved solids, water, filtered, sum of constituents",10,10,1971-10-27,1978-06-07
+USGS-02486500,Physical,Total solids,"Total solids, water, unfiltered, dried at 105 degrees Celsius",22,22,1969-10-08,1973-07-18
+USGS-02486500,Physical,Total suspended solids,"Suspended solids, water",11,11,1969-10-08,1974-10-29
+USGS-02486500,Physical,Total suspended solids,"Suspended solids, water, dried at 110 degrees Celsius",12,12,1971-06-02,1973-07-18
+USGS-02486500,Physical,Total volatile solids,"Loss on ignition (LOI), total solids in water, unfiltered",22,22,1969-10-08,1973-07-18
+USGS-02486500,Physical,Turbidity,Turbidity (legacy),1,1,1978-06-07,1978-06-07
+USGS-02486500,Physical,Turbidity,"Turbidity (legacy) as silicon dioxide, Hellige turbidimeter",11,11,1969-10-08,1971-07-20
+USGS-02486500,Physical,Turbidity,"Turbidity (legacy), Jackson candle turbidimeter",19,19,1971-12-08,1976-09-22
+USGS-02486500,Physical,pH,"pH, water, unfiltered, field",82,82,1969-10-08,1978-06-08
+USGS-02486500,Radiochemical,Alpha particle,"Gross alpha radioactivity as natural uranium (U-nat), suspended sediment, natural uranium curve",1,1,1974-10-29,1974-10-29
+USGS-02486500,Radiochemical,Alpha particle,"Gross alpha radioactivity as natural uranium (U-nat), water, filtered, natural uranium curve",1,1,1974-10-29,1974-10-29
+USGS-02486500,Radiochemical,Beta particle,"Gross beta radioactivity, suspended sediment, cesium-137 curve",1,1,1974-10-29,1974-10-29
+USGS-02486500,Radiochemical,Beta particle,"Gross beta radioactivity, suspended sediment, strontium-90/yttrium-90 curve",1,1,1974-10-29,1974-10-29
+USGS-02486500,Radiochemical,Beta particle,"Gross beta radioactivity, water, filtered, cesium-137 curve",1,1,1974-10-29,1974-10-29
+USGS-02486500,Radiochemical,Beta particle,"Gross beta radioactivity, water, filtered, strontium-90/yttrium-90 curve",1,1,1974-10-29,1974-10-29
+USGS-02486500,Sediment,Suspended Sediment Concentration (SSC),Suspended sediment concentration,9,9,1974-09-12,1975-06-10
+USGS-02486500,Sediment,Suspended Sediment Load,Suspended sediment flux,9,9,1974-09-12,1975-06-10

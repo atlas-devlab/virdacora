@@ -1,0 +1,2 @@
+# Source integrity checks use the provider CSV bytes, including line endings.
+/source/*.csv -text !eol whitespace=cr-at-eol

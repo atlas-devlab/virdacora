@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { canonicalJson, sha256Hex } from "@terravoce/protocol";
 import { z } from "zod";
-import { readLocalSourceCsv, type WaterOxygenReading } from "./sources/source.js";
+import { decodeSource, parseSourceCsv, readLocalSourceCsv, type WaterOxygenReading } from "./sources/source.js";
 import { importWaterRangersOxygen } from "./sources/water-rangers.js";
 import { parseWqpOxygen } from "./sources/wqp.js";
 import { TerritorialReviewError } from "./territorial-review.js";
@@ -17,17 +16,29 @@ const originFields = {
   rawSha256: hashSchema,
 };
 
-const discreteManifest = z.discriminatedUnion("provider", [
-  z.strictObject({ ...originFields, provider: z.literal("wqp"), start: z.iso.date(), end: z.iso.date() }),
-  z.strictObject({ ...originFields, provider: z.literal("water-rangers"), datasetUrl: z.url(),
-    attribution: z.string().trim().min(1).max(2000),
-    origin: z.enum(["simple-table-export", "public-record-transcription"]),
-    recordUrls: z.array(z.url()).min(1).max(250).optional(),
+const wqpManifest = z.strictObject({ ...originFields, provider: z.literal("wqp"), start: z.iso.date(), end: z.iso.date() });
+const rangersManifest = z.strictObject({ ...originFields, provider: z.literal("water-rangers"), datasetUrl: z.url(),
+  attribution: z.string().trim().min(1).max(2000),
+  origin: z.enum(["simple-table-export", "public-record-transcription"]),
+  recordUrls: z.array(z.url()).min(1).max(250).optional(),
+});
+const discreteManifest = z.discriminatedUnion("provider", [wqpManifest, rangersManifest]);
+const comparisonSchema = "virdacora-discrete-oxygen-comparison-v1";
+const comparisonManifest = z.strictObject({
+  schema: z.literal(comparisonSchema),
+  site: z.strictObject({ name: z.string().trim().min(1).max(200),
+    wqpStationUrl: z.url({ protocol: /^https$/, hostname: /^(?:www\.)?waterqualitydata\.us$/ }),
+    waterRangersLocationUrl: z.url({ protocol: /^https$/, hostname: /^data\.waterrangers\.com$/ }),
   }),
-]);
+  wqp: wqpManifest,
+  waterRangers: rangersManifest,
+  usgsHistory: z.strictObject({ stationId: z.string().regex(/^USGS-\d+$/), rawSha256: hashSchema }),
+});
+export const discreteComparisonFiles = ["manifest.json", "wqp.csv", "water-rangers.csv", "usgs-history.csv"] as const;
 
 type Outcome = "included" | "non-numeric-or-censored" | "provider-quality";
 type AuditedReading = WaterOxygenReading & { summaryDisposition: Outcome; publicRecordUrl: string | null };
+type ComparisonReading = AuditedReading & { provider: "wqp" | "water-rangers" };
 export type DiscreteSettlementScenario = "positive" | "altered_delivery" | "insufficient_delivery";
 
 function recordRefs(urls: string[]): Map<string, string> {
@@ -71,6 +82,17 @@ function summarize(readings: AuditedReading[]) {
 
 function hashResult(core: unknown) {
   return sha256Hex(`discrete-oxygen-delivery-v1:${canonicalJson(core)}`);
+}
+
+function summarizeComparison(readings: ComparisonReading[]) {
+  const { recordCount, includedCount, excludedCount, distinctDates } = summarize(readings);
+  const wqp = summarize(readings.filter(reading => reading.provider === "wqp"));
+  const waterRangers = summarize(readings.filter(reading => reading.provider === "water-rangers"));
+  const difference = wqp.includedCount === 1 && waterRangers.includedCount === 1 &&
+    wqp.minMgL !== null && waterRangers.minMgL !== null
+    ? Number(Math.abs(wqp.minMgL - waterRangers.minMgL).toPrecision(15)) : null;
+  return { recordCount, includedCount, excludedCount, distinctDates,
+    byProvider: { wqp, "water-rangers": waterRangers }, absoluteDifferenceMgL: difference };
 }
 
 export function prepareDiscreteTerritorialCase(input: unknown, bytes: Uint8Array) {
@@ -126,15 +148,89 @@ export function prepareDiscreteTerritorialCase(input: unknown, bytes: Uint8Array
   return { spec, result: { ...delivery, resultHash: hashResult(delivery) } };
 }
 
-export type DiscreteTerritorialCase = ReturnType<typeof prepareDiscreteTerritorialCase>["spec"];
-type DiscreteResult = ReturnType<typeof prepareDiscreteTerritorialCase>["result"];
+function prepareComparisonCase(input: unknown, wqpCsv: Uint8Array, rangersCsv: Uint8Array, historyCsv: Uint8Array) {
+  const manifest = comparisonManifest.parse(input);
+  const { site, usgsHistory } = manifest;
+  const { start, end } = manifest.wqp;
+  const wqp = prepareDiscreteTerritorialCase(manifest.wqp, wqpCsv);
+  const rangers = prepareDiscreteTerritorialCase(manifest.waterRangers, rangersCsv);
+  if (rangers.result.readings.some(({ reportedTime }) => !reportedTime?.date || reportedTime.date < start || reportedTime.date > end)) {
+    throw new Error("Water Rangers observations must fall within the comparison window.");
+  }
+  const wqpLocationUrl = new URL(site.wqpStationUrl);
+  const rangersLocationUrl = new URL(site.waterRangersLocationUrl);
+  if (!wqpLocationUrl.pathname.startsWith("/provider/") ||
+      wqpLocationUrl.pathname.split("/").filter(Boolean).at(-1) !== manifest.wqp.stationId ||
+      !/^\/locations\/[\w-]+\/?$/.test(rangersLocationUrl.pathname) ||
+      [wqpLocationUrl, rangersLocationUrl].some(url => url.username || url.password || url.search || url.hash)) {
+    throw new Error("Use the public station and location pages for the comparison site.");
+  }
+
+  const history = decodeSource(historyCsv);
+  if (history.sha256 !== usgsHistory.rawSha256) throw new Error("USGS historical source hash mismatch.");
+  const rows = parseSourceCsv(history.text, ["monitoringLocationIdentifier", "characteristicUserSupplied",
+    "resultCount", "firstActivity", "mostRecentActivity"]);
+  if (rows.some(row => row.monitoringLocationIdentifier !== usgsHistory.stationId)) {
+    throw new Error("The USGS history includes a different station.");
+  }
+  const oxygen = rows.filter(row => row.characteristicUserSupplied === "Dissolved oxygen (DO), water, unfiltered");
+  const historicalReference = z.strictObject({ resultCount: z.coerce.number().int().positive(),
+    firstActivity: z.iso.date(), mostRecentActivity: z.iso.date() }).parse({
+    resultCount: oxygen[0]?.resultCount, firstActivity: oxygen[0]?.firstActivity, mostRecentActivity: oxygen[0]?.mostRecentActivity,
+  });
+  if (oxygen.length !== 1 || historicalReference.firstActivity > historicalReference.mostRecentActivity ||
+      historicalReference.mostRecentActivity >= start) {
+    throw new Error("The USGS dissolved-oxygen summary must predate the comparison window.");
+  }
+
+  const stationId = site.name;
+  const regionId = `DISCRETE-${sha256Hex(canonicalJson({
+    wqpStationId: wqp.spec.stationId, waterRangersStationId: rangers.spec.stationId, waterRangersDataset: rangers.spec.source.url,
+  })).slice(2)}`;
+  const capturedAt = wqp.spec.capturedAt >= rangers.spec.capturedAt ? wqp.spec.capturedAt : rangers.spec.capturedAt;
+  const source = { site, start, end, manifestSha256: sha256Hex(canonicalJson(manifest)),
+    measurementSources: [wqp.spec.source, rangers.spec.source],
+    historicalReference: { provider: "usgs", ...usgsHistory, ...historicalReference,
+      url: `https://api.waterdata.usgs.gov/samples-data/summary/${usgsHistory.stationId}` },
+  } as const;
+  const readings: ComparisonReading[] = [
+    ...wqp.result.readings.map(reading => ({ ...reading, provider: "wqp" as const })),
+    ...rangers.result.readings.map(reading => ({ ...reading, provider: "water-rangers" as const })),
+  ];
+  const { policy: basePolicy } = wqp.spec;
+  const policy = { ...basePolicy, regionId,
+    delivery: "reproduce records from both sampling programs and keep USGS as historical context",
+    summaryBasis: "provider-specific eligible concentrations; asynchronous descriptive comparison" };
+  const policySource = canonicalJson(policy);
+  const core = {
+    version: "discrete-oxygen-comparison-case-v1", provider: "comparison", stationId, capturedAt, regionId, source, policy,
+    policyHash: sha256Hex(`discrete-oxygen-review-policy-v1:${policySource}`), policySourceHash: sha256Hex(policySource),
+    evidenceHash: sha256Hex(`discrete-oxygen-observation-batch-v1:${canonicalJson({ source, readings })}`),
+    challengeSeconds: policy.challengeSeconds, action: policy.action, requestedAmount: policy.amount, asset: policy.asset,
+  } as const;
+  const spec = { ...core, caseHash: sha256Hex(`${core.version}:${canonicalJson(core)}`) };
+  const delivery = { version: "discrete-oxygen-comparison-delivery-v1", caseHash: spec.caseHash, evidenceHash: spec.evidenceHash,
+    provider: spec.provider, stationId, readings, summary: summarizeComparison(readings) } as const;
+  return { spec, result: { ...delivery, resultHash: hashResult(delivery) } };
+}
+
+type SingleCase = ReturnType<typeof prepareDiscreteTerritorialCase>;
+type ComparisonCase = ReturnType<typeof prepareComparisonCase>;
+export type DiscreteTerritorialCase = SingleCase["spec"] | ComparisonCase["spec"];
+type DiscreteResult = SingleCase["result"] | ComparisonCase["result"];
 
 export async function loadDiscreteTerritorialCase(sourceFolder: string) {
-  const [bytes, manifest] = await Promise.all([
-    readLocalSourceCsv(resolve(sourceFolder, "observations.csv")),
-    readFile(resolve(sourceFolder, "manifest.json"), "utf8"),
-  ]);
-  return prepareDiscreteTerritorialCase(JSON.parse(manifest), bytes);
+  const manifest: unknown = JSON.parse(decodeSource(await readLocalSourceCsv(resolve(sourceFolder, "manifest.json"))).text);
+  if (manifest && typeof manifest === "object" && "schema" in manifest && manifest.schema === comparisonSchema) {
+    const [, wqp, rangers, history] = discreteComparisonFiles;
+    const [wqpCsv, rangersCsv, historyCsv] = await Promise.all([
+      readLocalSourceCsv(resolve(sourceFolder, wqp)), readLocalSourceCsv(resolve(sourceFolder, rangers)),
+      readLocalSourceCsv(resolve(sourceFolder, history)),
+    ]);
+    return { ...prepareComparisonCase(manifest, wqpCsv, rangersCsv, historyCsv), archiveFiles: discreteComparisonFiles };
+  }
+  const bytes = await readLocalSourceCsv(resolve(sourceFolder, "observations.csv"));
+  return { ...prepareDiscreteTerritorialCase(manifest, bytes), archiveFiles: ["manifest.json", "observations.csv"] as const };
 }
 
 export function makeDiscreteTerritorialCandidate(result: DiscreteResult, scenario: DiscreteSettlementScenario) {
@@ -148,7 +244,8 @@ export function makeDiscreteTerritorialCandidate(result: DiscreteResult, scenari
   } else if (scenario === "insufficient_delivery") {
     core.readings.pop();
   }
-  const candidate = { ...core, summary: summarize(core.readings) };
+  const summary = core.version === "discrete-oxygen-comparison-delivery-v1" ? summarizeComparison(core.readings) : summarize(core.readings);
+  const candidate = { ...core, summary };
   return { ...candidate, resultHash: hashResult(candidate) };
 }
 

@@ -4,7 +4,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { verifyDiscreteTerritorialBundle } from "../services/environmental-case/src/discrete-bundle.js";
-import { prepareDiscreteTerritorialCase } from "../services/environmental-case/src/discrete-territorial.js";
+import { discreteComparisonFiles, loadDiscreteTerritorialCase, prepareDiscreteTerritorialCase } from "../services/environmental-case/src/discrete-territorial.js";
 import { readLocalSourceCsv } from "../services/environmental-case/src/sources/source.js";
 import { captureWqpOxygen } from "../services/environmental-case/src/sources/wqp.js";
 import { runTerritorialSimulation } from "./run-territorial-simulation.js";
@@ -12,22 +12,29 @@ import { runTerritorialSimulation } from "./run-territorial-simulation.js";
 const usage = [
   "Usage: pnpm --silent territorial:discrete --provider wqp --station <id> --start <YYYY-MM-DD> --end <YYYY-MM-DD> --output <new-directory>",
   "       pnpm --silent territorial:discrete --provider water-rangers --station <site_id-or-location> --csv <file> --dataset-url <url> --attribution <text> --output <new-directory> [--record-url <public-observation-url> ...]",
+  "       pnpm --silent territorial:discrete --comparison <source-directory> --output <new-directory>",
 ].join("\n");
 
-type Options = { stationId: string; output: string } & (
+type ProviderOptions = { stationId: string; output: string } & (
   { provider: "wqp"; start: string; end: string } |
   { provider: "water-rangers"; csv: string; datasetUrl: string; attribution: string; recordUrls: string[] }
 );
+type Options = ProviderOptions | { comparison: string; output: string };
 
 function parseOptions(): Options | null {
   const { values } = parseArgs({ options: {
     provider: { type: "string" }, station: { type: "string" }, output: { type: "string" },
     start: { type: "string" }, end: { type: "string" }, csv: { type: "string" },
     "dataset-url": { type: "string" }, attribution: { type: "string" },
-    "record-url": { type: "string", multiple: true }, help: { type: "boolean" },
+    "record-url": { type: "string", multiple: true }, comparison: { type: "string" }, help: { type: "boolean" },
   } });
   if (values.help) return null;
-  const { provider, station, output, start, end, csv, "dataset-url": datasetUrl, attribution, "record-url": urls } = values;
+  const { comparison, provider, station, output, start, end, csv, "dataset-url": datasetUrl, attribution, "record-url": urls } = values;
+  if (comparison?.trim() && output?.trim() &&
+      [provider, station, start, end, csv, datasetUrl, attribution, urls].every(value => value === undefined)) {
+    return { comparison: resolve(comparison), output: resolve(output) };
+  }
+  if (comparison !== undefined) throw new Error("Supply a comparison archive and an output folder.");
   if (!station?.trim() || !output?.trim()) throw new Error("Choose a station and a new output directory.");
   const shared = { stationId: station, output: resolve(output) };
   if (provider === "wqp" && start && end && csv === undefined && datasetUrl === undefined && attribution === undefined && !urls) {
@@ -39,7 +46,7 @@ function parseOptions(): Options | null {
   throw new Error("Choose one provider and its required arguments.");
 }
 
-async function acquireSource(options: Options) {
+async function acquireSource(options: ProviderOptions) {
   const common = { schema: "virdacora-discrete-oxygen-archive-v1", provider: options.provider, stationId: options.stationId };
   if (options.provider === "wqp") {
     const { start, end, stationId } = options;
@@ -53,6 +60,25 @@ async function acquireSource(options: Options) {
     rawSha256: `0x${createHash("sha256").update(bytes).digest("hex")}`,
     ...(recordUrls.length ? { origin: "public-record-transcription", recordUrls } : { origin: "simple-table-export" }),
   } };
+}
+
+async function prepareSource(options: Options, sourceFolder: string) {
+  await mkdir(sourceFolder);
+  if ("comparison" in options) {
+    const entries = await Promise.all(discreteComparisonFiles.map(async name =>
+      [name, await readLocalSourceCsv(resolve(options.comparison, name))] as const));
+    for (const [name, content] of entries) {
+      await writeFile(resolve(sourceFolder, name), content, { flag: "wx" });
+    }
+    const { spec } = await loadDiscreteTerritorialCase(sourceFolder);
+    if (spec.provider !== "comparison") throw new Error("Use a comparison source manifest.");
+    return spec;
+  }
+  const { bytes, manifest } = await acquireSource(options);
+  const { spec } = prepareDiscreteTerritorialCase(manifest, bytes);
+  await writeFile(resolve(sourceFolder, "observations.csv"), bytes, { flag: "wx" });
+  await writeFile(resolve(sourceFolder, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n", { flag: "wx" });
+  return spec;
 }
 
 async function main(): Promise<void> {
@@ -73,12 +99,7 @@ async function main(): Promise<void> {
     const { output } = options;
     await mkdir(dirname(output), { recursive: true });
     await mkdir(output);
-    const { bytes, manifest } = await acquireSource(options);
-    const { spec } = prepareDiscreteTerritorialCase(manifest, bytes);
-    const sourceFolder = resolve(output, "source");
-    await mkdir(sourceFolder);
-    await writeFile(resolve(sourceFolder, "observations.csv"), bytes, { flag: "wx" });
-    await writeFile(resolve(sourceFolder, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n", { flag: "wx" });
+    const spec = await prepareSource(options, resolve(output, "source"));
     const anchor = await runTerritorialSimulation(output, spec.caseHash, "discrete");
     const verification = await verifyDiscreteTerritorialBundle(output, anchor);
     const summary = { completed: true, commitmentsSha256: anchor, verification };

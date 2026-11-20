@@ -31,9 +31,6 @@ if (discrete || datasetOverride !== undefined || captureCaseHash !== undefined) 
   assert.ok(outputOverride && isAbsolute(outputOverride), "An absolute simulation output path is required");
 }
 const datasetFolder = resolve(datasetOverride ?? "../../docs/datasets/usgs-willamette");
-const rawSourceName = discrete ? "observations.csv" : "continuous.json";
-const archiveNames = discrete ? [rawSourceName, "manifest.json"] : [rawSourceName, "station.json", "manifest.json"];
-const originalArchive = await Promise.all(archiveNames.map((name) => readFile(resolve(datasetFolder, name))));
 async function loadWillametteJob() {
   const repositoryPolicy = resolve("../../policies/usgs-data-review-v1.terra");
   const policyPath = datasetOverride === undefined ? repositoryPolicy : resolve(datasetFolder, "policy.terra");
@@ -52,6 +49,10 @@ async function loadWillametteJob() {
 const job = discrete
   ? { mode: "discrete" as const, ...await loadDiscreteTerritorialCase(datasetFolder) }
   : await loadWillametteJob();
+const archiveNames = job.mode === "discrete" ? job.archiveFiles : ["continuous.json", "station.json", "manifest.json"];
+const rawSourceName = archiveNames.find(name => name !== "manifest.json");
+assert.ok(rawSourceName, "An observation archive file is required");
+const originalArchive = await Promise.all(archiveNames.map((name) => readFile(resolve(datasetFolder, name))));
 const { spec, result: expectedResult } = job;
 if (captureCaseHash !== undefined) {
   assert.equal(spec.caseHash, captureCaseHash, "Captured dataset and policy must reproduce the acquisition case hash");
