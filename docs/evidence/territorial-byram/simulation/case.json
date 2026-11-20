@@ -1,0 +1,75 @@
+{
+  "version": "discrete-oxygen-comparison-case-v1",
+  "provider": "comparison",
+  "stationId": "Byram Swinging Bridge, Pearl River, Mississippi",
+  "capturedAt": "2026-11-19T23:43:01.332Z",
+  "regionId": "DISCRETE-64f55da89b3b0356caceb82388b175d1e05c0430050036fe0d692f72d961fa96",
+  "source": {
+    "site": {
+      "name": "Byram Swinging Bridge, Pearl River, Mississippi",
+      "wqpStationUrl": "https://waterqualitydata.us/provider/STORET/21MSWQ_WQX/21MSWQ_WQX-02486500/",
+      "waterRangersLocationUrl": "https://data.waterrangers.com/locations/byram-swinging-bridge"
+    },
+    "start": "2018-11-02",
+    "end": "2018-11-03",
+    "manifestSha256": "0x5de9ac21b8b5bec27d285fad1d2f79cde858067f00c1825fa687f94efb758366",
+    "measurementSources": [
+      {
+        "provider": "wqp",
+        "stationId": "21MSWQ_WQX-02486500",
+        "datasetIdentity": null,
+        "origin": "api-response",
+        "capturedAt": "2026-11-19T23:22:49.102Z",
+        "url": "https://waterqualitydata.us/wqx3/Result/search?siteid=21MSWQ_WQX-02486500&characteristicName=Dissolved+oxygen+%28DO%29&sampleMedia=Water&startDateLo=11-02-2018&startDateHi=11-03-2018&mimeType=csv&dataProfile=fullPhysChem",
+        "termsUrl": "https://waterqualitydata.us/beta/portal_userguide/",
+        "attribution": "Water Quality Portal (National Water Quality Monitoring Council, USGS, EPA), DOI 10.5066/P9QRKUVJ. Credit the submitting organization recorded on each result.",
+        "rawSha256": "0x75738111b65a4ed959fe73cbd9d14391654a519de9b3ca0e776e3d83101afa2b",
+        "inputRows": 1,
+        "manifestSha256": "0x1cc3b2d62aafe823079fcb8591441227e34e23ce91218f310a6e0ac8b1233919"
+      },
+      {
+        "provider": "water-rangers",
+        "stationId": "5ac11e49-a8c2-421c-a615-feb268b4ae69",
+        "datasetIdentity": "https://data.waterrangers.com/datasets/mississippi-water-stewards",
+        "origin": "public-record-transcription",
+        "capturedAt": "2026-11-19T23:43:01.332Z",
+        "url": "https://data.waterrangers.com/datasets/mississippi-water-stewards",
+        "termsUrl": "https://opendatacommons.org/licenses/by/1-0/",
+        "attribution": "SOURCE: Mississippi Water Stewards dataset by Mississippi State University via Water Rangers, Open Data Commons Attribution Licence (ODC-By 1.0).",
+        "rawSha256": "0x00adc6bbec5ad497e26ba49c522d0dca8e3b1823add4d8da4a6ebe308e804491",
+        "inputRows": 1,
+        "manifestSha256": "0x9c2b993458be79ca1e382d3cb367a19d6a70a877333baef310f669a97eca687a"
+      }
+    ],
+    "historicalReference": {
+      "provider": "usgs",
+      "stationId": "USGS-02486500",
+      "rawSha256": "0x67e0c35e1201726ef686addffd0484aff9113c0be9c60c0ade8c1b8ce89626d6",
+      "resultCount": 191,
+      "firstActivity": "1969-10-08",
+      "mostRecentActivity": "1978-06-09",
+      "url": "https://api.waterdata.usgs.gov/samples-data/summary/USGS-02486500"
+    }
+  },
+  "policy": {
+    "schema": "discrete-oxygen-review-policy-v1",
+    "regionId": "DISCRETE-64f55da89b3b0356caceb82388b175d1e05c0430050036fe0d692f72d961fa96",
+    "metric": "water.oxygen.mg_l",
+    "action": "DATA_REVIEW",
+    "asset": "TEST",
+    "amount": 10,
+    "challengeSeconds": 86400,
+    "delivery": "reproduce records from both sampling programs and keep USGS as historical context",
+    "summaryBasis": "provider-specific eligible concentrations; asynchronous descriptive comparison",
+    "requireBothChambers": true,
+    "requireScientificAndCommunityReview": true
+  },
+  "policyHash": "0x3b31a624ccb8ffac312e0f3467ab526a73bd3f03351bbbef9d9b1f6c0748ff2a",
+  "policySourceHash": "0xada8b44304ada3155ab90b02151f02f20ea2ce614dcebac06c8ab404745f2aee",
+  "evidenceHash": "0xe0bcaf79846c9be00f162dfa472c917177d26235daa0a4664df2c6ccafc25628",
+  "challengeSeconds": 86400,
+  "action": "DATA_REVIEW",
+  "requestedAmount": 10,
+  "asset": "TEST",
+  "caseHash": "0xcf00b845043ee11026ee4799cfb597f772c0c7c552cdb6f0e30a481cac192785"
+}

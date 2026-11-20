@@ -1,0 +1,10 @@
+{
+  "schema": "virdacora-territorial-commitments-v1",
+  "mode": "local-simulation",
+  "fundedCaseHash": "0xcf00b845043ee11026ee4799cfb597f772c0c7c552cdb6f0e30a481cac192785",
+  "submittedResultHashes": {
+    "positive": "0x6030252e1a31baa49acc76f357441128798914efab8614aff279dc42dde19cc1",
+    "altered_delivery": "0xd6e930fb0ccc951171a43cd4dc2d5dda4ab7d74ef18ddc7593323b02de3746c2",
+    "insufficient_delivery": "0x70fce67dfdc37b580015b2165f24057164012d49e4e6d3bd2c1e26cc6c5f1fcb"
+  }
+}

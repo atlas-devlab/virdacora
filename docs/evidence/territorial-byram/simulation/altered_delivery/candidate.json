@@ -1,0 +1,83 @@
+{
+  "version": "discrete-oxygen-comparison-delivery-v1",
+  "caseHash": "0xcf00b845043ee11026ee4799cfb597f772c0c7c552cdb6f0e30a481cac192785",
+  "evidenceHash": "0xe0bcaf79846c9be00f162dfa472c917177d26235daa0a4664df2c6ccafc25628",
+  "provider": "comparison",
+  "stationId": "Byram Swinging Bridge, Pearl River, Mississippi",
+  "readings": [
+    {
+      "stationId": "21MSWQ_WQX-02486500",
+      "stationName": "PEARL RIVER",
+      "seriesId": null,
+      "activityId": "21MSWQ_WQX-144174-173",
+      "recordId": "STORET-781887710",
+      "organization": "21MSWQ_WQX",
+      "observedAtUtc": null,
+      "reportedTime": {
+        "date": "2018-11-02",
+        "time": "14:20:00",
+        "zone": "CDT"
+      },
+      "valueText": "10.06",
+      "unit": "mg/L",
+      "valueMgL": 10.06,
+      "status": "Accepted",
+      "qualifiers": [],
+      "detectionCondition": null,
+      "publicRecordUrl": null,
+      "summaryDisposition": "included",
+      "provider": "wqp"
+    },
+    {
+      "stationId": "5ac11e49-a8c2-421c-a615-feb268b4ae69",
+      "stationName": "Byram Swinging Bridge",
+      "seriesId": null,
+      "activityId": null,
+      "recordId": "115848",
+      "organization": null,
+      "observedAtUtc": null,
+      "reportedTime": {
+        "date": "2018-11-03",
+        "time": null,
+        "zone": null
+      },
+      "valueText": "7.4",
+      "unit": "mg/L",
+      "valueMgL": 7.4,
+      "status": null,
+      "qualifiers": [],
+      "detectionCondition": null,
+      "publicRecordUrl": "https://data.waterrangers.com/observations/115848",
+      "summaryDisposition": "included",
+      "provider": "water-rangers"
+    }
+  ],
+  "summary": {
+    "recordCount": 2,
+    "includedCount": 2,
+    "excludedCount": 0,
+    "distinctDates": 2,
+    "byProvider": {
+      "wqp": {
+        "recordCount": 1,
+        "includedCount": 1,
+        "excludedCount": 0,
+        "distinctDates": 1,
+        "minMgL": 10.06,
+        "maxMgL": 10.06,
+        "meanMgL": 10.06
+      },
+      "water-rangers": {
+        "recordCount": 1,
+        "includedCount": 1,
+        "excludedCount": 0,
+        "distinctDates": 1,
+        "minMgL": 7.4,
+        "maxMgL": 7.4,
+        "meanMgL": 7.4
+      }
+    },
+    "absoluteDifferenceMgL": 2.66
+  },
+  "resultHash": "0xd6e930fb0ccc951171a43cd4dc2d5dda4ab7d74ef18ddc7593323b02de3746c2"
+}

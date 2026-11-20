@@ -51,6 +51,8 @@ simulation with the newly captured evidence, see the
 
 For discrete samples from Water Quality Portal or Water Rangers, see the
 [territorial review guide (IT/EN)](docs/DISCRETE_TERRITORIAL_IT_EN.md).
+The [Byram case (IT/EN)](docs/evidence/territorial-byram/) reviews both sources
+in one simulated case and includes the inputs and results for offline verification.
 
 ## Read dissolved-oxygen data from external sources
 

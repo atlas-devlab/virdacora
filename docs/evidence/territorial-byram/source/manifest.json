@@ -1,0 +1,34 @@
+{
+  "schema": "virdacora-discrete-oxygen-comparison-v1",
+  "site": {
+    "name": "Byram Swinging Bridge, Pearl River, Mississippi",
+    "wqpStationUrl": "https://waterqualitydata.us/provider/STORET/21MSWQ_WQX/21MSWQ_WQX-02486500/",
+    "waterRangersLocationUrl": "https://data.waterrangers.com/locations/byram-swinging-bridge"
+  },
+  "wqp": {
+    "schema": "virdacora-discrete-oxygen-archive-v1",
+    "provider": "wqp",
+    "stationId": "21MSWQ_WQX-02486500",
+    "capturedAt": "2026-11-19T23:22:49.102Z",
+    "rawSha256": "0x75738111b65a4ed959fe73cbd9d14391654a519de9b3ca0e776e3d83101afa2b",
+    "start": "2018-11-02",
+    "end": "2018-11-03"
+  },
+  "waterRangers": {
+    "schema": "virdacora-discrete-oxygen-archive-v1",
+    "provider": "water-rangers",
+    "stationId": "5ac11e49-a8c2-421c-a615-feb268b4ae69",
+    "capturedAt": "2026-11-19T23:43:01.332Z",
+    "rawSha256": "0x00adc6bbec5ad497e26ba49c522d0dca8e3b1823add4d8da4a6ebe308e804491",
+    "datasetUrl": "https://data.waterrangers.com/datasets/mississippi-water-stewards",
+    "attribution": "SOURCE: Mississippi Water Stewards dataset by Mississippi State University via Water Rangers, Open Data Commons Attribution Licence (ODC-By 1.0).",
+    "origin": "public-record-transcription",
+    "recordUrls": [
+      "https://data.waterrangers.com/observations/115848"
+    ]
+  },
+  "usgsHistory": {
+    "stationId": "USGS-02486500",
+    "rawSha256": "0x67e0c35e1201726ef686addffd0484aff9113c0be9c60c0ade8c1b8ce89626d6"
+  }
+}

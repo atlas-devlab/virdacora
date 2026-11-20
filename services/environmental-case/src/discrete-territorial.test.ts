@@ -162,4 +162,52 @@ describe("discrete territorial oxygen review", () => {
       });
     },
   );
+
+  it("verifies both providers in one window and binds the historical reference", async () => {
+    const sourceFolder = await mkdtemp(join(tmpdir(), "virdacora-comparison-test-"));
+    const wqp = wqpCsv({});
+    const rangers = Buffer.from(`location,site_id,observed_on,oxygen,observation_id\nSite,${stationId},2022-08-25,8.6,456\n`);
+    const history = Buffer.from([
+      "monitoringLocationIdentifier,characteristicUserSupplied,resultCount,firstActivity,mostRecentActivity",
+      `${stationId},"Dissolved oxygen (DO), water, unfiltered",1,2000-01-01,2000-02-01`, "",
+    ].join("\n"));
+    const manifest = {
+      schema: "virdacora-discrete-oxygen-comparison-v1",
+      site: { name: "Site", wqpStationUrl: `https://waterqualitydata.us/provider/NWIS/USGS-NJ/${stationId}/`,
+        waterRangersLocationUrl: "https://data.waterrangers.com/locations/site" },
+      wqp: { ...wqpManifest, rawSha256: sha256Hex(wqp) },
+      waterRangers: { ...rangersManifest, rawSha256: sha256Hex(rangers), recordUrls: [rangersManifest.recordUrls[1]] },
+      usgsHistory: { stationId, rawSha256: sha256Hex(history) },
+    };
+    const entries = { "manifest.json": JSON.stringify(manifest), "wqp.csv": wqp,
+      "water-rangers.csv": rangers, "usgs-history.csv": history };
+    try {
+      await Promise.all(Object.entries(entries).map(([name, bytes]) => writeFile(join(sourceFolder, name), bytes)));
+      const { spec, result } = await loadDiscreteTerritorialCase(sourceFolder);
+      expect(spec).toMatchObject({ provider: "comparison", source: { historicalReference: { provider: "usgs", resultCount: 1 } } });
+      expect(result.summary).toMatchObject({ includedCount: 2, distinctDates: 2, absoluteDifferenceMgL: 0.4 });
+      expect(result.readings).toMatchObject([{ provider: "wqp", recordId: "sample-1" }, { provider: "water-rangers", recordId: "456" }]);
+      const review = (candidate = makeDiscreteTerritorialCandidate(result, "positive")) => reviewDiscreteTerritorialDelivery({
+        sourceFolder, committedCase: spec, fundedCaseHash: spec.caseHash, submittedResultHash: candidate.resultHash, candidate,
+      });
+      await expect(review()).resolves.toMatchObject({ verified: true });
+      await expect(review(makeDiscreteTerritorialCandidate(result, "insufficient_delivery")))
+        .rejects.toMatchObject({ code: "DELIVERY_NOT_REPRODUCED" });
+      for (const name of ["wqp.csv", "water-rangers.csv", "usgs-history.csv"] as const) {
+        const file = join(sourceFolder, name);
+        await writeFile(file, Buffer.concat([entries[name], Buffer.from("\n")]));
+        await expect(review()).rejects.toMatchObject({ code: "SOURCE_INTEGRITY_FAILED" });
+        await writeFile(file, entries[name]);
+      }
+      const outsideWindow = Buffer.from(rangers.toString().replace("2022-08-25", "2022-09-01"));
+      await writeFile(join(sourceFolder, "water-rangers.csv"), outsideWindow);
+      await writeFile(join(sourceFolder, "manifest.json"), JSON.stringify({
+        ...manifest, waterRangers: { ...manifest.waterRangers, rawSha256: sha256Hex(outsideWindow) },
+      }));
+      await expect(loadDiscreteTerritorialCase(sourceFolder)).rejects.toThrow(/comparison window/);
+    } finally {
+      await Promise.all(Object.keys(entries).map(name => rm(join(sourceFolder, name), { force: true })));
+      await rmdir(sourceFolder);
+    }
+  });
 });

@@ -47,3 +47,9 @@ Water Rangers datasets available for download come with a dataset-specific
 attribution and the [Open Data Commons Attribution License](https://opendatacommons.org/licenses/by/1-0/).
 Keep that attribution with any reused export. See the
 [Water Rangers data sharing guide](https://data.waterrangers.com/api/faq).
+
+The [Byram evidence archive](docs/evidence/territorial-byram/) records the
+Mississippi Department of Environmental Quality sample distributed via Water
+Quality Portal, the Mississippi Water Stewards sample published by Mississippi
+State University via Water Rangers, and a historical USGS summary. The archive
+lists the source links and applicable attribution for each dataset.

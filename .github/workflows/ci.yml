@@ -71,6 +71,12 @@ jobs:
       - name: Run real archived-data territorial job and rejected deliveries
         run: pnpm territorial:e2e
 
+      - name: Verify and replay the archived Byram comparison
+        run: |
+          bundle=docs/evidence/territorial-byram
+          pnpm --silent territorial:verify-discrete --bundle "$bundle" --anchor "$(cat "$bundle/commitments.sha256")"
+          pnpm --silent territorial:discrete --comparison "$bundle/source" --output "$RUNNER_TEMP/territorial-byram"
+
   postgres-integration:
     name: Real PostgreSQL storage and API contracts
     runs-on: ubuntu-24.04

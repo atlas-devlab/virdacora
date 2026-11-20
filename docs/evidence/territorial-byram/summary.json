@@ -1,0 +1,113 @@
+{
+  "completed": true,
+  "commitmentsSha256": "0x1330c4051de3c966e3e6bb710c20ce519059b61727302de6f9827246518e974f",
+  "verification": {
+    "schema": "virdacora-discrete-territorial-verification-v1",
+    "mode": "local-simulation",
+    "scope": "offline reproducibility of captured discrete observations against local-simulation commitments",
+    "verified": true,
+    "commitmentsSha256": "0x1330c4051de3c966e3e6bb710c20ce519059b61727302de6f9827246518e974f",
+    "fundedCaseHash": "0xcf00b845043ee11026ee4799cfb597f772c0c7c552cdb6f0e30a481cac192785",
+    "submittedResultHashes": {
+      "positive": "0x6030252e1a31baa49acc76f357441128798914efab8614aff279dc42dde19cc1",
+      "altered_delivery": "0xd6e930fb0ccc951171a43cd4dc2d5dda4ab7d74ef18ddc7593323b02de3746c2",
+      "insufficient_delivery": "0x70fce67dfdc37b580015b2165f24057164012d49e4e6d3bd2c1e26cc6c5f1fcb"
+    },
+    "source": {
+      "site": {
+        "name": "Byram Swinging Bridge, Pearl River, Mississippi",
+        "wqpStationUrl": "https://waterqualitydata.us/provider/STORET/21MSWQ_WQX/21MSWQ_WQX-02486500/",
+        "waterRangersLocationUrl": "https://data.waterrangers.com/locations/byram-swinging-bridge"
+      },
+      "start": "2018-11-02",
+      "end": "2018-11-03",
+      "manifestSha256": "0x5de9ac21b8b5bec27d285fad1d2f79cde858067f00c1825fa687f94efb758366",
+      "measurementSources": [
+        {
+          "provider": "wqp",
+          "stationId": "21MSWQ_WQX-02486500",
+          "datasetIdentity": null,
+          "origin": "api-response",
+          "capturedAt": "2026-11-19T23:22:49.102Z",
+          "url": "https://waterqualitydata.us/wqx3/Result/search?siteid=21MSWQ_WQX-02486500&characteristicName=Dissolved+oxygen+%28DO%29&sampleMedia=Water&startDateLo=11-02-2018&startDateHi=11-03-2018&mimeType=csv&dataProfile=fullPhysChem",
+          "termsUrl": "https://waterqualitydata.us/beta/portal_userguide/",
+          "attribution": "Water Quality Portal (National Water Quality Monitoring Council, USGS, EPA), DOI 10.5066/P9QRKUVJ. Credit the submitting organization recorded on each result.",
+          "rawSha256": "0x75738111b65a4ed959fe73cbd9d14391654a519de9b3ca0e776e3d83101afa2b",
+          "inputRows": 1,
+          "manifestSha256": "0x1cc3b2d62aafe823079fcb8591441227e34e23ce91218f310a6e0ac8b1233919"
+        },
+        {
+          "provider": "water-rangers",
+          "stationId": "5ac11e49-a8c2-421c-a615-feb268b4ae69",
+          "datasetIdentity": "https://data.waterrangers.com/datasets/mississippi-water-stewards",
+          "origin": "public-record-transcription",
+          "capturedAt": "2026-11-19T23:43:01.332Z",
+          "url": "https://data.waterrangers.com/datasets/mississippi-water-stewards",
+          "termsUrl": "https://opendatacommons.org/licenses/by/1-0/",
+          "attribution": "SOURCE: Mississippi Water Stewards dataset by Mississippi State University via Water Rangers, Open Data Commons Attribution Licence (ODC-By 1.0).",
+          "rawSha256": "0x00adc6bbec5ad497e26ba49c522d0dca8e3b1823add4d8da4a6ebe308e804491",
+          "inputRows": 1,
+          "manifestSha256": "0x9c2b993458be79ca1e382d3cb367a19d6a70a877333baef310f669a97eca687a"
+        }
+      ],
+      "historicalReference": {
+        "provider": "usgs",
+        "stationId": "USGS-02486500",
+        "rawSha256": "0x67e0c35e1201726ef686addffd0484aff9113c0be9c60c0ade8c1b8ce89626d6",
+        "resultCount": 191,
+        "firstActivity": "1969-10-08",
+        "mostRecentActivity": "1978-06-09",
+        "url": "https://api.waterdata.usgs.gov/samples-data/summary/USGS-02486500"
+      }
+    },
+    "provider": "comparison",
+    "stationId": "Byram Swinging Bridge, Pearl River, Mississippi",
+    "summary": {
+      "recordCount": 2,
+      "includedCount": 2,
+      "excludedCount": 0,
+      "distinctDates": 2,
+      "byProvider": {
+        "wqp": {
+          "recordCount": 1,
+          "includedCount": 1,
+          "excludedCount": 0,
+          "distinctDates": 1,
+          "minMgL": 9.06,
+          "maxMgL": 9.06,
+          "meanMgL": 9.06
+        },
+        "water-rangers": {
+          "recordCount": 1,
+          "includedCount": 1,
+          "excludedCount": 0,
+          "distinctDates": 1,
+          "minMgL": 7.4,
+          "maxMgL": 7.4,
+          "meanMgL": 7.4
+        }
+      },
+      "absoluteDifferenceMgL": 1.66
+    },
+    "scenarios": [
+      {
+        "scenario": "positive",
+        "submittedResultHash": "0x6030252e1a31baa49acc76f357441128798914efab8614aff279dc42dde19cc1",
+        "outcome": "verified",
+        "reason": null
+      },
+      {
+        "scenario": "altered_delivery",
+        "submittedResultHash": "0xd6e930fb0ccc951171a43cd4dc2d5dda4ab7d74ef18ddc7593323b02de3746c2",
+        "outcome": "rejected",
+        "reason": "DELIVERY_NOT_REPRODUCED"
+      },
+      {
+        "scenario": "insufficient_delivery",
+        "submittedResultHash": "0x70fce67dfdc37b580015b2165f24057164012d49e4e6d3bd2c1e26cc6c5f1fcb",
+        "outcome": "rejected",
+        "reason": "DELIVERY_NOT_REPRODUCED"
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "id": "7c102728-74e0-4dd8-ac90-0521bed2c612",
+  "location_id": "5ac11e49-a8c2-421c-a615-feb268b4ae69",
+  "dataset_id": "641f73db-4e74-480b-8742-5a1027a7caa3",
+  "observed_at": "2018-11-03T16:39:00.000Z",
+  "observed_at_local": "2018-11-03T11:39:00-05:00",
+  "checked": "qc_complete",
+  "permalink": "https://data.waterrangers.com/observations/115848",
+  "readings": [
+    {
+      "id": "23e6a297-df9b-41a7-a948-ac18084e7e0f",
+      "parameter": "oxygen",
+      "qualitative": false,
+      "unit": "mg_l",
+      "value": "7.4",
+      "equipment": "lamotte_dissolved_oxygen_mg_l",
+      "equipment_limit": null
+    },
+    {
+      "id": "db28a6e2-7f85-4dfc-8e05-52098c4a82b6",
+      "parameter": "oxygen",
+      "qualitative": false,
+      "unit": "percent",
+      "value": "77",
+      "equipment": "lamotte_dissolved_oxygen_percent",
+      "equipment_limit": null
+    }
+  ]
+}

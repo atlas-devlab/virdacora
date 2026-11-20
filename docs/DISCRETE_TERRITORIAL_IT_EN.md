@@ -3,7 +3,8 @@
 ## Italiano
 
 `territorial:discrete` apre un caso territoriale di ossigeno disciolto per
-una fonte e una stazione. La consegna riproduce l'inventario dei campioni e
+una fonte e una stazione oppure per due programmi di campionamento con
+`--comparison`. La consegna riproduce l'inventario dei campioni e
 il riepilogo descrittivo, con conteggi, date, minimo, massimo e media in mg/L.
 Le date restano quelle riportate dalla fonte. Il caso finanzia la verifica dei
 dati nella simulazione locale Hardhat, con revisori, voti e unità TEST simulati.
@@ -33,7 +34,8 @@ della consegna completa e il rifiuto di quelle alterata e incompleta.
 ## English
 
 `territorial:discrete` reviews dissolved-oxygen samples from one provider and
-one station. Its deliverable is a reproducible sampling inventory with dates,
+one station, or from two sampling programs with `--comparison`.
+Its deliverable is a reproducible sampling inventory with dates,
 counts, minimum, maximum and mean concentration in mg/L. The case is scoped
 to descriptive statistics on reported samples. Forecasts and ecological
 thresholds belong to a separate assessment. Hardhat simulates the reviewers,
@@ -96,6 +98,25 @@ pnpm --silent territorial:discrete --provider water-rangers \
 For a downloaded simple-table export supply the CSV, dataset URL and dataset
 credit shown by Water Rangers. Reserve `--record-url` for transcriptions.
 [Water Rangers downloads and attribution](https://data.waterrangers.com/api/faq)
+
+To run a comparison, supply a source archive with `manifest.json`, the
+unmodified WQX response `wqp.csv`, the Water Rangers simple table
+`water-rangers.csv`, and the USGS Samples API station summary `usgs-history.csv`.
+The manifest schema is `virdacora-discrete-oxygen-comparison-v1`. `site` holds
+the `name`, `wqpStationUrl`, and `waterRangersLocationUrl` for the reach selected
+by the operator. `wqp` and `waterRangers` are the ordinary provider manifests.
+`usgsHistory` holds the USGS `stationId` and `rawSha256`. The WQP date window
+applies to both sample inventories. The older USGS summary is committed as
+historical context and contributes zero observations to the comparison.
+The report gives an absolute concentration difference when each program
+has exactly one eligible result. [USGS Samples API](https://api.waterdata.usgs.gov/samples-data/docs)
+
+```sh
+pnpm --silent territorial:discrete --comparison docs/evidence/territorial-byram/source --output outputs/byram-01
+```
+
+The [archived Byram case](evidence/territorial-byram/) contains the populated
+manifest, the three source files and the recorded simulation results.
 
 Keep the `commitmentsSha256` from the simulation command's JSON output
 separately from the bundle. Substitute that digest for `0x...` below.

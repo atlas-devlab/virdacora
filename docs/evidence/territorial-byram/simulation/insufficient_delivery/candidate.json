@@ -1,0 +1,60 @@
+{
+  "version": "discrete-oxygen-comparison-delivery-v1",
+  "caseHash": "0xcf00b845043ee11026ee4799cfb597f772c0c7c552cdb6f0e30a481cac192785",
+  "evidenceHash": "0xe0bcaf79846c9be00f162dfa472c917177d26235daa0a4664df2c6ccafc25628",
+  "provider": "comparison",
+  "stationId": "Byram Swinging Bridge, Pearl River, Mississippi",
+  "readings": [
+    {
+      "stationId": "21MSWQ_WQX-02486500",
+      "stationName": "PEARL RIVER",
+      "seriesId": null,
+      "activityId": "21MSWQ_WQX-144174-173",
+      "recordId": "STORET-781887710",
+      "organization": "21MSWQ_WQX",
+      "observedAtUtc": null,
+      "reportedTime": {
+        "date": "2018-11-02",
+        "time": "14:20:00",
+        "zone": "CDT"
+      },
+      "valueText": "9.06",
+      "unit": "mg/L",
+      "valueMgL": 9.06,
+      "status": "Accepted",
+      "qualifiers": [],
+      "detectionCondition": null,
+      "publicRecordUrl": null,
+      "summaryDisposition": "included",
+      "provider": "wqp"
+    }
+  ],
+  "summary": {
+    "recordCount": 1,
+    "includedCount": 1,
+    "excludedCount": 0,
+    "distinctDates": 1,
+    "byProvider": {
+      "wqp": {
+        "recordCount": 1,
+        "includedCount": 1,
+        "excludedCount": 0,
+        "distinctDates": 1,
+        "minMgL": 9.06,
+        "maxMgL": 9.06,
+        "meanMgL": 9.06
+      },
+      "water-rangers": {
+        "recordCount": 0,
+        "includedCount": 0,
+        "excludedCount": 0,
+        "distinctDates": 0,
+        "minMgL": null,
+        "maxMgL": null,
+        "meanMgL": null
+      }
+    },
+    "absoluteDifferenceMgL": null
+  },
+  "resultHash": "0x70fce67dfdc37b580015b2165f24057164012d49e4e6d3bd2c1e26cc6c5f1fcb"
+}
